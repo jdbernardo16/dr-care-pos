@@ -393,6 +393,35 @@ export class POS {
         );
 
         /**
+         * Auto-select takeaway as the default order type
+         * for pharmacy POS. This prevents the order type
+         * popup from appearing.
+         */
+        this.initialQueue.push(
+            () =>
+                new Promise(async (resolve, reject) => {
+                    const types = this.types.getValue();
+                    const takeawayType = Object.values(types).find(
+                        (type: any) => type.identifier === "takeaway",
+                    ) as any;
+
+                    if (takeawayType) {
+                        Object.values(types).forEach(
+                            (type: any) => (type.selected = false),
+                        );
+                        takeawayType.selected = true;
+                        await this.triggerOrderTypeSelection(takeawayType);
+                        this._types.next(types);
+                    }
+
+                    resolve({
+                        status: "success",
+                        message: "Takeaway selected as default order type",
+                    });
+                }),
+        );
+
+        /**
          * Whenever there is a change
          * on the products, we'll update
          * the cart.
