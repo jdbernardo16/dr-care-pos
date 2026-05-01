@@ -75,7 +75,7 @@ if ( Auth::check() ) {
     @section( 'layout.dashboard.footer' )
         @include( 'common.popups' )
         @include( 'common.dashboard-footer' )
-        <script src="{{ url( 'build/registerSW.js' ) }}"></script>
+        <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/build/sw.js',{scope:'/'})})}</script>
         @vite([ 'resources/ts/app.ts' ])
     @show
 </body>

@@ -70,6 +70,7 @@ export default ({ mode }) => {
             mkcert(),
             VitePWA({
                 registerType: "autoUpdate",
+                injectRegister: null,
                 includeAssets: ["favicon.ico"],
                 manifest: {
                     name: "NexoPOS",

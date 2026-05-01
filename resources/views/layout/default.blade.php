@@ -25,6 +25,6 @@ $theme  =   ns()->option->get( 'ns_default_theme', 'light' );
 </head>
 <body>
     @yield( 'layout.default.body' )
-    <script src="{{ url( 'build/registerSW.js' ) }}"></script>
+    <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/build/sw.js',{scope:'/'})})}</script>
 </body>
 </html>

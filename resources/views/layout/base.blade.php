@@ -39,7 +39,7 @@ if ( Auth::check() && Auth::user()->attribute instanceof UserAttribute ) {
     @yield( 'layout.base.body' )
     @section( 'layout.base.footer' )
         @include( 'common.footer' )
-        <script src="{{ url( 'build/registerSW.js' ) }}"></script>
+        <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/build/sw.js',{scope:'/'})})}</script>
     @show
 </body>
 </html>
