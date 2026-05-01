@@ -73,8 +73,8 @@ export default ({ mode }) => {
                 injectRegister: null,
                 includeAssets: ["favicon.ico"],
                 manifest: {
-                    name: "NexoPOS",
-                    short_name: "NexoPOS",
+                    name: "DrCare",
+                    short_name: "DrCare",
                     description: "POS & Inventory Management System",
                     theme_color: "#4f46e5",
                     background_color: "#ffffff",

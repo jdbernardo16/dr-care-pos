@@ -431,6 +431,33 @@ class MenuService
                     ),
                 ),
             ),
+            // Attendance
+            AsideMenu::menu(
+                label: __( 'Attendance' ),
+                icon: 'la-clock',
+                identifier: 'attendance',
+                permissions: [ 'attendance.clock', 'attendance.view' ],
+                childrens: AsideMenu::childrens(
+                    AsideMenu::subMenu(
+                        label: __( 'Clock In/Out' ),
+                        identifier: 'attendance-clock',
+                        permissions: [ 'attendance.clock' ],
+                        href: ns()->url( '/dashboard/attendance/clock' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Records' ),
+                        identifier: 'attendance-list',
+                        permissions: [ 'attendance.read' ],
+                        href: ns()->url( '/dashboard/attendance' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Create Record' ),
+                        identifier: 'attendance-create',
+                        permissions: [ 'attendance.create' ],
+                        href: ns()->url( '/dashboard/attendance/create' )
+                    ),
+                ),
+            ),
             AsideMenu::menu(
                 label: __( 'Reports' ),
                 icon: 'la-chart-pie',

@@ -13,6 +13,8 @@ class DefaultSeeder extends Seeder
      */
     public function run()
     {
+        include dirname( __FILE__ ) . '/../permissions/attendance.php';
+
         $this->call( DefaultCategorySeeder::class );
         $this->call( DefaultUnitGroupSeeder::class );
         $this->call( DefaultProviderSeeder::class );
