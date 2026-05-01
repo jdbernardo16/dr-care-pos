@@ -16,6 +16,12 @@ if ( Auth::check() && Auth::user()->attribute instanceof UserAttribute ) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexoPOS">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-touch-icon-180x180.png">
+    <link rel="manifest" href="{{ url( 'build/manifest.webmanifest' ) }}">
     <title>{!! $title ?? __( 'Unnamed Page' ) !!}</title>
     @include( 'layout._header-injection' )
     @vite([
@@ -33,6 +39,7 @@ if ( Auth::check() && Auth::user()->attribute instanceof UserAttribute ) {
     @yield( 'layout.base.body' )
     @section( 'layout.base.footer' )
         @include( 'common.footer' )
+        <script src="{{ url( 'build/registerSW.js' ) }}"></script>
     @show
 </body>
 </html>
