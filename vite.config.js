@@ -2,11 +2,11 @@ import { defineConfig, loadEnv } from "vite";
 
 // import fs from 'fs';
 import laravel from "laravel-vite-plugin";
-import mkcert from "vite-plugin-mkcert";
 import { resolve } from "path";
+import mkcert from "vite-plugin-mkcert";
 // import path from 'path';
-import vuePlugin from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
+import vuePlugin from "@vitejs/plugin-vue";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default ({ mode }) => {
@@ -73,8 +73,8 @@ export default ({ mode }) => {
                 injectRegister: null,
                 includeAssets: ["favicon.ico"],
                 manifest: {
-                    name: "NexoPOS",
-                    short_name: "NexoPOS",
+                    name: "DrCare",
+                    short_name: "DrCare",
                     description: "POS & Inventory Management System",
                     theme_color: "#4f46e5",
                     background_color: "#ffffff",
