@@ -71,8 +71,15 @@
                                     <th>{{ __( 'Date' ) }}</th>
                                     <th>{{ __( 'Clock In' ) }}</th>
                                     <th>{{ __( 'Clock Out' ) }}</th>
-                                    <th class="text-right">{{ __( 'Hours' ) }}</th>
-                                    <th class="text-right">{{ __( 'Pay' ) }}</th>
+                                    <th>{{ __( 'Break Start' ) }}</th>
+                                    <th>{{ __( 'Break End' ) }}</th>
+                                    <th class="text-right">{{ __( 'Break' ) }}</th>
+                                    <th class="text-right">{{ __( 'Net Hrs' ) }}</th>
+                                    <th class="text-right">{{ __( 'Reg Hrs' ) }}</th>
+                                    <th class="text-right">{{ __( 'Reg Pay' ) }}</th>
+                                    <th class="text-right">{{ __( 'OT Hrs' ) }}</th>
+                                    <th class="text-right">{{ __( 'Est. OT Pay' ) }}</th>
+                                    <th class="text-right">{{ __( 'Est. Total' ) }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -80,15 +87,26 @@
                                     <td>{{ formatDate( record.clock_in_at ) }}</td>
                                     <td class="text-sm">{{ formatDateTime( record.clock_in_at ) }}</td>
                                     <td class="text-sm">{{ formatDateTime( record.clock_out_at ) }}</td>
-                                    <td class="text-right">{{ record.total_hours }}</td>
-                                    <td class="text-right font-semibold">{{ ( record.total_hours * hourlyRate ).toFixed( 2 ) }}</td>
+                                    <td class="text-sm">{{ formatDateTime( record.break_start ) }}</td>
+                                    <td class="text-sm">{{ formatDateTime( record.break_end ) }}</td>
+                                    <td class="text-right">{{ record.break_hours || '0.00' }}</td>
+                                    <td class="text-right">{{ record.net_hours || record.total_hours }}</td>
+                                    <td class="text-right">{{ computeRegHrs( record ) }}</td>
+                                    <td class="text-right font-semibold">{{ computeRegPay( record ) }}</td>
+                                    <td class="text-right">{{ computeOtHrs( record ) }}</td>
+                                    <td class="text-right">{{ computeOtPay( record ) }}</td>
+                                    <td class="text-right font-bold">{{ computeTotalPay( record ) }}</td>
                                 </tr>
                             </tbody>
                             <tfoot>
                                 <tr class="font-bold text-primary">
-                                    <td colspan="3" class="text-right">{{ __( 'Totals' ) }}</td>
+                                    <td colspan="6" class="text-right">{{ __( 'Totals' ) }}</td>
                                     <td class="text-right">{{ totalPreviewHours }}</td>
-                                    <td class="text-right">{{ totalPreviewPay }}</td>
+                                    <td></td>
+                                    <td class="text-right">{{ totalRegPay }}</td>
+                                    <td></td>
+                                    <td class="text-right">{{ totalOtPay }}</td>
+                                    <td class="text-right">{{ totalEstPay }}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -129,11 +147,16 @@ export default {
     },
     computed: {
         totalPreviewHours() {
-            return this.attendanceRecords.reduce( ( sum, r ) => sum + ( parseFloat( r.total_hours ) || 0 ), 0 ).toFixed( 2 );
+            return this.attendanceRecords.reduce( ( sum, r ) => sum + ( parseFloat( r.net_hours || r.total_hours ) || 0 ), 0 ).toFixed( 2 );
         },
-        totalPreviewPay() {
-            const rate = this.hourlyRate || 0;
-            return this.attendanceRecords.reduce( ( sum, r ) => sum + ( parseFloat( r.total_hours ) || 0 ) * rate, 0 ).toFixed( 2 );
+        totalRegPay() {
+            return this.attendanceRecords.reduce( ( sum, r ) => sum + parseFloat( this.computeRegPay( r ) || 0 ), 0 ).toFixed( 2 );
+        },
+        totalOtPay() {
+            return this.attendanceRecords.reduce( ( sum, r ) => sum + parseFloat( this.computeOtPay( r ) || 0 ), 0 ).toFixed( 2 );
+        },
+        totalEstPay() {
+            return ( parseFloat( this.totalRegPay ) + parseFloat( this.totalOtPay ) ).toFixed( 2 );
         },
     },
     mounted() {
@@ -175,6 +198,24 @@ export default {
                     this.attendanceRecords = [];
                 },
             });
+        },
+        netHrs( record ) {
+            return parseFloat( record.net_hours || record.total_hours || 0 );
+        },
+        computeRegHrs( record ) {
+            return Math.min( this.netHrs( record ), 8 ).toFixed( 2 );
+        },
+        computeRegPay( record ) {
+            return ( parseFloat( this.computeRegHrs( record ) ) * this.hourlyRate ).toFixed( 2 );
+        },
+        computeOtHrs( record ) {
+            return Math.max( 0, this.netHrs( record ) - 8 ).toFixed( 2 );
+        },
+        computeOtPay( record ) {
+            return ( parseFloat( this.computeOtHrs( record ) ) * this.hourlyRate * 1.25 ).toFixed( 2 );
+        },
+        computeTotalPay( record ) {
+            return ( parseFloat( this.computeRegPay( record ) ) + parseFloat( this.computeOtPay( record ) ) ).toFixed( 2 );
         },
         createRun() {
             this.submitting = true;

@@ -15,6 +15,7 @@ class DefaultSeeder extends Seeder
     {
         include dirname( __FILE__ ) . '/../permissions/attendance.php';
         include dirname( __FILE__ ) . '/../permissions/payroll.php';
+        include dirname( __FILE__ ) . '/../permissions/overtime_holiday.php';
 
         $this->call( DefaultCategorySeeder::class );
         $this->call( DefaultUnitGroupSeeder::class );

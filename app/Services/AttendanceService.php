@@ -2,30 +2,22 @@
 
 namespace App\Services;
 
+use App\Exceptions\NotAllowedException;
 use App\Models\Attendance;
 use App\Models\User;
-use App\Exceptions\NotAllowedException;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceService
 {
-    /**
-     * Clock in a user
-     *
-     * @param int $userId
-     * @param string|null $note
-     * @return array
-     * @throws NotAllowedException
-     */
     public function clockIn( $userId, $note = null )
     {
         $activeRecord = Attendance::forUser( $userId )
-            ->clockedIn()
+            ->clockedInOrOnBreak()
             ->first();
 
         if ( $activeRecord instanceof Attendance ) {
-            throw new NotAllowedException( __( 'You\'re already clocked in. Please clock out first.' ) );
+            throw new NotAllowedException( __( 'You\'re already clocked in or on break. Please clock out first.' ) );
         }
 
         $attendance = new Attendance;
@@ -40,38 +32,37 @@ class AttendanceService
         return [
             'status' => 'success',
             'message' => __( 'You\'ve successfully clocked in.' ),
-            'data' => [
-                'attendance' => $attendance,
-            ],
+            'data' => compact( 'attendance' ),
         ];
     }
 
-    /**
-     * Clock out a user
-     *
-     * @param int $userId
-     * @param string|null $note
-     * @return array
-     * @throws NotAllowedException
-     */
     public function clockOut( $userId, $note = null )
     {
         $activeRecord = Attendance::forUser( $userId )
-            ->clockedIn()
+            ->clockedInOrOnBreak()
             ->first();
 
         if ( ! $activeRecord instanceof Attendance ) {
             throw new NotAllowedException( __( 'No active clock-in record found.' ) );
         }
 
+        // If on break, auto end break first
+        if ( $activeRecord->status === Attendance::STATUS_ON_BREAK ) {
+            $this->endBreak( $activeRecord );
+        }
+
         $clockIn = Carbon::parse( $activeRecord->clock_in_at );
         $clockOut = now();
-        $totalHours = $clockIn->diffInMinutes( $clockOut ) / 60;
+        $totalMinutes = $clockIn->diffInMinutes( $clockOut );
+        $breakMinutes = (float) $activeRecord->break_hours * 60;
+        $netMinutes = $totalMinutes - $breakMinutes;
+        $netHours = round( $netMinutes / 60, 2 );
 
         $activeRecord->clock_out_at = $clockOut;
         $activeRecord->clock_out_ip = request()->ip();
         $activeRecord->clock_out_note = $note;
-        $activeRecord->total_hours = round( $totalHours, 2 );
+        $activeRecord->total_hours = round( $totalMinutes / 60, 2 );
+        $activeRecord->net_hours = $netHours;
         $activeRecord->status = Attendance::STATUS_CLOCKED_OUT;
         $activeRecord->save();
 
@@ -81,16 +72,70 @@ class AttendanceService
             'data' => [
                 'attendance' => $activeRecord,
                 'total_hours' => $activeRecord->total_hours,
+                'break_hours' => $activeRecord->break_hours,
+                'net_hours' => $netHours,
             ],
         ];
     }
 
-    /**
-     * Get the current clock-in status for a user today
-     *
-     * @param int $userId
-     * @return array
-     */
+    public function breakIn( $userId, $note = null )
+    {
+        $record = Attendance::forUser( $userId )
+            ->clockedIn()
+            ->first();
+
+        if ( ! $record instanceof Attendance ) {
+            throw new NotAllowedException( __( 'You must be clocked in to take a break.' ) );
+        }
+
+        if ( $record->break_start !== null && $record->break_end === null ) {
+            throw new NotAllowedException( __( 'You\'re already on break. End your break first.' ) );
+        }
+
+        $record->break_start = now();
+        $record->status = Attendance::STATUS_ON_BREAK;
+        $record->save();
+
+        return [
+            'status' => 'success',
+            'message' => __( 'Break started.' ),
+            'data' => compact( 'record' ),
+        ];
+    }
+
+    public function breakOut( $userId, $note = null )
+    {
+        $record = Attendance::forUser( $userId )
+            ->onBreak()
+            ->first();
+
+        if ( ! $record instanceof Attendance ) {
+            throw new NotAllowedException( __( 'You\'re not currently on break.' ) );
+        }
+
+        $this->endBreak( $record );
+
+        return [
+            'status' => 'success',
+            'message' => __( 'Break ended.' ),
+            'data' => compact( 'record' ),
+        ];
+    }
+
+    private function endBreak( Attendance $record )
+    {
+        $breakStart = Carbon::parse( $record->break_start );
+        $breakEnd = now();
+        $breakMinutes = $breakStart->diffInMinutes( $breakEnd );
+        $existingBreak = (float) $record->break_hours;
+        $newBreakHours = $existingBreak + round( $breakMinutes / 60, 2 );
+
+        $record->break_end = $breakEnd;
+        $record->break_hours = $newBreakHours;
+        $record->status = Attendance::STATUS_CLOCKED_IN;
+        $record->save();
+    }
+
     public function getCurrentStatus( $userId )
     {
         $todayRecord = Attendance::forUser( $userId )
@@ -102,7 +147,10 @@ class AttendanceService
             return [
                 'status' => 'success',
                 'data' => [
-                    'is_clocked_in' => $todayRecord->status === Attendance::STATUS_CLOCKED_IN,
+                    'is_clocked_in' => in_array( $todayRecord->status, [
+                        Attendance::STATUS_CLOCKED_IN, Attendance::STATUS_ON_BREAK,
+                    ] ),
+                    'is_on_break' => $todayRecord->status === Attendance::STATUS_ON_BREAK,
                     'record' => $todayRecord,
                 ],
             ];
@@ -112,16 +160,12 @@ class AttendanceService
             'status' => 'success',
             'data' => [
                 'is_clocked_in' => false,
+                'is_on_break' => false,
                 'record' => null,
             ],
         ];
     }
 
-    /**
-     * Get the current clock-in status for all staff
-     *
-     * @return array
-     */
     public function getStaffStatus()
     {
         $staff = User::where( 'active', true )->get();
@@ -129,7 +173,7 @@ class AttendanceService
 
         foreach ( $staff as $user ) {
             $activeRecord = Attendance::forUser( $user->id )
-                ->clockedIn()
+                ->clockedInOrOnBreak()
                 ->first();
 
             $statuses[] = [
@@ -138,6 +182,7 @@ class AttendanceService
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'is_clocked_in' => $activeRecord instanceof Attendance,
+                'is_on_break' => $activeRecord && $activeRecord->status === Attendance::STATUS_ON_BREAK,
                 'record' => $activeRecord,
             ];
         }
@@ -148,17 +193,17 @@ class AttendanceService
         ];
     }
 
-    /**
-     * Get attendance history with optional filters
-     *
-     * @param array $filters
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
-     */
     public function getHistory( $filters = [] )
     {
         $query = Attendance::with( [ 'user', 'author' ] );
 
-        if ( ! empty( $filters[ 'user_id' ] ) ) {
+        // Non-admin users only see their own history
+        $user = Auth::user();
+        $isAdmin = $user && $user->hasRoles( [ 'admin' ] );
+
+        if ( ! $isAdmin ) {
+            $query->where( 'user_id', $user ? $user->id : 0 );
+        } elseif ( ! empty( $filters[ 'user_id' ] ) ) {
             $query->where( 'user_id', $filters[ 'user_id' ] );
         }
 

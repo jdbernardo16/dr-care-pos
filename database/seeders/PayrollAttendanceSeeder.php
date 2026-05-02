@@ -82,11 +82,16 @@ class PayrollAttendanceSeeder extends Seeder
                 continue;
             }
 
+            $breakHours = 1.0; // 1 hour lunch break
+            $netHours = $totalHours - $breakHours; // 9 hours net
+
             $attendance = new Attendance;
             $attendance->user_id = $user->id;
             $attendance->clock_in_at = $clockIn;
             $attendance->clock_out_at = $clockOut;
             $attendance->total_hours = $totalHours;
+            $attendance->break_hours = $breakHours;
+            $attendance->net_hours = $netHours;
             $attendance->status = Attendance::STATUS_CLOCKED_OUT;
             $attendance->author_id = $authorId;
             $attendance->save();

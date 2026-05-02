@@ -14,7 +14,7 @@
                     >{{ statusLabel }}</span>
                 </div>
                 <div class="ns-box-body p-4">
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
                             <p class="text-sm text-secondary mb-1">{{ __( 'Employee' ) }}</p>
                             <p class="font-semibold text-primary">{{ run.user?.username || '—' }}</p>
@@ -29,15 +29,35 @@
                         </div>
                         <div>
                             <p class="text-sm text-secondary mb-1">{{ __( 'Hourly Rate' ) }}</p>
-                            <p class="font-semibold text-primary">{{ run.hourly_rate }}</p>
+                            <p class="font-semibold text-primary">{{ currency( run.hourly_rate ) }}/hr</p>
                         </div>
                         <div>
                             <p class="text-sm text-secondary mb-1">{{ __( 'Total Hours' ) }}</p>
                             <p class="font-semibold text-primary">{{ run.total_hours }}</p>
                         </div>
                         <div>
+                            <p class="text-sm text-secondary mb-1">{{ __( 'Regular Pay' ) }}</p>
+                            <p class="font-semibold text-primary">{{ currency( sum( 'regular_pay' ) ) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary mb-1">{{ __( 'Overtime Hours' ) }}</p>
+                            <p class="font-semibold text-primary">{{ sum( 'overtime_hours' ) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary mb-1">{{ __( 'Overtime Pay' ) }}</p>
+                            <p class="font-semibold text-primary">{{ currency( sum( 'overtime_pay' ) ) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary mb-1">{{ __( 'Holiday Premium' ) }}</p>
+                            <p class="font-semibold text-primary">{{ currency( sum( 'holiday_pay' ) ) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary mb-1">{{ __( 'Night Differential' ) }}</p>
+                            <p class="font-semibold text-primary">{{ currency( sum( 'night_diff_pay' ) ) }}</p>
+                        </div>
+                        <div>
                             <p class="text-sm text-secondary mb-1">{{ __( 'Gross Pay' ) }}</p>
-                            <p class="font-bold text-lg text-primary">{{ run.gross_pay }}</p>
+                            <p class="font-bold text-lg text-green-600">{{ currency( run.gross_pay ) }}</p>
                         </div>
                     </div>
 
@@ -62,9 +82,15 @@
                                     <th>{{ __( 'Date' ) }}</th>
                                     <th>{{ __( 'Clock In' ) }}</th>
                                     <th>{{ __( 'Clock Out' ) }}</th>
-                                    <th class="text-right">{{ __( 'Hours' ) }}</th>
-                                    <th class="text-right">{{ __( 'Rate' ) }}</th>
-                                    <th class="text-right">{{ __( 'Pay' ) }}</th>
+                                    <th class="text-right">{{ __( 'Break' ) }}</th>
+                                    <th class="text-right">{{ __( 'Net Hrs' ) }}</th>
+                                    <th class="text-right">{{ __( 'Reg Hrs' ) }}</th>
+                                    <th class="text-right">{{ __( 'Reg Pay' ) }}</th>
+                                    <th class="text-right">{{ __( 'OT Hrs' ) }}</th>
+                                    <th class="text-right">{{ __( 'OT Pay' ) }}</th>
+                                    <th class="text-right">{{ __( 'Holiday' ) }}</th>
+                                    <th class="text-right">{{ __( 'Night Diff' ) }}</th>
+                                    <th class="text-right">{{ __( 'Total' ) }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -72,17 +98,29 @@
                                     <td>{{ formatDate( item.clock_in ) }}</td>
                                     <td class="text-sm">{{ formatDateTime( item.clock_in ) }}</td>
                                     <td class="text-sm">{{ formatDateTime( item.clock_out ) }}</td>
+                                    <td class="text-right">{{ item.break_deduction || '0.00' }}</td>
                                     <td class="text-right">{{ item.hours_worked }}</td>
-                                    <td class="text-right">{{ item.hourly_rate }}</td>
-                                    <td class="text-right font-semibold">{{ item.pay_amount }}</td>
+                                    <td class="text-right">{{ item.regular_hours || '0.00' }}</td>
+                                    <td class="text-right">{{ currency( item.regular_pay ) }}</td>
+                                    <td class="text-right">{{ item.overtime_hours || '0.00' }}</td>
+                                    <td class="text-right">{{ currency( item.overtime_pay ) }}</td>
+                                    <td class="text-right">{{ currency( item.holiday_pay ) }}</td>
+                                    <td class="text-right">{{ currency( item.night_diff_pay ) }}</td>
+                                    <td class="text-right font-semibold">{{ currency( item.pay_amount ) }}</td>
                                 </tr>
                             </tbody>
                             <tfoot>
                                 <tr class="font-bold text-primary">
                                     <td colspan="3" class="text-right">{{ __( 'Total' ) }}</td>
+                                    <td class="text-right">{{ sum( 'break_deduction' ) }}</td>
                                     <td class="text-right">{{ run.total_hours }}</td>
                                     <td></td>
-                                    <td class="text-right">{{ run.gross_pay }}</td>
+                                    <td class="text-right">{{ currency( sum( 'regular_pay' ) ) }}</td>
+                                    <td></td>
+                                    <td class="text-right">{{ currency( sum( 'overtime_pay' ) ) }}</td>
+                                    <td class="text-right">{{ currency( sum( 'holiday_pay' ) ) }}</td>
+                                    <td class="text-right">{{ currency( sum( 'night_diff_pay' ) ) }}</td>
+                                    <td class="text-right">{{ currency( run.gross_pay ) }}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -108,6 +146,7 @@
 
 <script>
 import { nsHttpClient, nsSnackBar } from '~/bootstrap';
+import { nsCurrency } from '~/filters/currency';
 import { __ } from '~/libraries/lang';
 
 export default {
@@ -135,6 +174,11 @@ export default {
     },
     methods: {
         __,
+        currency( value ) { return nsCurrency( value ); },
+        sum( field ) {
+            if ( ! this.run || ! this.run.items ) return '0.00';
+            return this.run.items.reduce( ( acc, item ) => acc + ( parseFloat( item[ field ] ) || 0 ), 0 ).toFixed( 2 );
+        },
         formatDate( value ) {
             if ( ! value ) return '—';
             return window.moment( value ).format( 'YYYY-MM-DD' );

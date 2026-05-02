@@ -20,6 +20,9 @@ Route::post( 'payroll/runs', [ PayrollController::class, 'createDraft' ] )
 Route::post( 'payroll/runs/{id}/post', [ PayrollController::class, 'postRun' ] )
     ->middleware( NsRestrictMiddleware::arguments( 'payroll.post' ) );
 
+Route::post( 'payroll/runs/{id}/recalculate', [ PayrollController::class, 'recalculateRun' ] )
+    ->middleware( NsRestrictMiddleware::arguments( 'payroll.update' ) );
+
 Route::post( 'payroll/runs/{id}/void', [ PayrollController::class, 'voidRun' ] )
     ->middleware( NsRestrictMiddleware::arguments( 'payroll.void' ) );
 

@@ -77,6 +77,11 @@ class PayrollController extends DashboardController
         );
     }
 
+    public function recalculateRun( $id )
+    {
+        return $this->payrollService->recalculateRun( $id );
+    }
+
     public function getSummary( Request $request )
     {
         return $this->payrollService->getPayrollSummary(

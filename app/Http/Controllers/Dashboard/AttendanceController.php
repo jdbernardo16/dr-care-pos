@@ -37,6 +37,22 @@ class AttendanceController extends DashboardController
         );
     }
 
+    public function breakIn( Request $request )
+    {
+        return $this->attendanceService->breakIn(
+            Auth::id(),
+            $request->input( 'note' )
+        );
+    }
+
+    public function breakOut( Request $request )
+    {
+        return $this->attendanceService->breakOut(
+            Auth::id(),
+            $request->input( 'note' )
+        );
+    }
+
     public function getCurrentStatus()
     {
         return $this->attendanceService->getCurrentStatus( Auth::id() );

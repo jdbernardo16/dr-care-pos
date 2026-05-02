@@ -107,6 +107,15 @@ const nsPayrollCreate = defineAsyncComponent(
 const nsPayrollDetail = defineAsyncComponent(
     () => import("./pages/dashboard/payroll/payroll-detail.vue"),
 );
+const nsOvertimeFile = defineAsyncComponent(
+    () => import("./pages/dashboard/overtime/overtime-file.vue"),
+);
+const nsOvertimeList = defineAsyncComponent(
+    () => import("./pages/dashboard/overtime/overtime-list.vue"),
+);
+const nsHolidayList = defineAsyncComponent(
+    () => import("./pages/dashboard/holidays/holiday-list.vue"),
+);
 
 declare const window;
 declare let nsExtraComponents;
@@ -158,6 +167,9 @@ const allComponents = Object.assign(
         nsPayrollList,
         nsPayrollCreate,
         nsPayrollDetail,
+        nsOvertimeFile,
+        nsOvertimeList,
+        nsHolidayList,
         ...baseComponents,
     },
     nsExtraComponents,

@@ -477,6 +477,24 @@ class MenuService
                         permissions: [ 'payroll.create' ],
                         href: ns()->url( '/dashboard/payroll/create' )
                     ),
+                    AsideMenu::subMenu(
+                        label: __( 'Overtime Requests' ),
+                        identifier: 'overtime-list',
+                        permissions: [ 'overtime.read' ],
+                        href: ns()->url( '/dashboard/overtime' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'File Overtime' ),
+                        identifier: 'overtime-file',
+                        permissions: [ 'overtime.create' ],
+                        href: ns()->url( '/dashboard/overtime/file' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Holidays' ),
+                        identifier: 'holiday-list',
+                        permissions: [ 'holiday.read' ],
+                        href: ns()->url( '/dashboard/holidays' )
+                    ),
                 ),
             ),
             AsideMenu::menu(

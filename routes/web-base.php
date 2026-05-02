@@ -54,6 +54,8 @@ Route::middleware( [
             include dirname( __FILE__ ) . '/web/users.php';
             include dirname( __FILE__ ) . '/web/attendance.php';
             include dirname( __FILE__ ) . '/web/payroll.php';
+            include dirname( __FILE__ ) . '/web/overtime.php';
+            include dirname( __FILE__ ) . '/web/holidays.php';
 
             Route::get( '/crud/download/{hash}', [ CrudController::class, 'downloadSavedFile' ] )->name( 'ns.dashboard.crud-download' );
         } );

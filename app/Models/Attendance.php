@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int            $user_id
  * @property \Carbon\Carbon $clock_in_at
  * @property \Carbon\Carbon $clock_out_at
+ * @property \Carbon\Carbon $break_start
+ * @property \Carbon\Carbon $break_end
+ * @property float          $break_hours
+ * @property float          $net_hours
  * @property string         $clock_in_ip
  * @property string         $clock_out_ip
  * @property string         $clock_in_note
@@ -39,6 +43,10 @@ class Attendance extends NsModel
         'user_id',
         'clock_in_at',
         'clock_out_at',
+        'break_start',
+        'break_end',
+        'break_hours',
+        'net_hours',
         'clock_in_ip',
         'clock_out_ip',
         'clock_in_note',
@@ -51,7 +59,11 @@ class Attendance extends NsModel
     protected $casts = [
         'clock_in_at' => 'datetime',
         'clock_out_at' => 'datetime',
+        'break_start' => 'datetime',
+        'break_end' => 'datetime',
         'total_hours' => 'decimal:2',
+        'break_hours' => 'decimal:2',
+        'net_hours' => 'decimal:2',
     ];
 
     public function user()
@@ -72,6 +84,16 @@ class Attendance extends NsModel
     public function scopeClockedIn( $query )
     {
         return $query->where( 'status', self::STATUS_CLOCKED_IN );
+    }
+
+    public function scopeOnBreak( $query )
+    {
+        return $query->where( 'status', self::STATUS_ON_BREAK );
+    }
+
+    public function scopeClockedInOrOnBreak( $query )
+    {
+        return $query->whereIn( 'status', [ self::STATUS_CLOCKED_IN, self::STATUS_ON_BREAK ] );
     }
 
     public function scopeForUser( $query, $userId )

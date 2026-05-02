@@ -9,6 +9,7 @@ use App\Services\CrudEntry;
 use App\Services\CrudService;
 use App\Services\Helper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use TorMorten\Eventy\Facades\Events as Hook;
 
 class AttendanceCrud extends CrudService
@@ -49,6 +50,17 @@ class AttendanceCrud extends CrudService
     public function __construct()
     {
         parent::__construct();
+    }
+
+    public function hook( $query ): void
+    {
+        parent::hook( $query );
+
+        // Non-admin users only see their own attendance records
+        $user = Auth::user();
+        if ( $user && ! $user->hasRoles( [ 'admin' ] ) ) {
+            $query->where( 'nexopos_attendance.user_id', $user->id );
+        }
     }
 
     public function getLabels()
@@ -105,14 +117,42 @@ class AttendanceCrud extends CrudService
                             'description' => __( 'Date and time the employee clocked out (optional if still active).' ),
                         ],
                         [
+                            'type' => 'datetime',
+                            'name' => 'break_start',
+                            'label' => __( 'Break Start' ),
+                            'value' => $entry->break_start ?? '',
+                            'description' => __( 'Date and time the employee started their break.' ),
+                        ],
+                        [
+                            'type' => 'datetime',
+                            'name' => 'break_end',
+                            'label' => __( 'Break End' ),
+                            'value' => $entry->break_end ?? '',
+                            'description' => __( 'Date and time the employee ended their break.' ),
+                        ],
+                        [
+                            'type' => 'number',
+                            'name' => 'break_hours',
+                            'label' => __( 'Break Hours' ),
+                            'value' => $entry->break_hours ?? '',
+                            'description' => __( 'Total break hours for this shift.' ),
+                            'attributes' => [ 'step' => '0.01' ],
+                        ],
+                        [
                             'type' => 'number',
                             'name' => 'total_hours',
                             'label' => __( 'Total Hours' ),
                             'value' => $entry->total_hours ?? '',
-                            'description' => __( 'Calculated total hours (auto-calculated on clock-out).' ),
-                            'attributes' => [
-                                'step' => '0.01',
-                            ],
+                            'description' => __( 'Total hours from clock-in to clock-out.' ),
+                            'attributes' => [ 'step' => '0.01' ],
+                        ],
+                        [
+                            'type' => 'number',
+                            'name' => 'net_hours',
+                            'label' => __( 'Net Hours' ),
+                            'value' => $entry->net_hours ?? '',
+                            'description' => __( 'Total hours minus break hours (used for payroll).' ),
+                            'attributes' => [ 'step' => '0.01' ],
                         ],
                         [
                             'type' => 'select',
@@ -166,8 +206,18 @@ class AttendanceCrud extends CrudService
                 '$direction' => '',
                 '$sort' => false,
             ],
+            'break_hours' => [
+                'label' => __( 'Break' ),
+                '$direction' => '',
+                '$sort' => false,
+            ],
+            'net_hours' => [
+                'label' => __( 'Net Hours' ),
+                '$direction' => '',
+                '$sort' => false,
+            ],
             'total_hours' => [
-                'label' => __( 'Hours' ),
+                'label' => __( 'Total' ),
                 '$direction' => '',
                 '$sort' => false,
             ],
