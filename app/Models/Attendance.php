@@ -64,6 +64,11 @@ class Attendance extends NsModel
         return $this->belongsTo( User::class, 'author_id' );
     }
 
+    public function payrollItem()
+    {
+        return $this->hasOne( PayrollRunItem::class, 'attendance_id' );
+    }
+
     public function scopeClockedIn( $query )
     {
         return $query->where( 'status', self::STATUS_CLOCKED_IN );

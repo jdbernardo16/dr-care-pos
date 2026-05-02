@@ -458,6 +458,27 @@ class MenuService
                     ),
                 ),
             ),
+            // Payroll
+            AsideMenu::menu(
+                label: __( 'Payroll' ),
+                icon: 'la-money-bill',
+                identifier: 'payroll',
+                permissions: [ 'payroll.read' ],
+                childrens: AsideMenu::childrens(
+                    AsideMenu::subMenu(
+                        label: __( 'Pay Runs' ),
+                        identifier: 'payroll-runs',
+                        permissions: [ 'payroll.read' ],
+                        href: ns()->url( '/dashboard/payroll' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Create Pay Run' ),
+                        identifier: 'payroll-create',
+                        permissions: [ 'payroll.create' ],
+                        href: ns()->url( '/dashboard/payroll/create' )
+                    ),
+                ),
+            ),
             AsideMenu::menu(
                 label: __( 'Reports' ),
                 icon: 'la-chart-pie',

@@ -174,7 +174,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B2pnnEYT.css",
+    "file": "assets/app-DZafUVs8.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -183,7 +183,7 @@
     ]
   },
   "resources/css/dark.css": {
-    "file": "assets/dark-ByJxlLS1.css",
+    "file": "assets/dark-DSOQLJct.css",
     "src": "resources/css/dark.css",
     "isEntry": true,
     "name": "dark",
@@ -201,7 +201,7 @@
     ]
   },
   "resources/css/grid.css": {
-    "file": "assets/grid-BEVQJYj6.css",
+    "file": "assets/grid-BN6EMXOu.css",
     "src": "resources/css/grid.css",
     "isEntry": true,
     "name": "grid",
@@ -210,7 +210,7 @@
     ]
   },
   "resources/css/light.css": {
-    "file": "assets/light-BVCvARCl.css",
+    "file": "assets/light-D3sN9gPZ.css",
     "src": "resources/css/light.css",
     "isEntry": true,
     "name": "light",
@@ -219,7 +219,7 @@
     ]
   },
   "resources/css/phosphor.css": {
-    "file": "assets/phosphor-OpFnx9Nv.css",
+    "file": "assets/phosphor-BptklB4q.css",
     "src": "resources/css/phosphor.css",
     "isEntry": true,
     "name": "phosphor",
@@ -321,7 +321,7 @@
     ]
   },
   "resources/ts/app-init.ts": {
-    "file": "assets/app-init-DhgUc_eR.js",
+    "file": "assets/app-init-CqUCgRAp.js",
     "name": "app-init",
     "src": "resources/ts/app-init.ts",
     "isEntry": true,
@@ -370,6 +370,10 @@
       "resources/ts/pages/dashboard/products/ns-print-label.vue",
       "resources/ts/pages/dashboard/transactions/ns-transactions-rules.vue",
       "resources/ts/components/ns-scale-settings-preview.vue",
+      "resources/ts/pages/dashboard/attendance/attendance-clock.vue",
+      "resources/ts/pages/dashboard/payroll/payroll-list.vue",
+      "resources/ts/pages/dashboard/payroll/payroll-create.vue",
+      "resources/ts/pages/dashboard/payroll/payroll-detail.vue",
       "resources/ts/pages/dashboard/profile/ns-token.vue"
     ]
   },
@@ -533,6 +537,21 @@
       "_runtime-dom.esm-bundler-mL0XFxpN.js"
     ]
   },
+  "resources/ts/pages/dashboard/attendance/attendance-clock.vue": {
+    "file": "assets/attendance-clock-DzkFcQL_.js",
+    "name": "attendance-clock",
+    "src": "resources/ts/pages/dashboard/attendance/attendance-clock.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/ts/bootstrap.ts",
+      "_lang-BINodpp-.js",
+      "_runtime-dom.esm-bundler-mL0XFxpN.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js",
+      "_runtime-core.esm-bundler-CF9jxWpW.js",
+      "_currency-D3_TCvZd.js",
+      "_chart--HL2-LwL.js"
+    ]
+  },
   "resources/ts/pages/dashboard/create-coupons.vue": {
     "file": "assets/create-coupons-DBEdEZXU.js",
     "name": "create-coupons",
@@ -639,6 +658,51 @@
       "_lang-BINodpp-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "_runtime-core.esm-bundler-CF9jxWpW.js"
+    ]
+  },
+  "resources/ts/pages/dashboard/payroll/payroll-create.vue": {
+    "file": "assets/payroll-create-BuJAPtkE.js",
+    "name": "payroll-create",
+    "src": "resources/ts/pages/dashboard/payroll/payroll-create.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/ts/bootstrap.ts",
+      "_lang-BINodpp-.js",
+      "_runtime-dom.esm-bundler-mL0XFxpN.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js",
+      "_runtime-core.esm-bundler-CF9jxWpW.js",
+      "_currency-D3_TCvZd.js",
+      "_chart--HL2-LwL.js"
+    ]
+  },
+  "resources/ts/pages/dashboard/payroll/payroll-detail.vue": {
+    "file": "assets/payroll-detail-Dao3qYbz.js",
+    "name": "payroll-detail",
+    "src": "resources/ts/pages/dashboard/payroll/payroll-detail.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/ts/bootstrap.ts",
+      "_lang-BINodpp-.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js",
+      "_runtime-core.esm-bundler-CF9jxWpW.js",
+      "_currency-D3_TCvZd.js",
+      "_chart--HL2-LwL.js",
+      "_runtime-dom.esm-bundler-mL0XFxpN.js"
+    ]
+  },
+  "resources/ts/pages/dashboard/payroll/payroll-list.vue": {
+    "file": "assets/payroll-list-D7MXcX9q.js",
+    "name": "payroll-list",
+    "src": "resources/ts/pages/dashboard/payroll/payroll-list.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/ts/bootstrap.ts",
+      "_lang-BINodpp-.js",
+      "_runtime-dom.esm-bundler-mL0XFxpN.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js",
+      "_runtime-core.esm-bundler-CF9jxWpW.js",
+      "_currency-D3_TCvZd.js",
+      "_chart--HL2-LwL.js"
     ]
   },
   "resources/ts/pages/dashboard/pos/header-buttons/ns-pos-customers-button.vue": {

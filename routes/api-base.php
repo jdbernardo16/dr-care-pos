@@ -41,6 +41,7 @@ Route::middleware( [
         include dirname( __FILE__ ) . '/api/permissions.php';
         include dirname( __FILE__ ) . '/api/system.php';
         include dirname( __FILE__ ) . '/api/attendance.php';
+        include dirname( __FILE__ ) . '/api/payroll.php';
     } );
 } );
 

@@ -14,7 +14,7 @@ $menus  =   app()->make( MenuService::class );
 $dateService  =   app()->make( DateService::class );
 
 if ( Auth::check() ) {
-    $theme  =   Auth::user()->attribute->theme ?: ns()->option->get( 'ns_default_theme', 'light' );
+    $theme  =   optional( Auth::user()->attribute )->theme ?: ns()->option->get( 'ns_default_theme', 'light' );
 } else {
     $theme  =   ns()->option->get( 'ns_default_theme', 'light' );
 }
