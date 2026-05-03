@@ -57,7 +57,10 @@ return new class extends Migration
             $table->index( 'date' );
         } );
 
-        // 4. Add breakdown columns to payroll_run_items
+        // 4. Register permission entries for attendance, payroll, overtime, and holidays
+        $this->registerPermissions();
+
+        // 5. Add breakdown columns to payroll_run_items
         Schema::table( 'nexopos_payroll_run_items', function ( Blueprint $table ) {
             $table->decimal( 'regular_hours', 10, 2 )->default( 0.00 )->after( 'pay_amount' );
             $table->decimal( 'regular_pay', 10, 2 )->default( 0.00 )->after( 'regular_hours' );
@@ -69,6 +72,21 @@ return new class extends Migration
             $table->decimal( 'night_diff_pay', 10, 2 )->default( 0.00 )->after( 'night_diff_hours' );
             $table->decimal( 'break_deduction', 10, 2 )->default( 0.00 )->after( 'night_diff_pay' );
         } );
+    }
+
+    protected function registerPermissions()
+    {
+        $includes = [
+            __DIR__ . '/../../permissions/attendance.php',
+            __DIR__ . '/../../permissions/payroll.php',
+            __DIR__ . '/../../permissions/overtime_holiday.php',
+        ];
+
+        foreach ( $includes as $file ) {
+            if ( file_exists( $file ) ) {
+                include_once $file;
+            }
+        }
     }
 
     public function down()

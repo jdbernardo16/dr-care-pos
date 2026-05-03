@@ -37,6 +37,10 @@ body {
     padding: 4px 0;
 }
 
+.ns-table tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
 hr {
     @apply border-t-0;
 }

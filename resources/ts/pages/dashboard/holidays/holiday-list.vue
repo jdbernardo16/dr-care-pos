@@ -83,7 +83,7 @@
                     </tr>
                     <tr v-for="h in holidays" :key="h.id">
                         <td class="font-semibold">{{ h.name }}</td>
-                        <td>{{ h.date }}</td>
+                        <td>{{ formatDate( h.date ) }}</td>
                         <td>
                             <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="h.type === 'regular_holiday' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'">
                                 {{ h.type === 'regular_holiday' ? __( 'Regular' ) : __( 'Special' ) }}
@@ -122,6 +122,15 @@ export default {
     },
     methods: {
         __,
+        formatDate( dateStr ) {
+            const date = new Date( dateStr );
+            return date.toLocaleDateString( 'en-US', {
+                timeZone: 'Asia/Manila',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+        },
         loadHolidays() {
             nsHttpClient.get( `/api/holidays?year=${this.year}` ).subscribe({
                 next: (result) => { this.holidays = result; },
