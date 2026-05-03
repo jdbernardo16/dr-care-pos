@@ -1,3 +1,6 @@
+# graphify knowledge graph (local only)
+graphify-out/
+
 .env
 vendor
 mns-backup
