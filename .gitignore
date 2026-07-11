@@ -1,6 +1,15 @@
 # graphify knowledge graph (local only)
 graphify-out/
 
+# opencode local config
+.opencode/
+
+# playwright-cli local state
+.playwright-cli/
+
+# codebase index store (local only)
+.codebase-index-store/
+
 .env
 vendor
 mns-backup

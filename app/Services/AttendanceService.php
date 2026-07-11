@@ -81,14 +81,14 @@ class AttendanceService
     public function breakIn( $userId, $note = null )
     {
         $record = Attendance::forUser( $userId )
-            ->clockedIn()
+            ->clockedInOrOnBreak()
             ->first();
 
         if ( ! $record instanceof Attendance ) {
             throw new NotAllowedException( __( 'You must be clocked in to take a break.' ) );
         }
 
-        if ( $record->break_start !== null && $record->break_end === null ) {
+        if ( $record->status === Attendance::STATUS_ON_BREAK ) {
             throw new NotAllowedException( __( 'You\'re already on break. End your break first.' ) );
         }
 
