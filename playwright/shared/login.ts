@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 
 export default async function login( page ) {
     const username = process.env.TEST_USERNAME || 'admin';
-    const password = process.env.TEST_PASSWORD || 'admin123';
+    const password = process.env.TEST_PASSWORD || 'password';
     const baseUrl  = process.env.APP_URL || 'http://localhost:8000';
 
     /**

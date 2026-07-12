@@ -34,6 +34,7 @@ export default defineConfig({
     projects: [
         /**
          * Authentication setup — runs first to save session state.
+         * Other projects depend on this to skip re-logging-in.
          */
         {
             name: 'setup',

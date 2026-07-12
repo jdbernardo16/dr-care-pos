@@ -365,17 +365,20 @@ export default {
                             this.barcode     =   '';
                             const product    =   {};
 
+                            const unitQuantity  =   result.unitQuantity || result.product.selectedUnitQuantity || result.product.unit_quantities?.[0];
+                            const unit          =   result.unit || unitQuantity?.unit;
+
                             product.name                    =   result.product.name;
                             product.id                      =   result.product.id;
                             product.product_type            =   result.product.product_type;
                             product.rate                    =   result.product.rate;
                             product.tax_group_id            =   result.product.tax_group_id;
                             product.tax_type                =   result.product.tax_type;
-                            product.unit_id                 =   result.unit.id;
-                            product.unit_price              =   result.unitQuantity.sale_price;
-                            product.price_gross             =   result.unitQuantity.sale_price_gross;
-                            product.price_net               =   result.unitQuantity.sale_price_net;
-                            product.unit_name               =   result.unit.name;
+                            product.unit_id                 =   unit.id;
+                            product.unit_price              =   unitQuantity.sale_price;
+                            product.price_gross             =   unitQuantity.sale_price_gross;
+                            product.price_net               =   unitQuantity.sale_price_net;
+                            product.unit_name               =   unit.name;
                             
                             // Check if this is a scale barcode with embedded data
                             if ( result.scale ) {
