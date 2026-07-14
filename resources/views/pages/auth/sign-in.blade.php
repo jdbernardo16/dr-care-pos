@@ -15,7 +15,7 @@ use App\Events\RenderLoginFooterEvent;
                 <div class="flex justify-center items-center py-6">
                     <a href="https://my.nexopos.com" target="_blank">
                         @if ( ! ns()->option->get( 'ns_store_square_logo', false ) )
-                        <img class="w-32" src="{{ asset( 'svg/nexopos-variant-1.svg' ) }}" alt="NexoPOS">
+                        <img class="w-32" src="{{ asset( 'images/doctorcare.jpg' ) }}" alt="NexoPOS">
                         @else
                         <img src="{{ ns()->option->get( 'ns_store_square_logo' ) }}" alt="NexoPOS">
                         @endif

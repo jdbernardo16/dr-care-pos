@@ -4,7 +4,7 @@
     <div id="page-container" class="h-full w-full flex">
         <div class="container flex-auto flex-col items-center justify-center flex m-4 sm:mx-auto">
             <div class="flex justify-center items-center py-6">
-                <img class="w-32" src="{{ asset( 'svg/nexopos-variant-1.svg' ) }}" alt="NexoPOS">
+                <img class="w-32" src="{{ asset( 'images/doctorcare.jpg' ) }}" alt="NexoPOS">
             </div>
             <div class="ns-box rounded shadow w-full md:w-2/5 lg:w-2/5 overflow-hidden">
                 <div id="section-header" class="ns-box-header p-4">
