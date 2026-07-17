@@ -39,9 +39,12 @@
             <div v-if="options.ns_pos_enable_pinned_products && pinnedProducts.length > 0" id="pinned-products">
                 <div class="overflow-x-hidden pinned-wrapper">
                     <div class="shadow-sm grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 divide-x-1 divide-y-1 divide-solid divide-pos-button-edge flex-nowrap flex items-center">
-                        <div @click="addToTheCart( product )" v-for="product of pinnedProducts" :key="product.id" 
-                            :class="options.ns_pos_show_preview_pinned_products ? 'h-36' : 'h-20 small-pinned-product'"
-                            class="cursor-pointer flex flex-col items-center relativ justify-center overflow-hidden relative flex-shrink-0">
+                        <div @click="!isOutOfStock(product) && addToTheCart( product )" v-for="product of pinnedProducts" :key="product.id" 
+                            :class="[options.ns_pos_show_preview_pinned_products ? 'h-36' : 'h-20 small-pinned-product', isOutOfStock(product) ? 'ns-out-of-stock' : 'cursor-pointer']"
+                            class="flex flex-col items-center relativ justify-center overflow-hidden relative flex-shrink-0">
+                            <div v-if="isOutOfStock(product)" class="absolute top-0 left-0 w-full h-5 flex items-center justify-center out-of-stock-badge z-20">
+                                <span class="text-2xs px-1.5 py-0.5 rounded-sm font-bold">{{ __( 'OOS' ) }}</span>
+                        </div>
                             <div v-if="options.ns_pos_show_preview_pinned_products" class="h-full w-full flex items-center justify-center overflow-hidden">
                                 <img v-if="product.galleries && product.galleries.filter( i => i.featured ).length > 0" :src="product.galleries.filter( i => i.featured )[0].url" class="object-cover h-full" :alt="product.name"/>
                                 <img v-else-if="hasNoFeatured( product )" :src="product.galleries[0].url" class="object-cover h-full" :alt="product.name"/>
@@ -97,8 +100,11 @@
                 </div>
 
                 <div  v-if="! hasCategories" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    <div @click="addToTheCart( product )" v-for="product of products" :key="product.id" 
-                        class="cell-item w-full h-36 cursor-pointer border flex flex-col items-center justify-center overflow-hidden relative">
+                    <div @click="!isOutOfStock(product) && addToTheCart( product )" v-for="product of products" :key="product.id" 
+                        :class="['cell-item w-full h-36 border flex flex-col items-center justify-center overflow-hidden relative', isOutOfStock(product) ? 'ns-out-of-stock' : 'cursor-pointer']">
+                        <div v-if="isOutOfStock(product)" class="absolute top-0 left-0 w-full h-6 flex items-center justify-center out-of-stock-badge z-20">
+                            <span class="text-xs px-2 py-0.5 rounded-sm font-bold">{{ __( 'Out of Stock' ) }}</span>
+                        </div>
                         <div class="h-full w-full flex items-center justify-center overflow-hidden">
                             <img v-if="product.galleries && product.galleries.filter( i => i.featured ).length > 0" :src="product.galleries.filter( i => i.featured )[0].url" class="object-cover h-full" :alt="product.name"/>
                             <img v-else-if="hasNoFeatured( product )" :src="product.galleries[0].url" class="object-cover h-full" :alt="product.name"/>
@@ -289,6 +295,13 @@ export default {
     methods: {
         __, 
         nsCurrency,
+
+        isOutOfStock( product ) {
+            if ( ! product.unit_quantities || product.unit_quantities.length === 0 ) {
+                return true;
+            }
+            return product.unit_quantities.every( q => parseFloat( q.quantity ) <= 0 );
+        },
 
         switchTo,
 

@@ -297,6 +297,19 @@
                 }
             }
         }
+
+        .ns-out-of-stock {
+            &.cell-item, &.small-pinned-product {
+                @apply opacity-40;
+                pointer-events: none;
+            }
+
+            .out-of-stock-badge {
+                span {
+                    @apply bg-red-600 text-white;
+                }
+            }
+        }
     }
 }
 

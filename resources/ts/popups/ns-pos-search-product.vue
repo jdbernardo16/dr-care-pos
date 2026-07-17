@@ -33,14 +33,19 @@
                     <li
                         v-for="product of products"
                         :key="product.id"
-                        @click="addToCart(product)"
-                        class="cursor-pointer p-2 flex justify-between border-b"
+                        @click="!isOutOfStock(product) && addToCart(product)"
+                        :class="['p-2 flex justify-between border-b', isOutOfStock(product) ? 'ns-out-of-stock opacity-40' : 'cursor-pointer']"
                     >
-                        <div class="">
-                            <h2 class="text-fontcolor">{{ product.name }}</h2>
-                            <small class="text-soft-secondary text-xs">
-                                {{ product.category.name }}
-                            </small>
+                        <div class="flex items-center gap-2">
+                            <div v-if="isOutOfStock(product)" class="out-of-stock-badge">
+                                <span class="text-xs px-1.5 py-0.5 rounded-sm font-bold bg-red-600 text-white">{{ __( 'OOS' ) }}</span>
+                            </div>
+                            <div>
+                                <h2 class="text-fontcolor">{{ product.name }}</h2>
+                                <small class="text-soft-secondary text-xs">
+                                    {{ product.category.name }}
+                                </small>
+                            </div>
                         </div>
                         <div></div>
                     </li>
@@ -107,6 +112,13 @@ export default {
     },
     methods: {
         __,
+
+        isOutOfStock( product ) {
+            if ( ! product.unit_quantities || product.unit_quantities.length === 0 ) {
+                return true;
+            }
+            return product.unit_quantities.every( q => parseFloat( q.quantity ) <= 0 );
+        },
 
         popupCloser,
         popupResolver,
