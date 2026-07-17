@@ -13,6 +13,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
@@ -276,7 +277,7 @@ class CoreService
          * Those will be cached to avoid unecessary db calls when testing
          * wether the user has the permission or not.
          */
-        if ( Helper::installed() ) {
+        if ( Helper::installed() && Schema::hasTable( 'nexopos_permissions' ) ) {
             Permission::get()->each( function ( $permission ) {
                 if ( ! Gate::has( $permission->namespace ) ) {
                     Gate::define( $permission->namespace, function ( User $user ) use ( $permission ) {
