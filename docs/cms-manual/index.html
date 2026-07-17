@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr Care POS — CMS Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cover-bg: #0a0a0a;
+    --cover-text: #FFFFFF;
+    --cover-accent: #FFD700;
+    --section-bg: #1a1a1a;
+    --section-accent: #FFD700;
+    --content-bg: #FFFFFF;
+    --content-text: #1a1a1a;
+    --content-title: #1a1a1a;
+    --step-header: #1a1a1a;
+    --note-bg: #FFF9E6;
+    --note-border: #FFD700;
+    --epilogue-text: #666666;
+    --prologue-text: #666666;
+    --muted: #888888;
+    --border-light: #e5e5e5;
+    --panel-left-bg: #fafafa;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--content-bg);
+    overflow: hidden;
+    color: var(--content-text);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .deck {
+    position: relative;
+    width: 100%; height: 100%;
+    overflow: hidden;
+  }
+
+  .slides-container {
+    position: relative;
+    width: 100%; height: 100%;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    pointer-events: none;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--content-bg);
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    z-index: 10;
+  }
+
+  .slide.prev {
+    opacity: 0;
+    transform: translateX(-40px);
+    z-index: 5;
+  }
+
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: var(--content-bg);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .top-bar-section {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cover-accent);
+    min-width: 160px;
+  }
+
+  .top-bar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .top-bar-counter {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 160px;
+    text-align: right;
+  }
+
+  .top-bar-counter span {
+    color: var(--cover-accent);
+    font-weight: 700;
+  }
+
+  .slide-cover {
+    background: var(--cover-bg);
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover-inner {
+    text-align: center;
+    z-index: 1;
+    padding: 40px;
+    max-width: 900px;
+  }
+
+  .cover-accent-bar {
+    width: 80px; height: 4px;
+    background: var(--cover-accent);
+    margin: 0 auto 40px;
+    border-radius: 2px;
+  }
+
+  .cover-title {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 900;
+    color: var(--cover-text);
+    line-height: 1.1;
+    margin: 0 0 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .cover-subtitle {
+    font-size: clamp(14px, 2vw, 20px);
+    font-weight: 700;
+    color: var(--cover-accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0 0 32px;
+  }
+
+  .cover-tagline {
+    font-size: clamp(13px, 1.3vw, 16px);
+    color: var(--muted);
+    font-weight: 400;
+    margin: 0 auto 48px;
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  .cover-logo {
+    width: clamp(100px, 12vw, 160px);
+    height: clamp(100px, 12vw, 160px);
+    margin: 0 auto 40px;
+    display: block;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--cover-accent);
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.4));
+  }
+
+  .cover-date {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 24px;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .slide-divider {
+    background: var(--section-bg);
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .divider-accent-bar {
+    width: 100%; height: 4px;
+    background: var(--section-accent);
+    flex-shrink: 0;
+  }
+
+  .divider-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 80px;
+    margin-top: 48px;
+    gap: 60px;
+    z-index: 1;
+  }
+
+  .divider-left { flex: 1; }
+
+  .divider-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .divider-number {
+    font-size: clamp(72px, 9vw, 120px);
+    font-weight: 900;
+    color: var(--section-accent);
+    line-height: 0.9;
+    margin: 0 0 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .divider-line {
+    width: 48px; height: 3px;
+    background: var(--section-accent);
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  .divider-title {
+    font-size: clamp(28px, 3.5vw, 48px);
+    font-weight: 800;
+    color: var(--cover-text);
+    line-height: 1.15;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .divider-subtitle {
+    font-size: clamp(13px, 1.3vw, 16px);
+    color: var(--muted);
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  .divider-right {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .divider-icon {
+    font-size: 100px;
+    opacity: 0.15;
+    color: var(--cover-text);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .slide-content {
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--content-bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .content-header {
+    padding: 16px 32px 12px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+    margin-top: 48px;
+  }
+
+  .content-title {
+    font-size: clamp(18px, 1.8vw, 24px);
+    font-weight: 800;
+    color: var(--content-title);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .content-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .panel-left {
+    width: 40%;
+    min-width: 320px;
+    max-width: 480px;
+    background: var(--panel-left-bg);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 32px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-light);
+  }
+
+  .panel-right {
+    flex: 1;
+    background: var(--content-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 28px 32px;
+    overflow-y: auto;
+    gap: 20px;
+  }
+
+  .panel-left::-webkit-scrollbar,
+  .panel-right::-webkit-scrollbar { width: 5px; }
+  .panel-left::-webkit-scrollbar-track,
+  .panel-right::-webkit-scrollbar-track { background: transparent; }
+  .panel-left::-webkit-scrollbar-thumb,
+  .panel-right::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+
+  .prologue {
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: var(--prologue-text);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  .epilogue {
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: var(--epilogue-text);
+    line-height: 1.7;
+    margin-top: 20px;
+    border-top: 1px solid var(--border-light);
+    padding-top: 16px;
+  }
+
+  .step { margin-bottom: 18px; }
+
+  .step-header {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--step-header);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-header::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cover-accent);
+    flex-shrink: 0;
+  }
+
+  .step-body {
+    font-size: clamp(12px, 1.05vw, 14px);
+    color: var(--content-text);
+    line-height: 1.7;
+    padding-left: 14px;
+  }
+
+  .note-box {
+    background: var(--note-bg);
+    border-left: 3px solid var(--note-border);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    margin-top: auto;
+    margin-bottom: 18px;
+  }
+
+  .note-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cover-accent);
+    margin-bottom: 6px;
+  }
+
+  .note-text {
+    font-size: 12px;
+    color: var(--content-text);
+    line-height: 1.6;
+  }
+
+  .screenshot-wrapper {
+    position: relative;
+    max-width: 100%;
+    max-height: 72vh;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+
+  .screenshot {
+    display: block;
+    max-width: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .screenshot-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cover-accent);
+    margin-bottom: 6px;
+  }
+
+  .slide-toc {
+    background: var(--content-bg);
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .toc-body {
+    flex: 1;
+    padding: 24px 48px 32px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: 48px;
+    z-index: 1;
+  }
+
+  .toc-heading {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cover-accent);
+    margin: 0 0 28px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--cover-accent);
+    display: inline-block;
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .toc-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--panel-left-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 14px 18px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .toc-item:hover {
+    border-color: var(--cover-accent);
+    transform: translateX(4px);
+  }
+
+  .toc-num {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--cover-accent);
+    min-width: 36px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .toc-text-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--content-text);
+    line-height: 1.3;
+  }
+
+  .toc-text-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .nav-arrows {
+    position: fixed;
+    bottom: 20px;
+    right: 72px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+  }
+
+  .nav-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-light);
+    background: var(--content-bg);
+    color: var(--content-text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    user-select: none;
+    font-weight: 700;
+  }
+
+  .nav-btn:hover {
+    border-color: var(--cover-accent);
+    color: var(--cover-accent);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: var(--cover-accent);
+    transition: width 0.3s ease;
+    z-index: 1000;
+  }
+
+  .thumb-sidebar {
+    position: fixed;
+    top: 48px; right: 0;
+    width: 56px;
+    height: calc(100% - 48px);
+    background: var(--panel-left-bg);
+    border-left: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    gap: 6px;
+    z-index: 90;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .thumb-item {
+    width: 40px; height: 30px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background: var(--content-bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .thumb-item:hover {
+    border-color: var(--cover-accent);
+    color: var(--content-text);
+  }
+
+  .thumb-item.active {
+    border-color: var(--cover-accent);
+    background: var(--note-bg);
+    color: var(--content-text);
+  }
+
+  .keyboard-hint {
+    position: fixed;
+    bottom: 20px; left: 24px;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.5;
+    z-index: 1000;
+    font-family: 'Inter', monospace;
+    pointer-events: none;
+  }
+
+  .keyboard-hint kbd {
+    background: var(--panel-left-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 10px;
+    margin: 0 2px;
+  }
+
+  @media (max-width: 1024px) {
+    .content-body { flex-direction: column; }
+    .panel-left {
+      width: 100%;
+      max-width: none;
+      min-width: auto;
+      padding: 20px 24px;
+      max-height: 40%;
+      border-right: none;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .panel-right {
+      padding: 16px 24px;
+    }
+    .screenshot-wrapper { max-height: 50vh; }
+    .divider-body { padding: 0 40px; }
+    .thumb-sidebar { display: none; }
+    .nav-arrows { right: 24px; }
+  }
+
+  @media (max-width: 640px) {
+    .toc-grid { grid-template-columns: 1fr; }
+    .divider-body { flex-direction: column; gap: 20px; padding: 20px; }
+    .divider-right { display: none; }
+    .top-bar { padding: 0 16px; }
+    .top-bar-title { display: none; }
+    .panel-left { padding: 16px 20px; }
+    .content-header { padding: 12px 20px 10px; }
+  }
+
+  @media print {
+    body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .slide {
+      page-break-before: always;
+      page-break-inside: avoid;
+      position: static !important;
+      opacity: 1 !important;
+      display: block !important;
+      transform: none !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 100vh;
+      overflow: visible !important;
+      border: none !important;
+    }
+    .slide:first-child { page-break-before: avoid; }
+    .top-bar { display: none !important; }
+    .thumb-sidebar { display: none !important; }
+    .nav-arrows, .nav-btn { display: none !important; }
+    .progress-bar { display: none !important; }
+    .keyboard-hint { display: none !important; }
+    .deck { width: 100% !important; height: auto !important; overflow: visible !important; }
+    .slides-container { width: 100% !important; height: auto !important; overflow: visible !important; }
+    .content-body { overflow: visible !important; }
+    .panel-left { overflow: visible !important; }
+    .panel-right { overflow: visible !important; }
+    .screenshot-wrapper { max-height: none !important; box-shadow: none !important; }
+    .screenshot { max-height: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+  <div class="slides-container" id="slidesContainer">
+
+    <!-- SLIDE 1: COVER -->
+    <div class="slide active" data-type="cover">
+      <div class="slide-cover">
+        <div class="cover-inner">
+          <div class="cover-accent-bar"></div>
+          <div class="cover-title">Dr Care POS<br>CMS Manual</div>
+          <div class="cover-subtitle">Administrator Guide</div>
+          <div class="cover-tagline">A comprehensive guide for administrators managing the Dr Care Point of Sale system built on NexoPOS</div>
+          <img class="cover-logo" src="doctorcare.jpg" alt="Dr Care Logo">
+          <div class="cover-date">July 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: TABLE OF CONTENTS -->
+    <div class="slide" data-type="toc">
+      <div class="slide-toc">
+        <div class="top-bar">
+          <span class="top-bar-section">Overview</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>02</span> / 35</span>
+        </div>
+        <div class="toc-body">
+          <div class="toc-heading">Table of Contents</div>
+          <div class="toc-grid">
+            <div class="toc-item" data-slide="2">
+              <div class="toc-num">I</div>
+              <div class="toc-text">
+                <div class="toc-text-title">Sales &amp; Operations</div>
+                <div class="toc-text-sub">POS, orders, and payment management</div>
+              </div>
+            </div>
+            <div class="toc-item" data-slide="7">
+              <div class="toc-num">II</div>
+              <div class="toc-text">
+                <div class="toc-text-title">Inventory &amp; Products</div>
+                <div class="toc-text-sub">Catalog, stock, providers, procurements</div>
+              </div>
+            </div>
+            <div class="toc-item" data-slide="16">
+              <div class="toc-num">III</div>
+              <div class="toc-text">
+                <div class="toc-text-title">Customers &amp; CRM</div>
+                <div class="toc-text-sub">Directory, groups, rewards, coupons</div>
+              </div>
+            </div>
+            <div class="toc-item" data-slide="20">
+              <div class="toc-num">IV</div>
+              <div class="toc-text">
+                <div class="toc-text-title">Accounting &amp; Finance</div>
+                <div class="toc-text-sub">Expenses, accounts, taxes, reports</div>
+              </div>
+            </div>
+            <div class="toc-item" data-slide="26" style="grid-column: span 2;">
+              <div class="toc-num">V</div>
+              <div class="toc-text">
+                <div class="toc-text-title">Staff &amp; System</div>
+                <div class="toc-text-sub">Users, roles, attendance, payroll, media, modules, settings</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: DIVIDER I -->
+    <div class="slide" data-type="divider">
+      <div class="slide-divider">
+        <div class="top-bar">
+          <span class="top-bar-section">Section I</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>03</span> / 35</span>
+        </div>
+        <div class="divider-accent-bar"></div>
+        <div class="divider-body">
+          <div class="divider-left">
+            <div class="divider-section-label">Section</div>
+            <div class="divider-number">I</div>
+            <div class="divider-line"></div>
+            <div class="divider-title">Sales &amp; Operations</div>
+            <div class="divider-subtitle">Manage daily sales, process orders, and configure payment types from a unified operations hub</div>
+          </div>
+          <div class="divider-right">
+            <div class="divider-icon">&#x1F4B5;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: I.A. Logging In -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Sales &amp; Operations</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>04</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">I.A. Logging In</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Access the Dr Care POS admin panel through the sign-in page. This is the secure entry point for all administrative functions.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to the admin sign-in URL at <code>/sign-in</code> on your Dr Care domain.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Enter your username in the Username field.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Enter your password in the Password field.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Click the "Sign In" button to authenticate and access the dashboard.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Keep your credentials secure. The system does not expose password reset from the login screen by default. Contact a system administrator if you are locked out.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/login.png" alt="Login screen" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: I.B. Dashboard Overview -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Sales &amp; Operations</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>05</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">I.B. Dashboard Overview</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Dashboard is your command center. It provides at-a-glance metrics, recent orders, best customers, and quick access to all modules.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Review the summary cards: Incomplete Orders, Expenses, Income, and Weekly Sales.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Check the "Recents Orders" panel for the latest transactions with timestamps and totals.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Use the left sidebar to navigate to any module. Expandable menus reveal sub-pages.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Click the notification bell to view system alerts and low-stock warnings.</div>
+            </div>
+            <div class="epilogue">The dashboard auto-refreshes metrics when you return from other modules. Use it as your daily starting point.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/dashboard.png" alt="Dashboard overview" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: I.C. Point of Sale -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Sales &amp; Operations</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>06</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">I.C. Point of Sale</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The POS screen is where front-desk staff process sales. It combines product browsing, cart management, and checkout in one interface.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to the POS module from the sidebar or use <code>/dashboard/pos</code>.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Browse products by category or search by name. Click a product to add it to the cart.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Adjust quantities, apply discounts, or remove items directly from the cart panel.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Select a customer, choose the payment type, and complete the order.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">The POS supports multiple payment methods and can print receipts automatically if a thermal printer is configured in Settings.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/pos.png" alt="POS screen" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: I.D. Managing Orders -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Sales &amp; Operations</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>07</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">I.D. Managing Orders</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Orders List gives you a complete history of every transaction. Filter, search, and review order details from one centralized table.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Open the Orders List from the sidebar to see all completed, hold, and refunded orders.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Use the search bar and date filters to narrow down specific transactions.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Click any order row to open the detail view, showing items, customer, and payment breakdown.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Use action buttons to refund, print receipts, or re-process an order.</div>
+            </div>
+            <div class="epilogue">Orders are immutable once completed. Refunds generate a separate record for audit purposes.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/orders-list.png" alt="Orders list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: DIVIDER II -->
+    <div class="slide" data-type="divider">
+      <div class="slide-divider">
+        <div class="top-bar">
+          <span class="top-bar-section">Section II</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>08</span> / 35</span>
+        </div>
+        <div class="divider-accent-bar"></div>
+        <div class="divider-body">
+          <div class="divider-left">
+            <div class="divider-section-label">Section</div>
+            <div class="divider-number">II</div>
+            <div class="divider-line"></div>
+            <div class="divider-title">Inventory &amp; Products</div>
+            <div class="divider-subtitle">Manage your product catalog, stock levels, categories, units, providers, and procurement workflows</div>
+          </div>
+          <div class="divider-right">
+            <div class="divider-icon">&#x1F4E6;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: II.A. Product Catalog -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>09</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.A. Product Catalog</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Products List is the backbone of your inventory. Every item available for sale is created, edited, and monitored from this screen.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Inventory &gt; Products to view the full catalog with stock counts and pricing.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Use filters to show products by category, stock status, or visibility.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Click the "Create Product" button to add a new item to the catalog.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Hover over a product row to reveal quick-action icons: edit, delete, or adjust stock.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Products with low stock appear highlighted. Set reorder thresholds in the product detail form to receive automatic alerts.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/products-list.png" alt="Products list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: II.B. Creating a Product -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>10</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.B. Creating a Product</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The product creation form captures all details needed to sell an item: identity, pricing, stock, category, and unit of measure.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Enter the product name, SKU, and barcode. These identifiers must be unique across the catalog.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Assign a category and unit group. Select the default unit (e.g., piece, box, kg).</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Set the sale price, wholesale price, and purchase price for margin tracking.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Upload a product image, set initial stock quantity, and enable or disable the product.</div>
+            </div>
+            <div class="epilogue">After saving, the product appears immediately in the POS and can be sold. You can edit it anytime from the product list.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/products-create.png" alt="Create product form" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: II.C. Product Categories -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>11</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.C. Product Categories</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Categories group products for easier browsing in the POS and cleaner reporting. They also drive menu organization on the sales floor.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Inventory &gt; Categories to see the current category tree.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Category" to add a new group. Provide a name, description, and optional parent category.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Upload a category image if you want visual tiles in the POS category picker.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Use drag handles to reorder categories. Child categories inherit the parent's display settings.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Deleting a category does not delete its products. Items will simply show as uncategorized until reassigned.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/products-categories.png" alt="Product categories" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: II.D. Stock Adjustment -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>12</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.D. Stock Adjustment</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Stock Adjustment allows you to correct inventory counts without a sale or procurement. Use it for damage, spoilage, or cycle-count corrections.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Go to Inventory &gt; Stock Adjustment. Select the product that needs a quantity correction.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Enter the new actual quantity. The system calculates the difference and records the adjustment reason.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Choose an adjustment type: Damaged, Lost, Found, or General Correction.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Save the adjustment. The product's stock updates immediately and the change is logged in Stock Flow Records.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Always add a descriptive note. Auditors and managers rely on these notes to understand why inventory changed outside normal sales.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/stock-adjustment.png" alt="Stock adjustment" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: II.E. Stock Flow Records -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>13</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.E. Stock Flow Records</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Stock Flow Records provide an immutable audit trail of every unit that entered or left your inventory. This is critical for reconciliation and compliance.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Inventory &gt; Stock Flow Records to view the chronological history.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Filter by product, operation type (sale, procurement, adjustment), or date range.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Each row shows the product, quantity delta, operation, user who performed it, and timestamp.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Export the filtered view to CSV for external accounting or warehouse reconciliation.</div>
+            </div>
+            <div class="epilogue">Records are read-only. If a mistake is found, perform a reverse adjustment rather than editing history.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/stock-flow-records.png" alt="Stock flow records" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: II.F. Managing Providers -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>14</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.F. Managing Providers</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Providers are your suppliers and vendors. Maintaining accurate provider records ensures smooth procurement and accurate cost tracking.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Open the Providers List from the sidebar to see all registered suppliers.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create A Provider" to add a new supplier. Record name, contact person, phone, email, and address.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Assign a provider to products in the product form to link procurement history.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Use the provider detail page to view all procurements and outstanding balances.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Inactive providers can be disabled rather than deleted. This preserves historical procurement records for reporting.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/providers-list.png" alt="Providers list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 15: II.G. Procurements -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>15</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.G. Procurements</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Procurements module tracks every purchase from your providers. It updates inventory and records the cost basis for margin calculations.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Procurements &gt; Procurements List to review past and pending purchases.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "New Procurement" to create a purchase order. Select the provider first.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Add products by scanning barcode or selecting from the catalog. Enter quantities and unit costs.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Save as Draft for approval, or mark as Delivered to immediately add stock to inventory.</div>
+            </div>
+            <div class="epilogue">Delivered procurements are irreversible. If you make an error, create a stock adjustment to correct the count.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/procurements-list.png" alt="Procurements list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 16: II.H. New Procurement -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Inventory &amp; Products</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>16</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">II.H. New Procurement</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The procurement creation form is designed for speed. Add multiple products, apply provider discounts, and record shipping costs in one workflow.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Choose the provider from the dropdown. The system loads their product history for quick re-ordering.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Add Product" and search by name or SKU. Specify quantity and per-unit cost.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Review the summary panel: subtotal, tax, discount, shipping, and grand total.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Set the procurement status and delivery date, then save. Stock updates on delivery confirmation.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">If a product is new to the system, create it in the catalog first before adding it to a procurement.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/procurements-create.png" alt="New procurement form" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 17: DIVIDER III -->
+    <div class="slide" data-type="divider">
+      <div class="slide-divider">
+        <div class="top-bar">
+          <span class="top-bar-section">Section III</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>17</span> / 35</span>
+        </div>
+        <div class="divider-accent-bar"></div>
+        <div class="divider-body">
+          <div class="divider-left">
+            <div class="divider-section-label">Section</div>
+            <div class="divider-number">III</div>
+            <div class="divider-line"></div>
+            <div class="divider-title">Customers &amp; CRM</div>
+            <div class="divider-subtitle">Build customer relationships through directory management, group segmentation, and loyalty programs</div>
+          </div>
+          <div class="divider-right">
+            <div class="divider-icon">&#x1F465;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 18: III.A. Customer Directory -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Customers &amp; CRM</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>18</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">III.A. Customer Directory</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Customers module stores every person or organization that has purchased from your business. Use it for service history, outreach, and loyalty tracking.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Open Customers &gt; List to see the full directory with contact info and total purchase history.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Search by name, phone, or email to find a specific customer quickly.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Click a customer row to open their profile: orders, rewards balance, and group membership.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Use action buttons to edit details, assign a group, or view their complete order timeline.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Customers created during POS checkout are automatically added to the directory with basic contact info.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/customers-list.png" alt="Customers list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 19: III.B. Adding a Customer -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Customers &amp; CRM</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>19</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">III.B. Adding a Customer</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Manually add customers for pre-registration, corporate accounts, or patients who prefer walk-in registration before their first purchase.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Click "Create Customer" from the customer list or sidebar.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Fill in the name, email, and phone. These fields are required for order association and receipts.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Select a customer group if applicable (e.g., VIP, Corporate, Senior). This affects pricing rules.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Add an address and any internal notes, then save. The customer is now selectable at checkout.</div>
+            </div>
+            <div class="epilogue">You can import customers in bulk via CSV from the customer list action menu.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/customers-create.png" alt="Create customer form" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 20: III.C. Customer Groups -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Customers &amp; CRM</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>20</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">III.C. Customer Groups</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Groups let you apply tiered pricing, discounts, and access rules to segments of your customer base. Common groups include VIP, Staff, Corporate, and Senior.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Customers &gt; Customers Groups to see existing segments.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Group" to define a new segment. Name it descriptively and set a default discount percentage.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Assign customers to the group from their individual profile pages or via bulk selection in the list.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">When a grouped customer is selected at POS, their discount auto-applies to eligible products.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Group discounts stack with coupon codes. Be careful when combining multiple discount layers to avoid negative margins.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/customers-groups.png" alt="Customer groups" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 21: DIVIDER IV -->
+    <div class="slide" data-type="divider">
+      <div class="slide-divider">
+        <div class="top-bar">
+          <span class="top-bar-section">Section IV</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>21</span> / 35</span>
+        </div>
+        <div class="divider-accent-bar"></div>
+        <div class="divider-body">
+          <div class="divider-left">
+            <div class="divider-section-label">Section</div>
+            <div class="divider-number">IV</div>
+            <div class="divider-line"></div>
+            <div class="divider-title">Accounting &amp; Finance</div>
+            <div class="divider-subtitle">Track expenses, manage accounts, configure taxes, and generate financial reports</div>
+          </div>
+          <div class="divider-right">
+            <div class="divider-icon">&#x1F4C8;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 22: IV.A. Expenses & Transactions -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Accounting &amp; Finance</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>22</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">IV.A. Expenses &amp; Transactions</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Record every business expense in the Transactions module. This feeds directly into profit-and-loss reporting and ensures accurate bookkeeping.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Accounting &gt; Expenses to view the transaction log.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Expense" to record a new outgoing payment. Choose the category and linked account.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Enter the amount, description, and date. Attach a receipt image for digital record-keeping.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Use the Transaction History sub-page to review past entries by date range or category.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Expenses are not the same as procurements. Procurements add inventory; expenses are operational outflows like rent or utilities.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/expenses-list.png" alt="Expenses list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 23: IV.B. Accounts Management -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Accounting &amp; Finance</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>23</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">IV.B. Accounts Management</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Accounts represent your financial ledgers: cash drawers, bank accounts, mobile wallets, and credit lines. They are the source and destination of all money flows.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Go to Accounting &gt; Accounts to see all registered financial accounts with current balances.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Account" to add a new ledger. Choose the type: Cash, Bank, or Credit.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Name the account descriptively (e.g., "Main Cash Drawer", "BPI Checking"). Set an opening balance.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Link accounts to payment types so that POS transactions auto-deposit to the correct ledger.</div>
+            </div>
+            <div class="epilogue">Account balances update in real time as sales and expenses are recorded across the system.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/accounts-list.png" alt="Accounts list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 24: IV.C. Tax Configuration -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Accounting &amp; Finance</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>24</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">IV.C. Tax Configuration</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Taxes are calculated automatically at checkout based on the tax groups and rates you define here. Ensure compliance with local tax regulations.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Taxes &gt; Taxes to see existing rates. Rates are grouped for easier application.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Tax" to add a new rate. Provide a name, percentage, and optional tax number.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Create Tax Groups to bundle multiple taxes (e.g., VAT + Local Tax) that apply together.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Assign tax groups to products or categories. The POS auto-calculates the correct total at checkout.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Tax-inclusive and tax-exclusive modes are set in Settings &gt; POS. Verify this before your first sale to avoid pricing errors.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/taxes-list.png" alt="Taxes list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 25: IV.D. Creating a Tax -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Accounting &amp; Finance</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>25</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">IV.D. Creating a Tax</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The tax creation form lets you define the rate, type, and applicability rules for any government or local levy.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Enter a descriptive name such as "VAT 12%" or "Service Charge 5%".</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Choose the tax type: Percentage, Fixed Amount, or Compound (applies on top of another tax).</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Set the rate value. For percentages, enter 12 for 12%. For fixed, enter the exact amount in Php.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Decide if the tax is included in the displayed price or added at checkout. Save to activate.</div>
+            </div>
+            <div class="epilogue">You can override tax settings per product if certain items are exempt or subject to a different rate.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/taxes-create.png" alt="Create tax form" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 26: IV.E. Sales Reports -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Accounting &amp; Finance</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>26</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">IV.E. Sales Reports</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Sales Reports turn raw transaction data into actionable insights. Filter by date, product, cashier, or payment type to understand performance.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Reports &gt; Sale Report to open the primary sales analytics dashboard.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Set the date range using the picker. Choose preset ranges like Today, This Week, or Custom.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Review the summary cards: total sales, tax collected, refunds, and net revenue.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Scroll to the breakdown tables: top products, top categories, and sales by hour.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">All report tables can be exported to CSV or PDF. Use the export button in the top-right of each table.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/sales-report.png" alt="Sales report" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 27: DIVIDER V -->
+    <div class="slide" data-type="divider">
+      <div class="slide-divider">
+        <div class="top-bar">
+          <span class="top-bar-section">Section V</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>27</span> / 35</span>
+        </div>
+        <div class="divider-accent-bar"></div>
+        <div class="divider-body">
+          <div class="divider-left">
+            <div class="divider-section-label">Section</div>
+            <div class="divider-number">V</div>
+            <div class="divider-line"></div>
+            <div class="divider-title">Staff &amp; System</div>
+            <div class="divider-subtitle">Manage users, roles, attendance, payroll, media assets, modules, and system-wide settings</div>
+          </div>
+          <div class="divider-right">
+            <div class="divider-icon">&#x2699;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 28: V.A. User Management -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>28</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.A. User Management</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Users module controls who can access the admin panel. Each user gets a role that defines their permissions across all modules.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Users &gt; Users List to see all active and inactive system users.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create User" to add a new staff member. Enter username, email, and assign a role.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Set a secure temporary password. The user will be prompted to change it on first login.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Enable or disable accounts without deleting them. Disabled users cannot log in but retain audit history.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Never share admin accounts. Every action is logged by user ID, and shared credentials break audit trails.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/users-list.png" alt="Users list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 29: V.B. Creating Users -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>29</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.B. Creating Users</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The user creation form captures identity, role, and initial credentials. A well-defined role ensures the user only accesses what they need.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Fill in the required fields: username, email, and password. The username must be unique.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Select a role from the dropdown. Common roles include Admin, Cashier, Inventory Manager, and Accountant.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Add optional details: full name, phone, and avatar image for staff identification.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Save the user. An account activation email is sent automatically if SMTP is configured in Settings.</div>
+            </div>
+            <div class="epilogue">After creation, the user appears in the list and can log in immediately using the provided credentials.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/users-create.png" alt="Create user form" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 30: V.C. Role Permissions -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>30</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.C. Role Permissions</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Roles define what a user can see and do. The system ships with default roles, but you can create custom ones for fine-grained access control.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Users &gt; Roles to view existing roles. Click a role to inspect its current permission set.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Roles" to define a new role. Name it clearly (e.g., "Senior Cashier").</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Use the Permissions Manager to toggle access per module: Read, Create, Update, Delete, and Export.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Assign the new role to users from their profile or during user creation.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">The "Admin" role has full system access and cannot be restricted. Create secondary admin roles with narrower scope for daily operations.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/roles-list.png" alt="Roles list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 31: V.D. Attendance Records -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>31</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.D. Attendance Records</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Track staff punctuality and working hours with the Attendance module. Records feed directly into Payroll calculations.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Attendance &gt; Records to view the daily check-in and check-out log.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Staff clock in via the "Clock In/Out" page. Managers can also create manual entries for corrections.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Filter records by user, date range, or status (Present, Late, Absent, On Leave).</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Export attendance summaries to CSV for integration with external payroll systems if needed.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Overtime entries are managed separately in the Overtime module and are linked to attendance records for validation.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/attendance-records.png" alt="Attendance records" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 32: V.E. Payroll Runs -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>32</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.E. Payroll Runs</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">Payroll Runs calculate gross pay, deductions, and net pay for each staff member based on attendance and approved overtime.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Payroll &gt; Pay Runs to see existing payroll periods.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Create Pay Run" to start a new period. Select the date range and eligible employees.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Review the auto-calculated summary: regular hours, overtime, deductions, and net pay per employee.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Approve the pay run to finalize. Approved runs are locked and generate printable payslips.</div>
+            </div>
+            <div class="epilogue">Once approved, a pay run cannot be edited. Create an adjustment run if corrections are needed later.</div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/payroll-list.png" alt="Payroll runs" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 33: V.F. Media Library -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>33</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.F. Media Library</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">The Media Library is a centralized repository for all images and files used across products, categories, and receipts.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Medias from the sidebar to open the media manager.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Upload files by dragging and dropping into the upload zone or clicking the Upload button.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Organize files into folders. Supported formats include JPG, PNG, GIF, and PDF.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Click any file to copy its URL or insert it directly into a product or category form.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Large images are automatically resized into thumbnails. Keep originals under 2 MB for optimal upload speed.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/medias-list.png" alt="Media library" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 34: V.G. Modules -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>34</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.G. Modules</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">NexoPOS supports modular extensions. The Modules page lets you install, enable, disable, and update add-ons that extend Dr Care's functionality.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Modules &gt; List to see installed modules and their status (active or inactive).</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Click "Upload Module" to install a new extension. Upload the module ZIP file provided by the developer.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Toggle the module switch to enable or disable it. Disabling preserves settings but hides features.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Check for updates on the module card. Updated modules may require a system refresh after installation.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Only install modules from trusted sources. Third-party modules have full database access and can affect system stability.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/modules-list.png" alt="Modules list" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 35: V.H. General Settings -->
+    <div class="slide" data-type="content">
+      <div class="slide-content">
+        <div class="top-bar">
+          <span class="top-bar-section">Staff &amp; System</span>
+          <span class="top-bar-title">CMS Manual</span>
+          <span class="top-bar-counter"><span>35</span> / 35</span>
+        </div>
+        <div class="content-header">
+          <div class="content-title">V.H. General Settings</div>
+        </div>
+        <div class="content-body">
+          <div class="panel-left">
+            <div class="prologue">General Settings control the core behavior of Dr Care: store identity, currency, language, date format, and receipt templates.</div>
+            <div class="step">
+              <div class="step-header">Step 1</div>
+              <div class="step-body">Navigate to Settings &gt; General to open the primary configuration panel.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 2</div>
+              <div class="step-body">Set the store name, address, and contact details. These appear on printed receipts and reports.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 3</div>
+              <div class="step-body">Configure currency settings: symbol (Php), decimal separator, thousand separator, and precision.</div>
+            </div>
+            <div class="step">
+              <div class="step-header">Step 4</div>
+              <div class="step-body">Review sub-settings pages: POS, Customers, Orders, Accounting, Reports, Invoices, and Reset.</div>
+            </div>
+            <div class="note-box">
+              <div class="note-label">Note</div>
+              <div class="note-text">Changes to currency or date format take effect immediately across all screens. Warn active cashiers before modifying these values.</div>
+            </div>
+          </div>
+          <div class="panel-right">
+            <div class="screenshot-wrapper">
+              <img src="screenshots/settings-general.png" alt="General settings" class="screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width: 2.86%;"></div>
+<div class="thumb-sidebar" id="thumbSidebar"></div>
+<div class="nav-arrows">
+  <button class="nav-btn" id="prevBtn" title="Previous slide">&#x2039;</button>
+  <button class="nav-btn" id="nextBtn" title="Next slide">&#x203A;</button>
+</div>
+<div class="keyboard-hint">
+  <kbd>&larr;</kbd> <kbd>&rarr;</kbd> navigate
+</div>
+
+<script>
+(function() {
+  'use strict';
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+  const progressBar = document.getElementById('progressBar');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const thumbSidebar = document.getElementById('thumbSidebar');
+
+  slides.forEach((slide, i) => {
+    const thumb = document.createElement('div');
+    const type = slide.dataset.type;
+    thumb.className = 'thumb-item';
+    thumb.dataset.index = i;
+    thumb.textContent = type === 'cover' ? 'C' : type === 'toc' ? 'T' : type === 'divider' ? 'D' : (i + 1);
+    thumb.title = 'Slide ' + (i + 1);
+    thumb.addEventListener('click', () => goToSlide(i));
+    thumbSidebar.appendChild(thumb);
+  });
+
+  function updateSlides() {
+    slides.forEach((slide, i) => {
+      slide.classList.remove('active', 'prev');
+      if (i === currentSlide) {
+        slide.classList.add('active');
+      } else if (i < currentSlide) {
+        slide.classList.add('prev');
+      }
+    });
+    const progress = ((currentSlide + 1) / totalSlides) * 100;
+    progressBar.style.width = progress + '%';
+    prevBtn.disabled = currentSlide === 0;
+    nextBtn.disabled = currentSlide === totalSlides - 1;
+    document.querySelectorAll('.thumb-item').forEach((thumb, i) => {
+      thumb.classList.toggle('active', i === currentSlide);
+    });
+    const activeThumb = thumbSidebar.querySelector('.thumb-item.active');
+    if (activeThumb) {
+      activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    currentSlide = index;
+    updateSlides();
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+      currentSlide++;
+      updateSlides();
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlide > 0) {
+      currentSlide--;
+      updateSlides();
+    }
+  }
+
+  prevBtn.addEventListener('click', prevSlide);
+  nextBtn.addEventListener('click', nextSlide);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prevSlide();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      goToSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      goToSlide(totalSlides - 1);
+    }
+  });
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+    }
+  }, { passive: true });
+
+  let wheelTimeout;
+  document.addEventListener('wheel', (e) => {
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(() => {
+      if (e.deltaY > 30) nextSlide();
+      else if (e.deltaY < -30) prevSlide();
+    }, 50);
+  }, { passive: true });
+
+  document.querySelectorAll('.toc-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const slideIndex = parseInt(item.dataset.slide);
+      if (!isNaN(slideIndex)) goToSlide(slideIndex);
+    });
+  });
+
+  updateSlides();
+})();
+</script>
+
+</body>
+</html>
