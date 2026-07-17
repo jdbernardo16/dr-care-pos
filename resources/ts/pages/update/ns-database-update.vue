@@ -2,7 +2,7 @@
     <div class="container mx-auto flex-auto items-center justify-center flex">
         <div id="database-update" class="w-full md:w-2/3 lg:w-1/3">
             <div class="flex justify-center items-center py-6">
-                <img class="w-32" src="/images/doctorcare.jpg" alt="NexoPOS" />
+                <img class="w-32" src="/images/doctorcare.jpg" alt="Dr Care" />
             </div>
             <div class="my-3 rounded shadow ns-box">
                 <div
@@ -16,7 +16,7 @@
                     <p class="text-center text-sm py-4">
                         {{
                             __(
-                                "In order to keep NexoPOS running smoothly with updates, we need to proceed to the database migration. In fact you don't need to do any action, just wait until the process is done and you'll be redirected.",
+                                "In order to keep Dr Care running smoothly with updates, we need to proceed to the database migration. In fact you don't need to do any action, just wait until the process is done and you'll be redirected.",
                             )
                         }}
                     </p>

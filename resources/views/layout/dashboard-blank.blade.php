@@ -28,7 +28,7 @@ if ( Auth::check() ) {
     <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NexoPOS">
+    <meta name="apple-mobile-web-app-title" content="Dr Care">
     <link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-touch-icon-180x180.png">
     <link rel="manifest" href="{{ url( 'build/manifest.webmanifest' ) }}">
     <title>{!! Helper::pageTitle( $title ?? __( 'Unnamed Page' ) ) !!}</title>
