@@ -14,6 +14,7 @@ use App\Fields\EntityTransactionFields;
 use App\Fields\ReccurringTransactionFields;
 use App\Fields\ScheduledTransactionFields;
 use App\Models\Order;
+use App\Models\PayrollRun;
 use App\Models\Procurement;
 use App\Models\Role;
 use App\Models\Transaction;
@@ -24,6 +25,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class TransactionService
@@ -1258,10 +1260,14 @@ class TransactionService
      */
     public function clearAllAccounts()
     {
-        TransactionAccount::truncate();
-        Transaction::truncate();
-        TransactionHistory::truncate();
         TransactionActionRule::truncate();
+
+        if ( Schema::hasTable( 'nexopos_transactions_histories' ) ) {
+            TransactionHistory::truncate();
+        }
+
+        Transaction::getQuery()->delete();
+        TransactionAccount::truncate();
 
         return [
             'status' => 'success',
