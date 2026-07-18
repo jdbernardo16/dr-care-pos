@@ -11,8 +11,8 @@
         </div>
         <div class="rounded shadow ns-tab-item flex-auto flex overflow-hidden">
             <div class="cart-table flex flex-auto flex-col overflow-hidden">
-                <div id="cart-header" class="flex items-center px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span class="font-bold text-lg">{{ __( 'Ticket' ) }}</span>
+                <div id="cart-header" class="flex items-center px-3 py-2 border-b border-box-edge">
+                    <span class="font-bold text-lg text-fontcolor">{{ __( 'Ticket' ) }}</span>
                 </div>
                 <div id="cart-table-header" class="hidden"></div>
                 <div id="cart-products-table" class="flex flex-auto flex-col overflow-auto">
@@ -25,57 +25,57 @@
                         </div>
                     </div>
 
-                    <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-gray-100 dark:border-gray-800" v-for="(product, index) of products">
+                    <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-box-edge" v-for="(product, index) of products">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 min-w-0">
-                                <div class="font-semibold text-base lg:text-lg text-gray-900 dark:text-gray-100 truncate">
+                                <div class="font-semibold text-base lg:text-lg text-fontcolor truncate">
                                     {{ product.name }}
-                                    <span class="text-gray-600 dark:text-gray-400 font-normal text-sm" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
+                                    <span class="text-fontcolor-soft font-normal text-sm" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
                                 </div>
-                                <div class="flex items-center gap-3 mt-1 text-sm lg:text-base text-gray-700 dark:text-gray-300">
+                                <div class="flex items-center gap-3 mt-1 text-sm lg:text-base text-fontcolor">
                                     <span class="flex items-center gap-1">
-                                        <span class="text-gray-600">&times;</span>
-                                        <span class="font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
-                                        <span class="text-gray-600">@</span>
+                                        <span class="text-fontcolor-soft">&times;</span>
+                                        <span class="font-semibold text-fontcolor bg-input-background px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
+                                        <span class="text-fontcolor-soft">@</span>
                                         <span>{{ nsCurrency(product.unit_price) }}</span>
                                     </span>
-                                    <button @click="removeUsingIndex(index)" class="text-red-600 hover:text-red-800 text-sm">
+                                    <button @click="removeUsingIndex(index)" class="text-error-secondary hover:text-error-tertiary text-sm">
                                         <i class="las la-trash-alt"></i>
                                     </button>
                                 </div>
                                 <div class="flex flex-wrap gap-2 mt-1 text-sm">
-                                    <a @click="changeProductPrice(product)" class="text-blue-500 hover:text-blue-700 cursor-pointer border-b border-dashed border-blue-300">{{ __( 'Price' ) }}: {{ nsCurrency(product.unit_price) }}</a>
-                                    <a v-if="allowQuantityModification(product)" @click="openDiscountPopup(product, 'product', index)" class="text-blue-500 hover:text-blue-700 cursor-pointer border-b border-dashed border-blue-300">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span>: {{ nsCurrency(product.discount) }}</a>
+                                    <a @click="changeProductPrice(product)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Price' ) }}: {{ nsCurrency(product.unit_price) }}</a>
+                                    <a v-if="allowQuantityModification(product)" @click="openDiscountPopup(product, 'product', index)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span>: {{ nsCurrency(product.discount) }}</a>
                                 </div>
                             </div>
-                            <div class="text-base lg:text-lg font-bold text-gray-900 dark:text-gray-100 flex-shrink-0 ml-4">
+                            <div class="text-base lg:text-lg font-bold text-fontcolor flex-shrink-0 ml-4">
                                 {{ nsCurrency(product.total_price) }}
                             </div>
                         </div>
                     </div>
 
                 </div>
-                <div id="cart-products-summary" class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+                <div id="cart-products-summary" class="px-3 py-2 border-t border-box-edge">
                     <div class="space-y-1 text-sm lg:text-base">
-                        <div class="flex justify-between text-gray-700 dark:text-gray-300">
+                        <div class="flex justify-between text-fontcolor-soft">
                             <span>{{ __( 'Subtotal' ) }}</span>
                             <span>{{ nsCurrency(order.subtotal) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-700 dark:text-gray-300" v-if="order.discount > 0">
+                        <div class="flex justify-between text-fontcolor-soft" v-if="order.discount > 0">
                             <span>{{ __( 'Discount' ) }}<span v-if="order.discount_type === 'percentage'"> ({{ order.discount_percentage }}%)</span></span>
                             <span>-{{ nsCurrency(order.discount) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-700 dark:text-gray-300" v-if="order.tax_value > 0">
+                        <div class="flex justify-between text-fontcolor-soft" v-if="order.tax_value > 0">
                             <span>{{ __( 'Tax' ) }}</span>
                             <span>{{ nsCurrency(order.tax_value) }}</span>
                         </div>
-                        <div class="flex justify-between font-bold text-lg lg:text-xl text-gray-900 dark:text-gray-100 border-t-2 border-gray-900 dark:border-gray-100 pt-2 mt-2">
+                        <div class="flex justify-between font-bold text-lg lg:text-xl text-fontcolor border-t-2 border-fontcolor pt-2 mt-2">
                             <span>{{ __( 'Total' ) }}</span>
                             <span>{{ nsCurrency(order.total) }}</span>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center px-2 py-2 border-t border-gray-200 dark:border-gray-700 gap-1" id="cart-bottom-buttons">
+                <div class="flex items-center px-2 py-2 border-t border-box-edge gap-1" id="cart-bottom-buttons">
                     <template v-for="button of (new Array(4)).fill()" v-if="Object.keys( cartButtons ).length === 0"> 
                         <div class="animate-pulse flex-shrink-0 w-1/4 flex items-center font-bold cursor-pointer justify-center border-r flex-auto">
                             <i class="mx-4 rounded-full bg-slate-300 h-5 w-5"></i>
