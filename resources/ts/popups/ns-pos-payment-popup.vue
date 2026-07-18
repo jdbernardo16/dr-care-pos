@@ -55,8 +55,12 @@ export default {
             }
         });
         this.paymentTypesSubscription   =   POS.paymentsType.subscribe( paymentsType => {
-            this.paymentsType   =   paymentsType;
-            paymentsType.filter( payment => {
+            const allowed = paymentsType.filter( payment => {
+                const label = ( payment.label || '' ).toLowerCase();
+                return payment.identifier === 'cash-payment' || label.includes( 'gcash' ) || label.includes( 'g-cash' );
+            });
+            this.paymentsType   =   allowed;
+            allowed.filter( payment => {
                 if ( payment.selected ) {
                     POS.selectedPaymentType.next( payment );
                 }
