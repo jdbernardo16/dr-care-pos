@@ -553,7 +553,6 @@
 }
 
 /* ───── Numpad Keys ───── */
-.is-popup .ns-numpad-key,
 #numpad .ns-numpad-key {
     @apply text-xl font-bold rounded-lg border border-gray-200;
     height: 3.5rem;
