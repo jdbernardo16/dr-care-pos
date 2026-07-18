@@ -590,22 +590,10 @@ export class POS {
          */
         const data = {
             buttons: {
-                nsPosDashboardButton,
-                nsPosPendingOrderButton,
-                // nsPosOrderTypeButton,
                 nsPosCustomersButton,
-                nsPosResetButton,
+                nsPosPendingOrderButton,
             },
         };
-
-        /**
-         * if the cash register is enabled
-         * we'll add that button to the list
-         * of button available.
-         */
-        if (this.options.getValue().ns_pos_registers_enabled === "yes") {
-            data.buttons["nsPosCashRegister"] = nsPosCashRegister;
-        }
 
         /**
          * expose the pos header data, for allowing
