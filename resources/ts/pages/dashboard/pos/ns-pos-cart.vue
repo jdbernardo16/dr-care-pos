@@ -76,17 +76,8 @@
                     </div>
                 </div>
                 <div class="flex items-center px-2 py-2 border-t border-box-edge gap-1" id="cart-bottom-buttons">
-                    <template v-for="button of (new Array(4)).fill()" v-if="Object.keys( cartButtons ).length === 0"> 
-                        <div class="animate-pulse flex-shrink-0 w-1/4 flex items-center font-bold cursor-pointer justify-center border-r flex-auto">
-                            <i class="mx-4 rounded-full bg-slate-300 h-5 w-5"></i>
-                            <div class="text-lg mr-4 hidden md:flex md:flex-auto lg:text-2xl">
-                                <div class="h-2 flex-auto bg-slate-200 rounded"></div>
-                            </div>
-                        </div>
-                    </template>
-                    <template v-for="component of cartButtons">
-                        <component :is="component" :order="order" :settings="settings"></component>
-                    </template>
+                    <ns-pos-charge-button :order="order"></ns-pos-charge-button>
+                    <ns-pos-more-button :order="order"></ns-pos-more-button>
                 </div>
             </div>
         </div>
@@ -116,28 +107,25 @@ import nsPosOrderSettingsVue from '~/popups/ns-pos-order-settings.vue';
 import nsPosProductPricePopupVue from '~/popups/ns-pos-product-price-popup.vue';
 import nsPosQuickProductPopupVue from '~/popups/ns-pos-quick-product-popup.vue';
 
-declare const POS, nsShortcuts, nsHotPress, nsHooks;
+declare const POS, nsShortcuts, nsHotPress;
 
-import { ref, markRaw } from '@vue/reactivity';
+import { ref } from '@vue/reactivity';
 import { Order } from '~/interfaces/order';
 import { defineAsyncComponent, Ref } from 'vue';
 import ActionPermissions from '~/libraries/action-permissions';
 
 export default {
     name: 'ns-pos-cart',
+    components: {
+        nsPosChargeButton,
+        nsPosMoreButton,
+    },
     data: () => {
         return {
             popup : null,
-            cartButtons: {},
             products: [],
-            defaultCartButtons: {
-                nsPosChargeButton: markRaw( nsPosChargeButton ),
-                nsPosMoreButton: markRaw( nsPosMoreButton ),
-            },
             visibleSection: null,
             visibleSectionSubscriber: null,
-            cartButtonsSubscriber: null,
-
             optionsSubscriber: null,
             options: {},
             typeSubscribe: null,
@@ -164,10 +152,6 @@ export default {
         }
     },
     mounted() {
-        this.cartButtonsSubscriber  =   POS.cartButtons.subscribe( cartButtons => {
-            this.cartButtons    =   cartButtons;
-        });
-
         this.optionsSubscriber  =   POS.options.subscribe( options => {
             this.options    =   options;
         });
@@ -188,14 +172,6 @@ export default {
 
         this.visibleSectionSubscriber   =   POS.visibleSection.subscribe( section => {
             this.visibleSection     =   ref(section);
-        });
-
-        /**
-         * everytime the cart reset
-         * we restore original buttons.
-         */
-        nsHooks.addAction( 'ns-before-cart-reset', 'ns-pos-cart-buttons', () => {
-            POS.cartButtons.next( this.defaultCartButtons );
         });
 
         /**
@@ -234,8 +210,6 @@ export default {
         this.productSubscribe.unsubscribe();
         this.settingsSubscribe.unsubscribe();
         this.optionsSubscriber.unsubscribe();
-        this.cartButtonsSubscriber.unsubscribe();
-
         nsHotPress.destroy( 'ns_pos_keyboard_shipping' );
         nsHotPress.destroy( 'ns_pos_keyboard_note' );
     },
