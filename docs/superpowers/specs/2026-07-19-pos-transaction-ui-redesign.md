@@ -83,6 +83,27 @@ Replace the current full-screen payment modal with a compact dialog overlay insp
 - Payment list sidebar — replaced by compact tabs
 - Full-screen overlay — replaced by dialog
 
+## Typography & Font Sizing (Tablet-Optimized)
+
+Primary use is on tablets — all transaction UI text must be larger and more readable, matching Loyverse's approach.
+
+| Element | Current | New Target |
+|---------|---------|------------|
+| Item name (cart row) | ~14px | **16-18px** |
+| Item price / line total | ~14px | **16-18px** |
+| Inline quantity display | ~12px | **14-16px** |
+| "Charge" button text | ~14px | **18-20px** |
+| Total amount | ~16px | **20-24px** |
+| Totals section labels | ~12px | **14-16px** |
+| Totals section values | ~14px | **16-18px** |
+| Payment popup total | ~24px | **28-32px** |
+| Quick-select amounts | ~14px | **16-18px** |
+| Category chips | ~12px | **14-15px** |
+| Product grid item name | ~13px | **14-16px** |
+| Product grid price | ~12px | **14-15px** |
+
+**Approach:** Increase base font sizes by ~2-4px across the cart panel and payment popup. Use `text-base` → `text-lg`/`text-xl` equivalents via Tailwind classes. Keep line-height proportional for readability.
+
 ## Changes Summary
 
 | Area | Current | New |
@@ -110,6 +131,8 @@ All existing POS functionality is preserved:
 - Scale barcode support
 - All popups (price, discount, quantity, etc.)
 - Keyboard shortcuts
+
+## Architecture
 
 ## Architecture
 
