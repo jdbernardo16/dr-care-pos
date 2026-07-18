@@ -243,7 +243,42 @@
                             </div>
                         </div>
                     </div>
-                    <div class="w-full md:w-1/2 px-4"></div>
+                    <div class="w-full md:w-1/2 px-4">
+                        <div class="shadow rounded my-4 ns-box" v-if="payments.length > 0">
+                            <div class="border-b ns-box-body">
+                                <table class="table ns-table w-full">
+                                    <thead class="text-fontcolor">
+                                        <tr>
+                                            <th class="border p-2 text-left">
+                                                {{ __("Payment Type") }}
+                                            </th>
+                                            <th width="150" class="border p-2 text-right">
+                                                {{ __("Total") }}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-fontcolor">
+                                        <tr v-for="payment of payments" :key="payment.identifier">
+                                            <td class="p-2 border">{{ payment.label }}</td>
+                                            <td class="p-2 border text-right">
+                                                {{ nsCurrency(payment.total) }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="text-fontcolor font-semibold">
+                                        <tr>
+                                            <td class="p-2 border text-font">
+                                                {{ __("Total") }}
+                                            </td>
+                                            <td class="p-2 border text-right">
+                                                {{ nsCurrency(paymentsTotal) }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div
@@ -797,6 +832,7 @@ export default {
                 value: ns.date.moment.endOf("day").format(),
             },
             result: [],
+            payments: [],
             isLoading: false,
             users: [],
             ns: window.ns,
@@ -856,7 +892,9 @@ export default {
         nsDateTimePicker,
     },
     computed: {
-        // ...
+        paymentsTotal() {
+            return this.payments.reduce((sum, p) => sum + p.total, 0);
+        },
     },
     methods: {
         __,
@@ -1044,6 +1082,7 @@ export default {
                         this.isLoading = false;
                         this.result = response.result;
                         this.summary = response.summary;
+                        this.payments = response.payments || [];
                     },
                     error: (error) => {
                         this.isLoading = false;

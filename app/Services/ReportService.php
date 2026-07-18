@@ -11,6 +11,7 @@ use App\Models\CustomerAccountHistory;
 use App\Models\DashboardDay;
 use App\Models\DashboardMonth;
 use App\Models\Order;
+use App\Models\OrderPayment;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductHistory;
@@ -720,7 +721,8 @@ class ReportService
     {
         $request = Order::paymentStatus( Order::PAYMENT_PAID )
             ->from( $start )
-            ->to( $end );
+            ->to( $end )
+            ->with( 'payments' );
 
         if ( ! empty( $user_id ) ) {
             $request = $request->where( 'author_id', $user_id );
@@ -763,6 +765,7 @@ class ReportService
                 return $product;
             } )->values(),
             'summary' => $summary,
+            'payments' => $this->getOrdersPaymentSummary( $orders ),
         ];
     }
 
@@ -770,9 +773,8 @@ class ReportService
     {
         $request = Order::paymentStatus( Order::PAYMENT_PAID )
             ->from( $start )
-            ->to( $end );
-
-        $request->with( 'products' );
+            ->to( $end )
+            ->with( [ 'products', 'payments' ] );
 
         if ( ! empty( $user_id ) ) {
             $request = $request->where( 'author_id', $user_id );
@@ -862,7 +864,34 @@ class ReportService
             return $categoryWithProducts;
         } );
 
-        return compact( 'result', 'summary' );
+        return [
+            'result' => $result,
+            'summary' => $summary,
+            'payments' => $this->getOrdersPaymentSummary( $orders ),
+        ];
+    }
+
+    private function getOrdersPaymentSummary( $orders ): array
+    {
+        $orderIds = $orders->pluck( 'id' );
+
+        $payments = OrderPayment::whereIn( 'order_id', $orderIds )
+            ->select( 'identifier', DB::raw( 'SUM(value) as total' ) )
+            ->groupBy( 'identifier' )
+            ->get()
+            ->keyBy( 'identifier' );
+
+        $paymentTypes = \App\Models\PaymentType::active()->get();
+
+        return $paymentTypes->map( function ( $type ) use ( $payments ) {
+            $payment = $payments->get( $type->identifier );
+
+            return [
+                'identifier' => $type->identifier,
+                'label' => $type->label,
+                'total' => $payment ? (float) $payment->total : 0,
+            ];
+        } )->values()->toArray();
     }
 
     /**
