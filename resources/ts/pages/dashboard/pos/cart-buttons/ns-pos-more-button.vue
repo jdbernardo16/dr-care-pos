@@ -1,14 +1,15 @@
 <template>
     <div class="relative flex-shrink-0" id="more-button">
         <div
-            @click="toggleMenu()"
+            @click="toggleMenu($event)"
             class="flex items-center font-bold cursor-pointer justify-center rounded-lg bg-input-background text-fontcolor text-xl h-14 w-14 mx-1 border border-box-edge"
         >
             <span>⋮</span>
         </div>
         <div
             v-if="showMenu"
-            class="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-box-edge py-1 z-[100] max-h-80 overflow-y-auto"
+            :style="menuStyle"
+            class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-box-edge py-1 z-[9999] max-h-80 overflow-y-auto min-w-[200px]"
         >
             <div
                 @click="handleAction(action)"
@@ -46,13 +47,26 @@ export default {
     data: () => ({
         showMenu: false,
         menuActions: [],
+        menuPosition: {},
     }),
+    computed: {
+        menuStyle() {
+            return this.menuPosition;
+        },
+    },
     methods: {
         __,
-        toggleMenu() {
+        toggleMenu(e) {
             this.showMenu = !this.showMenu;
             if (this.showMenu) {
                 this.buildMenu();
+                const btn = this.$el.querySelector('[class*="cursor-pointer"]');
+                const rect = btn.getBoundingClientRect();
+                this.menuPosition = {
+                    bottom: (window.innerHeight - rect.top + 8) + 'px',
+                    left: Math.max(8, rect.left) + 'px',
+                    minWidth: Math.max(200, rect.width) + 'px',
+                };
             }
         },
         buildMenu() {
