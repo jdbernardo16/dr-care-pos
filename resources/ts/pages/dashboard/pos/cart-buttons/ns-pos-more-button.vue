@@ -2,22 +2,22 @@
     <div class="relative flex-shrink-0" id="more-button">
         <div
             @click="toggleMenu($event)"
-            class="flex items-center font-bold cursor-pointer justify-center rounded-lg bg-input-background text-fontcolor text-xl h-14 w-14 mx-1 border border-box-edge"
+            class="flex items-center font-bold cursor-pointer justify-center rounded-lg bg-white text-fontcolor text-xl h-14 w-14 mx-1 border-2 border-box-edge hover:bg-gray-100"
         >
             <span>⋮</span>
         </div>
         <div
             v-if="showMenu"
             :style="menuStyle"
-            class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-box-edge py-1 z-[9999] max-h-80 overflow-y-auto min-w-[200px]"
+            class="fixed bg-white rounded-lg shadow-xl border border-box-edge py-1 z-[9999] max-h-80 overflow-y-auto min-w-[200px]"
         >
             <div
                 @click="handleAction(action)"
                 v-for="action of menuActions"
                 :key="action.label"
-                class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-3 text-sm font-medium text-fontcolor border-b border-box-edge last:border-0"
+                class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3 text-sm font-medium text-fontcolor border-b border-box-edge last:border-0"
             >
-                <i :class="action.icon" class="text-lg"></i>
+                <i :class="action.icon" class="text-lg text-fontcolor-soft"></i>
                 <span>{{ action.label }}</span>
             </div>
         </div>
@@ -60,8 +60,7 @@ export default {
             this.showMenu = !this.showMenu;
             if (this.showMenu) {
                 this.buildMenu();
-                const btn = this.$el.querySelector('[class*="cursor-pointer"]');
-                const rect = btn.getBoundingClientRect();
+                const rect = e.currentTarget.getBoundingClientRect();
                 this.menuPosition = {
                     bottom: (window.innerHeight - rect.top + 8) + 'px',
                     left: Math.max(8, rect.left) + 'px',
