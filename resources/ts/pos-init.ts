@@ -590,10 +590,16 @@ export class POS {
          */
         const data = {
             buttons: {
-                nsPosCustomersButton,
+                nsPosDashboardButton,
                 nsPosPendingOrderButton,
+                nsPosCustomersButton,
+                nsPosResetButton,
             },
         };
+
+        if (this.options.getValue().ns_pos_registers_enabled === "yes") {
+            data.buttons["nsPosCashRegister"] = nsPosCashRegister;
+        }
 
         /**
          * expose the pos header data, for allowing
