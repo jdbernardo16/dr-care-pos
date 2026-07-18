@@ -192,7 +192,7 @@ trait NsForms
         $excluded = array_keys( collect( $form[ 'tabs' ] )->toArray() );
 
         foreach ( $fields as $field => $value ) {
-            if ( ! in_array( $field, $excluded ) ) {
+            if ( ! in_array( $field, $excluded ) && $field !== 'undefined' ) {
                 $data[ $field ] = $value;
             }
         }
@@ -220,7 +220,7 @@ trait NsForms
     {
         $formValue = [];
 
-        if ( isset( $form['main'] ) ) {
+        if ( isset( $form['main']['name'] ) ) {
             $formValue[$form['main']['name']] = $form['main']['value'];
         }
 
