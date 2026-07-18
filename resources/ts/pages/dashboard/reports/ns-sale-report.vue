@@ -114,12 +114,12 @@
                                         <tr class="">
                                             <td
                                                 width="200"
-                                                class="font-semibold p-2 border text-left info text-white"
+                                                class="font-semibold p-2 border text-left text-fontcolor"
                                             >
                                                 {{ __("Sub Total") }}
                                             </td>
                                             <td
-                                                class="p-2 border text-right border-info-primary"
+                                                class="p-2 border text-right text-fontcolor"
                                             >
                                                 {{
                                                     nsCurrency(summary.subtotal)
@@ -129,33 +129,16 @@
                                         <tr class="">
                                             <td
                                                 width="200"
-                                                class="font-semibold p-2 border text-left error text-white"
+                                                class="font-semibold p-2 border text-left text-fontcolor"
                                             >
                                                 {{ __("Sales Discounts") }}
                                             </td>
                                             <td
-                                                class="p-2 border text-right border-error-primary"
+                                                class="p-2 border text-right text-fontcolor"
                                             >
                                                 {{
                                                     nsCurrency(
                                                         summary.sales_discounts,
-                                                    )
-                                                }}
-                                            </td>
-                                        </tr>
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left error text-white"
-                                            >
-                                                {{ __("Sales Taxes") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right border-error-primary"
-                                            >
-                                                {{
-                                                    nsCurrency(
-                                                        summary.sales_taxes,
                                                     )
                                                 }}
                                             </td>
@@ -166,12 +149,12 @@
                                         >
                                             <td
                                                 width="200"
-                                                class="font-semibold p-2 border text-left error text-white"
+                                                class="font-semibold p-2 border text-left text-fontcolor"
                                             >
                                                 {{ __("Product Taxes") }}
                                             </td>
                                             <td
-                                                class="p-2 border text-right border-error-primary"
+                                                class="p-2 border text-right text-fontcolor"
                                             >
                                                 {{
                                                     nsCurrency(
@@ -183,27 +166,12 @@
                                         <tr class="">
                                             <td
                                                 width="200"
-                                                class="font-semibold p-2 border text-left info text-white"
-                                            >
-                                                {{ __("Shipping") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right border-success-primary"
-                                            >
-                                                {{
-                                                    nsCurrency(summary.shipping)
-                                                }}
-                                            </td>
-                                        </tr>
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left success text-white"
+                                                class="font-semibold p-2 border text-left font-bold text-lg text-fontcolor"
                                             >
                                                 {{ __("Total") }}
                                             </td>
                                             <td
-                                                class="p-2 border text-right border-success-primary"
+                                                class="p-2 border text-right font-bold text-lg text-fontcolor"
                                             >
                                                 {{ nsCurrency(summary.total) }}
                                             </td>
@@ -211,12 +179,12 @@
                                         <tr class="">
                                             <td
                                                 width="200"
-                                                class="font-semibold p-2 border text-left success text-white"
+                                                class="font-semibold p-2 border text-left text-fontcolor-soft"
                                             >
                                                 {{ __("Cost Of Goods") }}
                                             </td>
                                             <td
-                                                class="p-2 border text-right border-success-primary"
+                                                class="p-2 border text-right text-fontcolor-soft"
                                             >
                                                 {{
                                                     nsCurrency(
@@ -228,12 +196,12 @@
                                         <tr class="">
                                             <td
                                                 width="200"
-                                                class="font-semibold p-2 border text-left success text-white"
+                                                class="font-semibold p-2 border text-left text-fontcolor"
                                             >
                                                 {{ __("Profit") }}
                                             </td>
                                             <td
-                                                class="p-2 border text-right border-success-primary"
+                                                class="p-2 border text-right text-fontcolor"
                                             >
                                                 {{ nsCurrency(summary.profit) }}
                                             </td>
