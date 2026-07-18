@@ -4,7 +4,7 @@
             @click="inputValue( key )"
             :key="index"
             v-for="(key,index) of keys" 
-            :class="index === keys.length - 1 ? 'border-r border-b' : ''"
+            :class="[key.identifier === 'next' && keys.length === 1 ? 'col-span-3' : '', index === keys.length - 1 ? 'border-r border-b' : '']"
             class="select-none ns-numpad-key h-24 font-bold flex items-center justify-center cursor-pointer">
             <span v-if="key.value !== undefined">{{ key.value }}</span>
             <i v-if="key.icon" class="las" :class="key.icon"></i>
@@ -20,7 +20,7 @@ declare const ns, nsHotPress, nsState;
 
 export default {
     name: 'ns-numpad',
-    props: [ 'value', 'currency', 'floating', 'limit' ],
+    props: [ 'value', 'currency', 'floating', 'limit', 'doubleZero' ],
     data() {
         return {
             number: parseInt( 
@@ -35,12 +35,25 @@ export default {
             cursor: parseInt( ns.currency.ns_currency_precision ),
             orderSubscription: null,
             allSelected: true,
-            keys: [
+        }
+    },
+    computed: {
+        keys() {
+            if ( this.doubleZero ) {
+                return [
+                    ...([7,8,9].map( key => ({ identifier: key, value: key }))),
+                    ...([4,5,6].map( key => ({ identifier: key, value: key }))),
+                    ...([1,2,3].map( key => ({ identifier: key, value: key }))),
+                    ...[{ identifier: '00', value: '00' },{ identifier: 0, value: 0 },{ identifier: 'backspace', icon : 'la-backspace' }],
+                    ...[{ identifier: 'next', value: __( 'Enter' ) }],
+                ];
+            }
+            return [
                 ...([7,8,9].map( key => ({ identifier: key, value: key }))),
                 ...([4,5,6].map( key => ({ identifier: key, value: key }))),
                 ...([1,2,3].map( key => ({ identifier: key, value: key }))),
                 ...[{ identifier: 'backspace', icon : 'la-backspace' },{ identifier: 0, value: 0 },{ identifier: 'next', value: __( 'Enter' ) }],
-            ]
+            ];
         }
     },
     unmounted() {
@@ -166,6 +179,16 @@ export default {
             if ( key.identifier === 'next' ) {
                 this.$emit( 'next', this.floating && this.screenValue.length > 0 ? parseFloat( this.screenValue / number ) : this.screenValue );
                 return;
+            } else if ( key.identifier === '00' ) {
+                if ( this.limit > 0 && this.screenValue.length >= this.limit ) {
+                    return;
+                }
+                if ( this.allSelected ) {
+                    this.screenValue    =   '00';
+                    this.allSelected    =   false;
+                } else {
+                    this.screenValue    +=  '00';
+                }
             } else if ( key.identifier === 'backspace' ) {
                 if ( this.allSelected ) {
                     this.screenValue    =   '0';

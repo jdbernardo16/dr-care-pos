@@ -32,6 +32,7 @@
                             @click="inputValue( key )"
                             :key="index"
                             v-for="(key,index) of keys"
+                            :class="[key.identifier === 'next' ? 'col-span-3' : '']"
                             style="margin:-1px;"
                             class="ns-numpad-key text-2xl border h-16 flex items-center justify-center cursor-pointer">
                             <span v-if="key.value !== undefined">{{ key.value }}</span>
@@ -87,7 +88,8 @@ export default {
                 ...([7,8,9].map( key => ({ identifier: key, value: key }))),
                 ...([4,5,6].map( key => ({ identifier: key, value: key }))),
                 ...([1,2,3].map( key => ({ identifier: key, value: key }))),
-                ...[{ identifier: 'backspace', icon : 'la-backspace' },{ identifier: 0, value: 0 }, { identifier: 'next', icon: 'la-share' }],
+                ...[{ identifier: '00', value: '00' },{ identifier: 0, value: 0 },{ identifier: 'backspace', icon : 'la-backspace' }],
+                ...[{ identifier: 'next', icon: 'la-share' }],
             ]
         }
     },
@@ -217,6 +219,13 @@ export default {
                     readonly: false,
                 });
                 this.backValue     =   '0';
+            } else if ( key.identifier === '00' ) {
+                if ( this.allSelected ) {
+                    this.backValue      =   '00';
+                    this.allSelected    =   false;
+                } else {
+                    this.backValue      +=  '00';
+                }
             } else if ( key.identifier === 'backspace' ) {
                 if ( this.allSelected ) {
                     this.backValue      =   '0';
