@@ -67,4 +67,5 @@ $storeAdmin->addPermissions( [
 $cashier = Role::namespace( 'nexopos.store.cashier' );
 $cashier->addPermissions( [
     'attendance.clock',
+    'attendance.read',
 ] );
