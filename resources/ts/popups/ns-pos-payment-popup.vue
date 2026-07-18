@@ -245,8 +245,8 @@ export default {
                     </div>
                 </div>
 
-                <!-- Quick Amounts (shown for cash payment) -->
-                <div v-if="activePayment?.identifier === 'cash-payment'" class="mb-4">
+                <!-- Quick Amounts -->
+                <div v-if="activePayment" class="mb-4">
                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ __( 'Quick Amount' ) }}</div>
                     <div class="flex gap-2 flex-wrap">
                         <div v-for="amount in quickAmounts" :key="amount"
