@@ -46,6 +46,8 @@ return [
             'type' => 'select',
             'options' => Helper::kvToJsOptions( [
                 'default' => __( 'Default' ),
+                'thermal_58' => __( 'Thermal 58mm' ),
+                'thermal_80' => __( 'Thermal 80mm' ),
             ] ),
             'name' => 'ns_invoice_receipt_template',
             'value' => ns()->option->get( 'ns_invoice_receipt_template' ),
