@@ -129,6 +129,60 @@
                     </tr>
                 </tbody>
             </table>
+            @if( $gcash )
+            <br>
+            <h2 class="text-center font-bold border-b border-dashed py-2 text-black">{{ __( 'GCash Summary' ) }}</h2>
+            <br>
+            <table class="w-full">
+                <tbody>
+                    <tr>
+                        <td colspan="2" class="p-1">{{ __( 'GCash Opening Balance' ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $gcash->opening_balance, 2 ) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="p-1">{{ __( 'GCash Current Balance' ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $gcash->current_balance, 2 ) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="p-1">{{ __( 'GCash Payments (orders)' ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $gcash->total_gcash_payments, 2 ) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="p-1">{{ __( 'Total Cash-In (principal)' ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $gcash->total_cash_in, 2 ) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="p-1">{{ __( 'Total Cash-Out (net)' ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $gcash->total_cash_out, 2 ) }}</td>
+                    </tr>
+                    <tr class="font-bold">
+                        <td colspan="2" class="p-1">{{ __( 'Total Fees Earned' ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $gcash->total_fees, 2 ) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            @if( $gcash->transactions->count() > 0 )
+            <br>
+            <table class="w-full">
+                <thead>
+                    <tr class="font-semibold">
+                        <td colspan="4" class="p-2 border-b border-gray-800 text-center">{{ __( 'GCash Transactions' ) }}</td>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    @foreach( $gcash->transactions as $tx )
+                    <tr>
+                        <td colspan="2" class="p-1">
+                            {{ $tx->type === 'cash_in' ? __( 'Cash In' ) : __( 'Cash Out' ) }}
+                        </td>
+                        <td class="p-1 text-right">{{ number_format( $tx->customer_amount, 2 ) }}</td>
+                        <td class="p-1 text-right">{{ number_format( $tx->service_fee, 2 ) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @endif
+            @endif
         </div>
     </div>
 </div>

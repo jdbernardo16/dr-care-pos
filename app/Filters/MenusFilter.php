@@ -42,6 +42,14 @@ class MenusFilter
             ];
         }
 
+        if ( ns()->option->get( 'ns_pos_registers_enabled' ) === 'yes' && isset( $menus[ 'registers' ] ) ) {
+            $menus[ 'registers' ][ 'childrens' ][ 'gcash' ] = [
+                'label' => __( 'GCash' ),
+                'permissions' => [ 'nexopos.use.registers' ],
+                'href' => ns()->route( 'ns.dashboard.gcash' ),
+            ];
+        }
+
         return $menus;
     }
 }

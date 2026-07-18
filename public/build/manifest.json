@@ -174,7 +174,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B5SqWUpA.css",
+    "file": "assets/app-DJRf0kIA.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -183,7 +183,7 @@
     ]
   },
   "resources/css/dark.css": {
-    "file": "assets/dark-BKdzcNIQ.css",
+    "file": "assets/dark-an3bAqQu.css",
     "src": "resources/css/dark.css",
     "isEntry": true,
     "name": "dark",
@@ -201,7 +201,7 @@
     ]
   },
   "resources/css/grid.css": {
-    "file": "assets/grid-CxJHJZ6-.css",
+    "file": "assets/grid-Cy1WIxP6.css",
     "src": "resources/css/grid.css",
     "isEntry": true,
     "name": "grid",
@@ -210,7 +210,7 @@
     ]
   },
   "resources/css/light.css": {
-    "file": "assets/light-D_DEsVHH.css",
+    "file": "assets/light-Cm-F8ihH.css",
     "src": "resources/css/light.css",
     "isEntry": true,
     "name": "light",
@@ -219,7 +219,7 @@
     ]
   },
   "resources/css/phosphor.css": {
-    "file": "assets/phosphor-jC_eVh-m.css",
+    "file": "assets/phosphor-BrgOzaxb.css",
     "src": "resources/css/phosphor.css",
     "isEntry": true,
     "name": "phosphor",
@@ -321,7 +321,7 @@
     ]
   },
   "resources/ts/app-init.ts": {
-    "file": "assets/app-init-jZwraTKh.js",
+    "file": "assets/app-init-BhB7drq8.js",
     "name": "app-init",
     "src": "resources/ts/app-init.ts",
     "isEntry": true,
@@ -377,6 +377,7 @@
       "resources/ts/pages/dashboard/overtime/overtime-file.vue",
       "resources/ts/pages/dashboard/overtime/overtime-list.vue",
       "resources/ts/pages/dashboard/holidays/holiday-list.vue",
+      "resources/ts/pages/dashboard/gcash/ns-gcash.vue",
       "resources/ts/pages/dashboard/profile/ns-token.vue"
     ]
   },
@@ -567,6 +568,21 @@
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "_runtime-core.esm-bundler-CF9jxWpW.js",
       "_currency-D3_TCvZd.js",
+      "_chart--HL2-LwL.js"
+    ]
+  },
+  "resources/ts/pages/dashboard/gcash/ns-gcash.vue": {
+    "file": "assets/ns-gcash-r67MFzby.js",
+    "name": "ns-gcash",
+    "src": "resources/ts/pages/dashboard/gcash/ns-gcash.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/ts/bootstrap.ts",
+      "_lang-BINodpp-.js",
+      "_currency-D3_TCvZd.js",
+      "_runtime-dom.esm-bundler-wAvozNVp.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js",
+      "_runtime-core.esm-bundler-CF9jxWpW.js",
       "_chart--HL2-LwL.js"
     ]
   },

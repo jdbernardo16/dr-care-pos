@@ -7,6 +7,7 @@ use App\Exceptions\NotAllowedException;
 use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\PaymentType;
+use App\Models\GcashSession;
 use App\Models\Register;
 use App\Models\RegisterHistory;
 use App\Models\User;
@@ -577,6 +578,33 @@ class CashRegistersService
             } );
         } );
 
+        $gcashSession = GcashSession::where( 'register_id', $register->id )
+            ->where( 'status', 'opened' )
+            ->where( 'opened_at', '>=', $opening->created_at )
+            ->first();
+
+        $gcash = null;
+
+        if ( $gcashSession instanceof GcashSession ) {
+            $gcashTransactions = $gcashSession->transactions()->orderBy( 'created_at', 'desc' )->get();
+
+            $gcashOrderPayments = OrderPayment::whereIn( 'order_id', $orders->pluck( 'id' ) )
+                ->where( 'identifier', 'gcash-payment' )
+                ->sum( 'value' );
+
+            $gcash = (object) [
+                'opening_balance' => $gcashSession->opening_balance,
+                'current_balance' => $gcashSession->current_balance,
+                'closing_balance' => $gcashSession->closing_balance,
+                'total_cash_in' => $gcashSession->total_cash_in,
+                'total_cash_out' => $gcashSession->total_cash_out,
+                'total_fees' => $gcashSession->total_fees,
+                'total_gcash_payments' => $gcashOrderPayments,
+                'transactions' => $gcashTransactions,
+                'is_open' => $gcashSession->status === 'opened',
+            ];
+        }
+
         $user = User::find( $opening->author_id );
         $cashier = $user->first_name . ' ' . $user->last_name . '(' . $user->username . ')';
 
@@ -602,7 +630,8 @@ class CashRegistersService
             'payments',
             'cashOnHand',
             'products',
-            'user'
+            'user',
+            'gcash'
         );
     }
 }
