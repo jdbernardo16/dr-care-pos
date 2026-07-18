@@ -28,9 +28,9 @@
                     <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-box-edge" v-for="(product, index) of products">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 min-w-0">
-                                <div class="font-semibold text-base lg:text-lg text-fontcolor truncate">
+                                <div class="font-semibold text-base lg:text-lg text-fontcolor break-words leading-tight">
                                     {{ product.name }}
-                                    <span class="text-fontcolor-soft font-normal text-sm" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
+                                    <span class="text-fontcolor-soft font-normal text-sm whitespace-nowrap" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
                                 </div>
                                 <div class="flex items-center gap-3 mt-1 text-sm lg:text-base text-fontcolor">
                                     <span class="flex items-center gap-1">
