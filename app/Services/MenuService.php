@@ -159,7 +159,7 @@ class MenuService
                     ),
                 ),
             ),
-            AsideMenu::menu(
+            /* AsideMenu::menu(
                 label: __( 'Accounting' ),
                 icon: 'la-stream',
                 identifier: 'accounting',
@@ -207,7 +207,7 @@ class MenuService
                         href: ns()->url( '/dashboard/accounting/accounts/create' )
                     ),
                 ),
-            ),
+            ), */
             AsideMenu::menu(
                 label: __( 'Inventory' ),
                 icon: 'la-boxes',
@@ -298,7 +298,7 @@ class MenuService
                     ),
                 ),
             ),
-            AsideMenu::menu(
+            /* AsideMenu::menu(
                 label: __( 'Taxes' ),
                 icon: 'la-balance-scale-left',
                 identifier: 'taxes',
@@ -334,8 +334,8 @@ class MenuService
                         href: ns()->url( '/dashboard/taxes/create' )
                     ),
                 ),
-            ),
-            AsideMenu::menu(
+            ), */
+            /* AsideMenu::menu(
                 label: __( 'Modules' ),
                 icon: 'la-plug',
                 identifier: 'modules',
@@ -352,7 +352,7 @@ class MenuService
                         href: ns()->url( '/dashboard/modules/upload' )
                     ),
                 ),
-            ),
+            ), */
             AsideMenu::menu(
                 label: __( 'Users' ),
                 icon: 'la-users',
