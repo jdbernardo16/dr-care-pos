@@ -166,7 +166,7 @@
                                             (i) => i.featured,
                                         ).length === 0
                                     "
-                                    class="las la-image text-6xl opacity-5"
+                                    class="las la-image text-6xl opacity-10"
                                 ></i>
                             </div>
                             <div class="w-full absolute z-10 -bottom-10">
@@ -259,7 +259,7 @@
                                 :alt="category.name"
                             />
                             <i
-                                class="las la-image text-6xl opacity-5"
+                                class="las la-image text-6xl opacity-10"
                                 v-if="!category.preview_url"
                             ></i>
                         </div>
@@ -349,7 +349,7 @@
                                     product.galleries.filter((i) => i.featured)
                                         .length === 0
                                 "
-                                class="las la-image text-6xl opacity-5"
+                                class="las la-image text-6xl opacity-10"
                             ></i>
                         </div>
                         <div class="w-full absolute z-10 -bottom-10">
