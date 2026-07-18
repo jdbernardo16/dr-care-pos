@@ -90,7 +90,12 @@ class AttendanceCrud extends CrudService
                             'type' => 'select',
                             'name' => 'user_id',
                             'label' => __( 'Employee' ),
-                            'options' => Helper::toJsOptions( User::all(), [ 'id', 'username' ] ),
+                            'options' => Helper::toJsOptions( User::all(), function( $user ) {
+                                return [
+                                    'value' => $user->id,
+                                    'label' => trim( $user->first_name . ' ' . $user->last_name ) ?: $user->username,
+                                ];
+                            } ),
                             'value' => $entry->user_id ?? '',
                             'description' => __( 'Select the employee.' ),
                             'validation' => 'required',
