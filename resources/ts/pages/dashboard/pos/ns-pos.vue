@@ -9,10 +9,10 @@
         </div>
         <div class="flex-auto overflow-hidden flex p-2">
             <div class="flex flex-auto overflow-hidden -m-2">
-                <div :class="visibleSection === 'both' ? 'w-1/2' : 'w-full'" class="flex overflow-hidden p-2" v-if="[ 'both', 'cart' ].includes( visibleSection )">
+                <div :class="visibleSection === 'both' ? 'w-[38%]' : 'w-full'" class="flex overflow-hidden p-2" v-if="[ 'both', 'cart' ].includes( visibleSection )">
                     <ns-pos-cart></ns-pos-cart>
                 </div>
-                <div :class="visibleSection === 'both' ? 'w-1/2' : 'w-full'" class="p-2 flex overflow-hidden" v-if="[ 'both', 'grid' ].includes( visibleSection )">
+                <div :class="visibleSection === 'both' ? 'w-[62%]' : 'w-full'" class="p-2 flex overflow-hidden" v-if="[ 'both', 'grid' ].includes( visibleSection )">
                     <ns-pos-grid></ns-pos-grid>
                 </div>
             </div>
