@@ -232,14 +232,14 @@ export default {
                 <!-- Total -->
                 <div class="text-center mb-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ __( 'Total Due' ) }}</div>
-                    <div class="text-3xl lg:text-4xl font-extrabold text-emerald-600">{{ nsCurrency( order?.total || 0 ) }}</div>
+                    <div class="text-3xl lg:text-4xl font-extrabold text-primary">{{ nsCurrency( order?.total || 0 ) }}</div>
                 </div>
 
                 <!-- Payment Method Tabs -->
                 <div class="flex gap-2 mb-6">
                     <div v-for="payment of paymentsType" :key="payment.identifier"
                         @click="select(payment)"
-                        :class="activePayment?.identifier === payment.identifier ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
+                        :class="activePayment?.identifier === payment.identifier ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
                         class="flex-1 text-center py-3 rounded-lg font-semibold text-sm cursor-pointer transition-colors">
                         {{ payment.label }}
                     </div>
@@ -251,7 +251,7 @@ export default {
                     <div class="flex gap-2 flex-wrap">
                         <div v-for="amount in quickAmounts" :key="amount"
                             @click="setAmount(amount)"
-                            :class="selectedAmount === amount ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-emerald-300'"
+                            :class="selectedAmount === amount ? 'border-secondary bg-red-50 dark:bg-red-900/20 text-secondary dark:text-red-300' : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-secondary'"
                             class="px-4 py-2 border-2 rounded-lg font-bold text-sm cursor-pointer transition-colors">
                             ₱{{ amount === 'exact' ? 'Exact' : amount.toLocaleString() }}
                         </div>
@@ -262,14 +262,14 @@ export default {
                 <div class="mb-4">
                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ __( 'Or enter amount' ) }}</div>
                     <input type="number" v-model="customAmount" @input="onCustomAmountInput"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-lg font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-lg font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                         placeholder="₱0.00" />
                 </div>
 
                 <!-- Change Due -->
-                <div v-if="changeDue > 0" class="flex justify-between items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg mb-6">
+                <div v-if="changeDue > 0" class="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg mb-6">
                     <span class="text-sm text-gray-700 dark:text-gray-300">{{ __( 'Change Due' ) }}</span>
-                    <span class="text-xl font-extrabold text-emerald-600">₱{{ changeDue.toLocaleString() }}</span>
+                    <span class="text-xl font-extrabold text-primary">₱{{ changeDue.toLocaleString() }}</span>
                 </div>
 
                 <!-- Action Buttons -->
@@ -277,7 +277,7 @@ export default {
                     <button @click="closePopup()" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                         {{ __( 'Cancel' ) }}
                     </button>
-                    <button @click="submitPayment()" :disabled="chargeAmount <= 0" class="flex-[2] py-3 bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-base cursor-pointer hover:bg-emerald-700 transition-colors">
+                    <button @click="submitPayment()" :disabled="chargeAmount <= 0" class="flex-[2] py-3 bg-primary disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-base cursor-pointer hover:bg-secondary transition-colors">
                         {{ __( 'Charge' ) }} {{ chargeAmount > 0 ? nsCurrency(chargeAmount) : '' }}
                     </button>
                 </div>

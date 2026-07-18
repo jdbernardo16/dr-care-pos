@@ -1,5 +1,5 @@
 <template>
-    <div @click="payOrder()" id="charge-button" class="flex-shrink-0 flex items-center font-bold cursor-pointer justify-center flex-auto rounded-lg bg-emerald-600 text-white text-lg lg:text-xl h-14 mx-1">
+    <div @click="payOrder()" id="charge-button" class="flex-shrink-0 flex items-center font-bold cursor-pointer justify-center flex-auto rounded-lg bg-primary text-white text-lg lg:text-xl h-14 mx-1">
         <i class="mr-2 text-xl las la-cash-register"></i> 
         <span class="text-base lg:text-lg">{{ __( 'Charge' ) }} {{ nsCurrency( order.total ) }}</span>
     </div>
