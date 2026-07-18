@@ -622,7 +622,7 @@ export class POS {
 
     defineCurrentScreen() {
         this._visibleSection.next(
-            ["xs", "sm"].includes(<string>this._responsive.is())
+            ["xs", "sm", "md"].includes(<string>this._responsive.is())
                 ? "grid"
                 : "both",
         );
