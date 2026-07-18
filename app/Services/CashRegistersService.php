@@ -6,6 +6,7 @@ use App\Events\CashRegisterHistoryAfterAllDeletedEvent;
 use App\Exceptions\NotAllowedException;
 use App\Models\Order;
 use App\Models\OrderPayment;
+use App\Models\PaymentType;
 use App\Models\Register;
 use App\Models\RegisterHistory;
 use App\Models\User;
@@ -136,6 +137,19 @@ class CashRegistersService
             return [
                 'status' => 'info',
                 'message' => __( 'We can\'t attach a payment to a register as it\'s reference is not provided.' ),
+            ];
+        }
+
+        /**
+         * Only cash payment types affect the physical cash register balance.
+         * Non-cash payments (GCash, bank, customer account) are recorded
+         * on the order but don't change the cash on hand.
+         */
+        $paymentType = PaymentType::find( $orderPayment->type->id ?? null );
+        if ( ! $paymentType instanceof PaymentType || ! $paymentType->is_cash ) {
+            return [
+                'status' => 'info',
+                'message' => __( 'Non-cash payment types are not tracked on the cash register.' ),
             ];
         }
 
@@ -481,8 +495,13 @@ class CashRegistersService
             ->join( 'nexopos_payments_types', 'nexopos_payments_types.identifier', '=', 'nexopos_orders_payments.identifier' )
             ->get();
 
+        $cashPaymentIdentifiers = PaymentType::where( 'is_cash', true )
+            ->get()
+            ->pluck( 'identifier' )
+            ->toArray();
+
         $totalCashPayment = OrderPayment::whereIn( 'order_id', $orders->pluck( 'id' ) )
-            ->where( 'identifier', OrderPayment::PAYMENT_CASH )
+            ->whereIn( 'identifier', $cashPaymentIdentifiers )
             ->sum( 'value' );
 
         $totalChange = $orders->sum( 'change' );

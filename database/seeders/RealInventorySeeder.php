@@ -6,6 +6,8 @@ use App\Models\Procurement;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductUnitQuantity;
+use App\Models\OrderPayment;
+use App\Models\PaymentType;
 use App\Models\Provider;
 use App\Models\Role;
 use App\Models\Unit;
@@ -42,14 +44,17 @@ class RealInventorySeeder extends Seeder
         echo "[4/7] Creating unit groups and units...\n";
         $this->createUnits();
 
-        echo "[5/7] Creating default provider...\n";
+        echo "[5/7] Creating payment types...\n";
+        $this->createPaymentTypes();
+
+        echo "[6/7] Creating default provider...\n";
         $this->createProvider();
 
-        echo "[6/7] Importing {$this->countCsvRows()} products from CSV...\n";
+        echo "[7/7] Importing {$this->countCsvRows()} products from CSV...\n";
         $procurement = $this->createProcurement();
         $this->importProducts($procurement);
 
-        echo "[7/7] Done!\n";
+        echo "[8/7] Done!\n";
     }
 
     private function truncateBusinessTables(): void
@@ -292,6 +297,67 @@ class RealInventorySeeder extends Seeder
         ];
     }
 
+    private function createPaymentTypes(): void
+    {
+        $types = [
+            [
+                'label' => 'Cash',
+                'identifier' => OrderPayment::PAYMENT_CASH,
+                'priority' => 0,
+                'description' => 'Physical cash payment.',
+                'is_cash' => true,
+                'readonly' => true,
+            ],
+            [
+                'label' => 'Bank Payment',
+                'identifier' => OrderPayment::PAYMENT_BANK,
+                'priority' => 1,
+                'description' => 'Bank transfer or deposit payment.',
+                'is_cash' => false,
+                'readonly' => true,
+            ],
+            [
+                'label' => 'Customer Account',
+                'identifier' => OrderPayment::PAYMENT_ACCOUNT,
+                'priority' => 2,
+                'description' => 'Payment from customer credit account.',
+                'is_cash' => false,
+                'readonly' => true,
+            ],
+            [
+                'label' => 'GCash',
+                'identifier' => 'gcash-payment',
+                'priority' => 3,
+                'description' => 'GCash mobile wallet payment.',
+                'is_cash' => false,
+                'readonly' => false,
+            ],
+            [
+                'label' => 'Maya',
+                'identifier' => 'maya-payment',
+                'priority' => 4,
+                'description' => 'Maya mobile wallet payment.',
+                'is_cash' => false,
+                'readonly' => false,
+            ],
+        ];
+
+        foreach ($types as $type) {
+            PaymentType::create([
+                'label' => $type['label'],
+                'identifier' => $type['identifier'],
+                'priority' => $type['priority'],
+                'description' => $type['description'],
+                'is_cash' => $type['is_cash'],
+                'readonly' => $type['readonly'],
+                'active' => true,
+                'author_id' => $this->authorId,
+            ]);
+        }
+
+        echo '   ✓ ' . count($types) . " payment types created\n";
+    }
+
     private function createProvider(): void
     {
         $provider = Provider::create([
@@ -346,6 +412,28 @@ class RealInventorySeeder extends Seeder
         $totalCost = 0;
         $productIds = [];
 
+        // Load actual quantities from INVENTORY COST UPDATED.csv as source of truth
+        $actualQtyPath = base_path('INVENTORY COST UPDATED.csv');
+        $actualQtyMap = [];
+        if (file_exists($actualQtyPath)) {
+            $aqHandle = fopen($actualQtyPath, 'r');
+            $aqHeaders = fgetcsv($aqHandle);
+            // Headers: Name,Cost,Price [Dr. Care],In stock [Dr. Care],ACTUAL QTY,...
+            $nameCol = 0;
+            $qtyCol = 4;
+            while (($aqRow = fgetcsv($aqHandle)) !== false) {
+                $aqName = trim($aqRow[$nameCol] ?? '');
+                $aqVal = $aqRow[$qtyCol] ?? '';
+                if ($aqName !== '') {
+                    $actualQtyMap[$aqName] = $aqVal !== '' ? (int) $aqVal : 0;
+                }
+            }
+            fclose($aqHandle);
+            echo "   ✓ Loaded " . count($actualQtyMap) . " actual quantities\n";
+        } else {
+            echo "   ⚠ INVENTORY COST UPDATED.csv not found, falling back to stock_qty\n";
+        }
+
         $barcodeBase = 100000000000;
 
         while (($row = fgetcsv($handle)) !== false) {
@@ -356,7 +444,9 @@ class RealInventorySeeder extends Seeder
             $name = $data['name'];
             $cost = (float) ($data['cost'] ?: 0);
             $price = (float) ($data['price'] ?: 0);
-            $stock = (int) ($data['stock_qty'] ?: 0);
+            $stock = array_key_exists($name, $actualQtyMap)
+                ? $actualQtyMap[$name]
+                : (int) ($data['stock_qty'] ?: 0);
             $genericName = $data['generic_name'] ?? '';
 
             $categoryId = $this->categoryMap[$category] ?? $this->categoryMap['General'];

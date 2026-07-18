@@ -196,6 +196,14 @@ class PaymentTypeCrud extends CrudService
                             label: __( 'Identifier' ),
                             value: $entry->identifier ?? '',
                         ),
+                        FormInput::switch(
+                            options: Helper::kvToJsOptions( [ __( 'No' ), __( 'Yes' ) ] ),
+                            name: 'is_cash',
+                            label: __( 'Cash Payment' ),
+                            validation: 'required',
+                            value: $entry->is_cash ?? '',
+                            description: __( 'If set to Yes, this payment type will be treated as physical cash and will affect the cash register balance.' ),
+                        ),
                         FormInput::textarea(
                             name: 'description',
                             label: __( 'Description' ),
@@ -380,6 +388,11 @@ class PaymentTypeCrud extends CrudService
                 '$direction' => '',
                 '$sort' => false,
             ],
+            'is_cash' => [
+                'label' => __( 'Cash' ),
+                '$direction' => '',
+                '$sort' => false,
+            ],
             'readonly' => [
                 'label' => __( 'Readonly' ),
                 '$direction' => '',
@@ -400,6 +413,7 @@ class PaymentTypeCrud extends CrudService
     {
         $entry->readonly = $entry->readonly ? __( 'Yes' ) : __( 'No' );
         $entry->active = $entry->active ? __( 'Yes' ) : __( 'No' );
+        $entry->is_cash = $entry->is_cash ? __( 'Yes' ) : __( 'No' );
 
         // you can make changes here
         $entry->action(

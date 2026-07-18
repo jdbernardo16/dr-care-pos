@@ -51,6 +51,14 @@
                             </tr>
                         </tbody>
                         <tfoot class="text-fontcolor font-semibold">
+                            <tr class="bg-box-background-total">
+                                <td class="p-2 border border-box-edge text-font">{{ __( 'Cash Total' ) }}</td>
+                                <td class="p-2 border text-right">{{ nsCurrency( report.cash_total ) }}</td>
+                            </tr>
+                            <tr class="bg-box-background-total">
+                                <td class="p-2 border border-box-edge text-font">{{ __( 'Non-Cash Total' ) }}</td>
+                                <td class="p-2 border text-right">{{ nsCurrency( report.non_cash_total ) }}</td>
+                            </tr>
                             <tr>
                                 <td class="p-2 border border-box-edge text-font">{{ __( 'Total' ) }}</td>
                                 <td class="p-2 border text-right">{{ nsCurrency( report.total ) }}</td>

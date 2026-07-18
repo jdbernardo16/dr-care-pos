@@ -18,6 +18,7 @@ use App\Services\CrudService;
 use App\Services\Helper;
 use App\Services\TaxService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\BulkEditor\Classes\BulkEditor;
 use TorMorten\Eventy\Facades\Events as Hook;
 
@@ -732,6 +733,12 @@ class ProductCrud extends CrudService
                 '$direction' => '',
                 '$sort' => false,
             ],
+            'quantity' => [
+                'label' => __( 'Quantity' ),
+                'width' => '100px',
+                '$direction' => '',
+                '$sort' => false,
+            ],
             'status' => [
                 'label' => __( 'Status' ),
                 '$direction' => '',
@@ -801,6 +808,7 @@ class ProductCrud extends CrudService
 
     public function hook( $query ): void
     {
+        $query->addSelect( DB::raw( '(SELECT COALESCE( SUM(quantity), 0 ) FROM nexopos_products_unit_quantities WHERE product_id = nexopos_products.id) as quantity' ) );
         $query->orderBy( 'updated_at', 'desc' );
 
         $query->selectSub(function ($sub) {

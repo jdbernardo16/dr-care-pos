@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int            $author_id
  * @property string         $description
  * @property bool           $readonly
+ * @property bool           $is_cash
  * @property \Carbon\Carbon $updated_at
  */
 class PaymentType extends NsModel
@@ -17,6 +18,12 @@ class PaymentType extends NsModel
     use HasFactory;
 
     protected $table = 'nexopos_' . 'payments_types';
+
+    protected $casts = [
+        'is_cash' => 'boolean',
+        'active' => 'boolean',
+        'readonly' => 'boolean',
+    ];
 
     public function scopeActive( $query )
     {

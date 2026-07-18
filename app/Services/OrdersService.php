@@ -3049,6 +3049,12 @@ class OrdersService
 
         $total = $payments->map( fn( $payment ) => $payment->value )->sum();
 
+        $cashIdentifiers = $paymentTypes->filter( fn( $pt ) => $pt->is_cash )->pluck( 'identifier' )->toArray();
+
+        $cashTotal = $payments->filter( fn( $payment ) => in_array( $payment->identifier, $cashIdentifiers ) )
+            ->map( fn( $payment ) => $payment->value )
+            ->sum();
+
         return [
             'summary' => $paymentTypes->map( function ( $paymentType ) use ( $payments ) {
                 $total = $payments
@@ -3062,6 +3068,8 @@ class OrdersService
                 ];
             } ),
             'total' => ns()->currency->define( $total )->toFloat(),
+            'cash_total' => ns()->currency->define( $cashTotal )->toFloat(),
+            'non_cash_total' => ns()->currency->define( $total - $cashTotal )->toFloat(),
             'entries' => $payments,
         ];
     }
