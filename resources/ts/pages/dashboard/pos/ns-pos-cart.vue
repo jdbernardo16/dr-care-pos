@@ -11,11 +11,8 @@
         </div>
         <div class="rounded shadow ns-tab-item flex-auto flex overflow-hidden">
             <div class="cart-table flex flex-auto flex-col overflow-hidden">
-                <div id="cart-header" class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+                <div id="cart-header" class="flex items-center px-3 py-2 border-b border-gray-200 dark:border-gray-700">
                     <span class="font-bold text-lg">{{ __( 'Ticket' ) }}</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1 rounded-full">{{ order.type ? order.type.label : 'N/A' }}</span>
-                    </div>
                 </div>
                 <div id="cart-table-header" class="hidden"></div>
                 <div id="cart-products-table" class="flex flex-auto flex-col overflow-auto">
@@ -33,16 +30,16 @@
                             <div class="flex-1 min-w-0">
                                 <div class="font-semibold text-base lg:text-lg text-gray-900 dark:text-gray-100 truncate">
                                     {{ product.name }}
-                                    <span class="text-gray-400 dark:text-gray-500 font-normal text-sm" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
+                                    <span class="text-gray-600 dark:text-gray-400 font-normal text-sm" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
                                 </div>
-                                <div class="flex items-center gap-3 mt-1 text-sm lg:text-base text-gray-500 dark:text-gray-400">
+                                <div class="flex items-center gap-3 mt-1 text-sm lg:text-base text-gray-700 dark:text-gray-300">
                                     <span class="flex items-center gap-1">
-                                        <span class="text-gray-400">&times;</span>
+                                        <span class="text-gray-600">&times;</span>
                                         <span class="font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
-                                        <span class="text-gray-400">@</span>
+                                        <span class="text-gray-600">@</span>
                                         <span>{{ nsCurrency(product.unit_price) }}</span>
                                     </span>
-                                    <button @click="removeUsingIndex(index)" class="text-red-400 hover:text-red-600 text-sm">
+                                    <button @click="removeUsingIndex(index)" class="text-red-600 hover:text-red-800 text-sm">
                                         <i class="las la-trash-alt"></i>
                                     </button>
                                 </div>
@@ -60,15 +57,15 @@
                 </div>
                 <div id="cart-products-summary" class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
                     <div class="space-y-1 text-sm lg:text-base">
-                        <div class="flex justify-between text-gray-500 dark:text-gray-400">
+                        <div class="flex justify-between text-gray-700 dark:text-gray-300">
                             <span>{{ __( 'Subtotal' ) }}</span>
                             <span>{{ nsCurrency(order.subtotal) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-500 dark:text-gray-400" v-if="order.discount > 0">
+                        <div class="flex justify-between text-gray-700 dark:text-gray-300" v-if="order.discount > 0">
                             <span>{{ __( 'Discount' ) }}<span v-if="order.discount_type === 'percentage'"> ({{ order.discount_percentage }}%)</span></span>
                             <span>-{{ nsCurrency(order.discount) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-500 dark:text-gray-400" v-if="order.tax_value > 0">
+                        <div class="flex justify-between text-gray-700 dark:text-gray-300" v-if="order.tax_value > 0">
                             <span>{{ __( 'Tax' ) }}</span>
                             <span>{{ nsCurrency(order.tax_value) }}</span>
                         </div>
