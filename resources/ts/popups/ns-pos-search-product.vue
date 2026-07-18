@@ -47,7 +47,11 @@
                                 </small>
                             </div>
                         </div>
-                        <div></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold">
+                                {{ totalQuantity(product) }}
+                            </span>
+                        </div>
                     </li>
                 </ul>
                 <ul v-if="products.length === 0">
@@ -120,6 +124,15 @@ export default {
             return product.unit_quantities.every( q => parseFloat( q.quantity ) <= 0 );
         },
 
+        totalQuantity( product ) {
+            if ( ! product.unit_quantities || product.unit_quantities.length === 0 ) {
+                return 0;
+            }
+            return product.unit_quantities
+                .map( q => parseFloat( q.quantity ) )
+                .reduce( ( a, b ) => a + b, 0 );
+        },
+
         popupCloser,
         popupResolver,
 
@@ -149,7 +162,7 @@ export default {
         search() {
             this.isLoading = true;
             nsHttpClient
-                .post("/api/products/search", { search: this.searchValue })
+                .post("/api/products/search", { search: this.searchValue, limit: 20 })
                 .subscribe({
                     next: (result) => {
                         this.isLoading = false;
