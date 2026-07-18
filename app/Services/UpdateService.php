@@ -99,6 +99,16 @@ class UpdateService
 
         if ( $class instanceof MigrationsMigration ) {
             $class->$method();
+
+            if ( ! Schema::hasTable( 'migrations' ) ) {
+                Schema::create( 'migrations', function ( $table ) {
+                    $table->increments( 'id' );
+                    $table->string( 'migration' );
+                    $table->string( 'type' )->nullable();
+                    $table->integer( 'batch' );
+                } );
+            }
+
             $migration = new Migration;
             $migration->migration = $pathinfo[ 'filename' ];
             $migration->type = $type;
