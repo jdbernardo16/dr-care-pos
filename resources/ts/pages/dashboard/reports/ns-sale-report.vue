@@ -1082,7 +1082,10 @@ export default {
                         this.isLoading = false;
                         this.result = response.result;
                         this.summary = response.summary;
-                        this.payments = response.payments || [];
+                        this.payments = (response.payments || []).filter( payment => {
+                            const label = ( payment.label || '' ).toLowerCase();
+                            return label.includes( 'gcash' ) || label.includes( 'g-cash' );
+                        });
                     },
                     error: (error) => {
                         this.isLoading = false;
