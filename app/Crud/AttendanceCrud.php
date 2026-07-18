@@ -81,13 +81,7 @@ class AttendanceCrud extends CrudService
     public function getForm( $entry = null )
     {
         return [
-            'main' => [
-                'label' => __( 'Employee' ),
-                'name' => 'user_id',
-                'value' => $entry->user_id ?? '',
-                'description' => __( 'The employee associated with this attendance record.' ),
-                'validation' => 'required',
-            ],
+            'main' => [],
             'tabs' => [
                 'general' => [
                     'label' => __( 'General' ),
@@ -102,7 +96,7 @@ class AttendanceCrud extends CrudService
                             'validation' => 'required',
                         ],
                         [
-                            'type' => 'datetime',
+                            'type' => 'datetimepicker',
                             'name' => 'clock_in_at',
                             'label' => __( 'Clock In' ),
                             'value' => $entry->clock_in_at ?? '',
@@ -110,21 +104,21 @@ class AttendanceCrud extends CrudService
                             'validation' => 'required',
                         ],
                         [
-                            'type' => 'datetime',
+                            'type' => 'datetimepicker',
                             'name' => 'clock_out_at',
                             'label' => __( 'Clock Out' ),
                             'value' => $entry->clock_out_at ?? '',
                             'description' => __( 'Date and time the employee clocked out (optional if still active).' ),
                         ],
                         [
-                            'type' => 'datetime',
+                            'type' => 'datetimepicker',
                             'name' => 'break_start',
                             'label' => __( 'Break Start' ),
                             'value' => $entry->break_start ?? '',
                             'description' => __( 'Date and time the employee started their break.' ),
                         ],
                         [
-                            'type' => 'datetime',
+                            'type' => 'datetimepicker',
                             'name' => 'break_end',
                             'label' => __( 'Break End' ),
                             'value' => $entry->break_end ?? '',
