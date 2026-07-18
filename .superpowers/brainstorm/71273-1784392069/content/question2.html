@@ -1,0 +1,58 @@
+<h2>Cart Header & Item Rows</h2>
+<p class="subtitle">Two more decisions to narrow down the design.</p>
+
+<div class="section">
+  <h3>1. Cart Header Toolbar</h3>
+  <p class="subtitle">Currently: Comments, Taxes, Coupons, Settings, Quick Product buttons visible above cart items. Where should these go?</p>
+  <div class="options">
+    <div class="option" data-choice="icons-only" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Inline Icon Bar (compact)</h3>
+        <p>Small icon-only row above cart items. No text labels, cleaner look. Expand on tap.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="menu-drawer" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Behind "..." Menu</h3>
+        <p>Move to the same ⋮ menu as Hold/Discount/Void. Cleanest cart header.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="move-above" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Move to Top Header Bar</h3>
+        <p>Move to the top toolbar (next to Customers, Order Type). Frees up cart space.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. Product Item Rows</h3>
+  <p class="subtitle">Currently has separate Qty and Total columns with action icons. Loyverse uses simpler rows with inline quantity.</p>
+  <div class="options">
+    <div class="option" data-choice="loyverse-rows" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Loyverse-style Rows</h3>
+        <p>Item name + inline qty (× 2) + line total. Tap item to adjust qty. Swipe to delete. Cleanest.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="hybrid-rows" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Compact Columns</h3>
+        <p>Keep columns but reduce padding/font sizes. Name takes most space, qty and total are smaller.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="keep-current" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Keep Current (restyle)</h3>
+        <p>Same layout, just update colors/spacing/typography to match modern look.</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,97 @@
+<h2>Scope Question</h2>
+<p class="subtitle">Where should the action buttons go?</p>
+
+<div style="display:flex;gap:24px;margin:20px 0;">
+  <div class="mockup" style="flex:1;">
+    <div class="mockup-header">Option A: Single "Charge" Button</div>
+    <div class="mockup-body" style="padding:16px;">
+      <div style="background:#f8f9fa;border-radius:8px;padding:20px;min-height:250px;display:flex;flex-direction:column;">
+        <div style="flex:1;border-bottom:1px solid #ddd;padding-bottom:12px;margin-bottom:12px;">
+          <div style="font-size:12px;color:#999;">CART ITEMS</div>
+        </div>
+        <div style="border-top:2px solid #333;padding:12px 0;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:18px;">
+            <span>Total</span><span>$17.50</span>
+          </div>
+        </div>
+        <button style="width:100%;background:#059669;color:white;border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;">Charge $17.50</button>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#666;text-align:center;">
+        Hold, Discount, Void moved to secondary menu (⋮)
+      </div>
+    </div>
+  </div>
+  <div class="mockup" style="flex:1;">
+    <div class="mockup-header">Option B: Charge + Compact Row</div>
+    <div class="mockup-body" style="padding:16px;">
+      <div style="background:#f8f9fa;border-radius:8px;padding:20px;min-height:250px;display:flex;flex-direction:column;">
+        <div style="flex:1;border-bottom:1px solid #ddd;padding-bottom:12px;margin-bottom:12px;">
+          <div style="font-size:12px;color:#999;">CART ITEMS</div>
+        </div>
+        <div style="border-top:2px solid #333;padding:8px 0;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:18px;">
+            <span>Total</span><span>$17.50</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:3fr 1fr;gap:6px;margin-top:8px;">
+          <button style="background:#059669;color:white;border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;">Charge $17.50</button>
+          <button style="background:#e5e7eb;color:#333;border:none;border-radius:8px;padding:14px;font-size:14px;cursor:pointer;">⋮</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#666;text-align:center;">
+        More options behind ⋮ (Hold, Disc, Void)
+      </div>
+    </div>
+  </div>
+  <div class="mockup" style="flex:1;">
+    <div class="mockup-header">Option C: Keep Current 4 Buttons</div>
+    <div class="mockup-body" style="padding:16px;">
+      <div style="background:#f8f9fa;border-radius:8px;padding:20px;min-height:250px;display:flex;flex-direction:column;">
+        <div style="flex:1;border-bottom:1px solid #ddd;padding-bottom:12px;margin-bottom:12px;">
+          <div style="font-size:12px;color:#999;">CART ITEMS</div>
+        </div>
+        <div style="border-top:2px solid #333;padding:8px 0;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:18px;">
+            <span>Total</span><span>$17.50</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-top:8px;">
+          <button style="background:#059669;color:white;border:none;border-radius:6px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;">Pay</button>
+          <button style="background:#0284c7;color:white;border:none;border-radius:6px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;">Hold</button>
+          <button style="background:#e5e7eb;color:#333;border:none;border-radius:6px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;">%</button>
+          <button style="background:#e11d48;color:white;border:none;border-radius:6px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;">Void</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#666;text-align:center;">
+        Keep current layout, redesign styling
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="subtitle">Which bottom-button approach do you prefer?</p>
+  <div class="options">
+    <div class="option" data-choice="single-charge" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Single "Charge" Button</h3>
+        <p>Like Loyverse — one prominent green button. Secondary actions in a ⋮ menu. Cleanest.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="charge-plus-menu" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Charge + Compact Menu</h3>
+        <p>Charge button takes most space, small ⋮ for Hold/Discount/Void. Balanced.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="keep-four" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Keep 4 Buttons (Redesign)</h3>
+        <p>Keep Pay/Hold/Discount/Void but restyle them to look more modern. Familiar.</p>
+      </div>
+    </div>
+  </div>
+</div>
