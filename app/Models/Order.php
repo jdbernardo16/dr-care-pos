@@ -8,6 +8,8 @@ use App\Classes\Hook;
 use App\Events\OrderAfterCreatedEvent;
 use App\Events\OrderAfterPaymentStatusChangedEvent;
 use App\Events\OrderAfterUpdatedEvent;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use App\Services\DateService;
 use App\Traits\NsFlashData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -63,6 +65,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class Order extends NsModel
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('order');
+    }
+
     use HasFactory, NsFlashData;
 
     public $timestamps = false;

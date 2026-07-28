@@ -8,6 +8,8 @@ use App\Traits\NsCustomerAddress;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,7 +31,14 @@ use Illuminate\Support\Facades\DB;
  */
 class Customer extends UserScope
 {
-    use HasFactory, NsCustomerAddress;
+    use HasFactory, NsCustomerAddress, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('customer');
+    }
 
     protected $table = 'nexopos_' . 'users';
 

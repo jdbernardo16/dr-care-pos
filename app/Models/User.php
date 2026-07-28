@@ -8,6 +8,8 @@ use App\Events\UserAfterUpdatedEvent;
 use App\Services\UserOptions;
 use App\Traits\NsCustomerAddress;
 use App\Traits\NsDependable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -36,7 +38,15 @@ class User extends Authenticatable
         HasFactory,
         Notifiable,
         NsCustomerAddress,
-        NsDependable;
+        NsDependable,
+        LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('user');
+    }
 
     protected $table = 'nexopos_users';
 

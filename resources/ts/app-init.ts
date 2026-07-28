@@ -116,6 +116,9 @@ const nsOvertimeList = defineAsyncComponent(
 const nsHolidayList = defineAsyncComponent(
     () => import("./pages/dashboard/holidays/holiday-list.vue"),
 );
+const nsActivityLog = defineAsyncComponent(
+    () => import("./pages/dashboard/ns-activity-log.vue"),
+);
 
 declare const window;
 declare let nsExtraComponents;
@@ -170,6 +173,7 @@ const allComponents = Object.assign(
         nsOvertimeFile,
         nsOvertimeList,
         nsHolidayList,
+        nsActivityLog,
         ...baseComponents,
     },
     nsExtraComponents,

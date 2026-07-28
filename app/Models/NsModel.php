@@ -24,7 +24,7 @@ abstract class NsModel extends NsRootModel
      * We would like to be able to monitor
      * accurately all changes that occurs on a model
      */
-    protected $oldAttributes = [];
+    protected array $oldAttributes = [];
 
     protected static function boot()
     {

@@ -44,6 +44,7 @@ Route::middleware( [
         include dirname( __FILE__ ) . '/api/payroll.php';
         include dirname( __FILE__ ) . '/api/overtime.php';
         include dirname( __FILE__ ) . '/api/holidays.php';
+        include dirname( __FILE__ ) . '/api/activity-log.php';
     } );
 } );
 

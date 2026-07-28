@@ -572,6 +572,13 @@ class MenuService
                 ),
             ),
             AsideMenu::menu(
+                label: __( 'Activity Log' ),
+                icon: 'la-history',
+                identifier: 'activity-log',
+                permissions: [ 'manage.options' ],
+                href: ns()->url( '/dashboard/activity-log' ),
+            ),
+            AsideMenu::menu(
                 label: __( 'Settings' ),
                 icon: 'la-cogs',
                 identifier: 'settings',

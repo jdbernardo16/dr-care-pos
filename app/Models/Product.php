@@ -7,6 +7,8 @@ use App\Events\ProductAfterDeleteEvent;
 use App\Events\ProductBeforeDeleteEvent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * @property string   $id
@@ -58,8 +60,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class Product extends NsModel
 {
-    use HasFactory;
+    use LogsActivity;
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('product');
+    }
+
+    use HasFactory;
     const STOCK_MANAGEMENT_ENABLED = 'enabled';
 
     const STOCK_MANAGEMENT_DISABLED = 'disabled';
