@@ -2,7 +2,7 @@
     <div class="relative flex-shrink-0" id="more-button">
         <div
             @click="toggleMenu($event)"
-            class="flex items-center font-bold cursor-pointer justify-center rounded-lg bg-white text-fontcolor text-xl h-14 w-14 mx-1 border-2 border-box-edge hover:bg-gray-100"
+            class="flex items-center font-bold cursor-pointer justify-center rounded-lg bg-white text-fontcolor text-2xl h-16 w-16 mx-1 border-2 border-box-edge hover:bg-gray-100"
         >
             <span>⋮</span>
         </div>
@@ -15,9 +15,9 @@
                 @click="handleAction(action)"
                 v-for="action of menuActions"
                 :key="action.label"
-                class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3 text-sm font-medium text-fontcolor border-b border-box-edge last:border-0"
+                class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3 text-base font-medium text-fontcolor border-b border-box-edge last:border-0"
             >
-                <i :class="action.icon" class="text-lg text-fontcolor-soft"></i>
+                <i :class="action.icon" class="text-xl text-fontcolor-soft"></i>
                 <span>{{ action.label }}</span>
             </div>
         </div>

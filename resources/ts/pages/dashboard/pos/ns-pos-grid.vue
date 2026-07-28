@@ -128,7 +128,7 @@
                                 class="absolute top-0 left-0 w-full h-5 flex items-center justify-center out-of-stock-badge z-20"
                             >
                                 <span
-                                    class="text-2xs px-1.5 py-0.5 rounded-sm font-bold"
+                                    class="text-xs px-1.5 py-0.5 rounded-sm font-bold"
                                     >{{ __("OOS") }}</span
                                 >
                             </div>
@@ -173,7 +173,7 @@
                                 <div
                                     class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2"
                                 >
-                                    <h3 class="text-sm text-center w-full">
+                                    <h3 class="text-base text-center w-full">
                                         {{ product.name }}
                                     </h3>
                                     <template
@@ -189,7 +189,7 @@
                                             "
                                         >
                                             <span
-                                                class="text-sm"
+                                                class="text-base"
                                                 v-if="
                                                     product.unit_quantities &&
                                                     product.unit_quantities
@@ -211,7 +211,7 @@
                                                     options.ns_pos_prefered_price ===
                                                     'gross_prices'
                                                 "
-                                                class="text-sm"
+                                                class="text-base"
                                             >
                                                 {{
                                                     nsCurrency(
@@ -221,7 +221,7 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span v-else class="text-sm">
+                                            <span v-else class="text-base">
                                                 {{
                                                     nsCurrency(
                                                         product
@@ -267,7 +267,7 @@
                             <div
                                 class="cell-item-label relative w-full flex items-center justify-center -top-10 h-20 py-2"
                             >
-                                <h3 class="text-sm font-bold py-2 text-center">
+                                <h3 class="text-base font-bold py-2 text-center">
                                     {{ category.name }}
                                 </h3>
                             </div>
@@ -313,10 +313,10 @@
                     >
                         <div
                             v-if="isOutOfStock(product)"
-                            class="absolute top-0 left-0 w-full h-6 flex items-center justify-center out-of-stock-badge z-20"
+                            class="absolute top-0 left-0 w-full h-7 flex items-center justify-center out-of-stock-badge z-20"
                         >
                             <span
-                                class="text-xs px-2 py-0.5 rounded-sm font-bold"
+                                class="text-sm px-2 py-0.5 rounded-sm font-bold"
                                 >{{ __("Out of Stock") }}</span
                             >
                         </div>
@@ -356,7 +356,7 @@
                             <div
                                 class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2"
                             >
-                                <h3 class="text-sm text-center w-full">
+                                <h3 class="text-base text-center w-full">
                                     {{ product.name }}
                                 </h3>
                                 <template
@@ -369,7 +369,7 @@
                                         v-if="options.ns_pos_vat === 'disabled'"
                                     >
                                         <span
-                                            class="text-sm"
+                                            class="text-base"
                                             v-if="
                                                 product.unit_quantities &&
                                                 product.unit_quantities
@@ -390,7 +390,7 @@
                                                 options.ns_pos_prefered_price ===
                                                 'gross_prices'
                                             "
-                                            class="text-sm"
+                                            class="text-base"
                                         >
                                             {{
                                                 nsCurrency(
@@ -399,7 +399,7 @@
                                                 )
                                             }}
                                         </span>
-                                        <span v-else class="text-sm">
+                                        <span v-else class="text-base">
                                             {{
                                                 nsCurrency(
                                                     product.unit_quantities[0]

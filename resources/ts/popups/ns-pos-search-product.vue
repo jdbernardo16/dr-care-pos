@@ -56,28 +56,28 @@
                                 class="las la-image text-4xl opacity-20"
                             ></i>
                         </div>
-                        <div class="p-2 flex flex-col gap-0.5 flex-1">
+                        <div class="p-3 flex flex-col gap-1 flex-1">
                             <div class="flex items-start justify-between gap-1">
                                 <h4
-                                    class="text-fontcolor font-semibold text-xs leading-tight line-clamp-2 flex-1"
+                                    class="text-fontcolor font-semibold text-base leading-tight line-clamp-2 flex-1"
                                 >
                                     {{ product.name }}
                                 </h4>
                                 <span
                                     v-if="isOutOfStock(product)"
-                                    class="text-2xs px-1 py-0.5 rounded-sm font-bold bg-red-600 text-white shrink-0 leading-none"
+                                    class="text-xs px-1.5 py-0.5 rounded-sm font-bold bg-red-600 text-white shrink-0 leading-none"
                                 >
                                     {{ __("OOS") }}
                                 </span>
                             </div>
-                            <small class="text-soft-secondary text-2xs">
+                            <small class="text-soft-secondary text-sm">
                                 {{ product.category?.name }}
                             </small>
-                            <div class="mt-auto flex items-center justify-between pt-0.5">
-                                <span class="text-2xs text-soft-secondary">
+                            <div class="mt-auto flex items-center justify-between pt-1">
+                                <span class="text-sm text-soft-secondary">
                                     {{ __("Stock") }}:
                                 </span>
-                                <span class="text-xs font-bold text-fontcolor">
+                                <span class="text-base font-bold text-fontcolor">
                                     {{ totalQuantity(product) }}
                                 </span>
                             </div>

@@ -3,7 +3,7 @@
         <div id="tools" class="flex pl-2 ns-tab" v-if="visibleSection === 'cart'">
             <div @click="switchTo( 'cart' )" class="flex cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 font-semibold active tab">
                 <span>{{ __( 'Cart' ) }}</span>
-                <span v-if="order" class="flex items-center justify-center text-sm rounded-full h-6 w-6 bg-green-500 text-white ml-1">{{ products.length }}</span>
+                <span v-if="order" class="flex items-center justify-center text-base rounded-full h-7 w-7 bg-green-500 text-white ml-1">{{ products.length }}</span>
             </div>
             <div @click="switchTo( 'grid' )" class="cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 border-t border-r border-l inactive tab">
                 {{ __( 'Products' ) }}
@@ -12,7 +12,7 @@
         <div class="rounded shadow ns-tab-item flex-auto flex overflow-hidden">
             <div class="cart-table flex flex-auto flex-col overflow-hidden">
                 <div id="cart-header" class="flex items-center px-3 py-2 border-b border-box-edge">
-                    <span class="font-bold text-lg text-fontcolor">{{ __( 'Ticket' ) }}</span>
+                    <span class="font-bold text-xl text-fontcolor">{{ __( 'Ticket' ) }}</span>
                 </div>
                 <div id="cart-table-header" class="hidden"></div>
                 <div id="cart-products-table" class="flex flex-auto flex-col overflow-auto">
@@ -28,27 +28,27 @@
                     <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-box-edge" v-for="(product, index) of products">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 min-w-0">
-                                <div class="font-semibold text-base lg:text-lg text-fontcolor break-words leading-tight">
+                                <div class="font-semibold text-lg lg:text-xl text-fontcolor break-words leading-tight">
                                     {{ product.name }}
-                                    <span class="text-fontcolor-soft font-normal text-sm whitespace-nowrap" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
+                                    <span class="text-fontcolor-soft font-normal text-base whitespace-nowrap" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
                                 </div>
-                                <div class="flex items-center gap-3 mt-1 text-sm lg:text-base text-fontcolor">
+                                <div class="flex items-center gap-3 mt-1 text-base lg:text-lg text-fontcolor">
                                     <span class="flex items-center gap-1">
                                         <span class="text-fontcolor-soft">&times;</span>
                                         <span class="font-semibold text-fontcolor bg-input-background px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
                                         <span class="text-fontcolor-soft">@</span>
                                         <span>{{ nsCurrency(product.unit_price) }}</span>
                                     </span>
-                                    <button @click="removeUsingIndex(index)" class="text-error-secondary hover:text-error-tertiary text-sm">
+                                    <button @click="removeUsingIndex(index)" class="text-error-secondary hover:text-error-tertiary text-base">
                                         <i class="las la-trash-alt"></i>
                                     </button>
                                 </div>
-                                <div class="flex flex-wrap gap-2 mt-1 text-sm">
+                                <div class="flex flex-wrap gap-2 mt-1 text-base">
                                     <a @click="changeProductPrice(product)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Price' ) }}: {{ nsCurrency(product.unit_price) }}</a>
                                     <a v-if="allowQuantityModification(product)" @click="openDiscountPopup(product, 'product', index)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span>: {{ nsCurrency(product.discount) }}</a>
                                 </div>
                             </div>
-                            <div class="text-base lg:text-lg font-bold text-fontcolor flex-shrink-0 ml-4">
+                            <div class="text-lg lg:text-xl font-bold text-fontcolor flex-shrink-0 ml-4">
                                 {{ nsCurrency(product.total_price) }}
                             </div>
                         </div>
@@ -56,7 +56,7 @@
 
                 </div>
                 <div id="cart-products-summary" class="px-3 py-2 border-t border-box-edge">
-                    <div class="space-y-1 text-sm lg:text-base">
+                    <div class="space-y-1 text-base lg:text-lg">
                         <div class="flex justify-between text-fontcolor-soft">
                             <span>{{ __( 'Subtotal' ) }}</span>
                             <span>{{ nsCurrency(order.subtotal) }}</span>
@@ -69,7 +69,7 @@
                             <span>{{ __( 'Tax' ) }}</span>
                             <span>{{ nsCurrency(order.tax_value) }}</span>
                         </div>
-                        <div class="flex justify-between font-bold text-lg lg:text-xl text-fontcolor border-t-2 border-fontcolor pt-2 mt-2">
+                        <div class="flex justify-between font-bold text-xl lg:text-2xl text-fontcolor border-t-2 border-fontcolor pt-2 mt-2">
                             <span>{{ __( 'Total' ) }}</span>
                             <span>{{ nsCurrency(order.total) }}</span>
                         </div>
