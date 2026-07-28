@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Phar;
 use PharData;
+use RecursiveCallbackFilterIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class FullBackupCommand extends Command
 {
@@ -51,9 +54,20 @@ class FullBackupCommand extends Command
     protected function createTarGz(string $sourceDir, string $outputPath): void
     {
         $tarPath = preg_replace('/\.gz$/', '', $outputPath);
-
         $phar = new PharData($tarPath);
-        $phar->buildFromDirectory($sourceDir);
+
+        $directory = new RecursiveDirectoryIterator(
+            $sourceDir,
+            RecursiveDirectoryIterator::SKIP_DOTS
+        );
+
+        $filtered = new RecursiveCallbackFilterIterator($directory, function ($current) {
+            return !$current->isLink();
+        });
+
+        $iterator = new RecursiveIteratorIterator($filtered, RecursiveIteratorIterator::LEAVES_ONLY);
+
+        $phar->buildFromIterator($iterator, $sourceDir);
 
         $phar->compress(Phar::GZ);
 
