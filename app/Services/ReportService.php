@@ -881,6 +881,20 @@ class ReportService
             ->get()
             ->keyBy( 'identifier' );
 
+        /**
+         * payment.value stores the amount tendered, not the amount applied.
+         * change is always returned in cash, so we subtract total change
+         * from the cash payment total to get the net cash received.
+         */
+        $totalChange = (float) $orders->sum( 'change' );
+
+        if ( ! isset( $payments['cash-payment'] ) ) {
+            $payments['cash-payment'] = new \stdClass;
+            $payments['cash-payment']->total = 0;
+        }
+
+        $payments['cash-payment']->total = max( 0, (float) $payments['cash-payment']->total - $totalChange );
+
         $paymentTypes = \App\Models\PaymentType::active()->get();
 
         return $paymentTypes->map( function ( $type ) use ( $payments ) {

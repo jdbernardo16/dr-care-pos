@@ -1052,7 +1052,7 @@ export default {
                         this.summary = response.summary;
                         this.payments = (response.payments || []).filter( payment => {
                             const label = ( payment.label || '' ).toLowerCase();
-                            return label.includes( 'gcash' ) || label.includes( 'g-cash' );
+                            return label.includes( 'gcash' ) || label.includes( 'g-cash' ) || label.includes( 'cash' );
                         });
                     },
                     error: (error) => {
