@@ -21,7 +21,7 @@
                         v-model="searchValue"
                         ref="searchField"
                         type="text"
-                        class="p-2 outline-hidden flex-auto text-font"
+                        class="p-2 outline-hidden flex-auto text-font text-2xl"
                     />
                     <button @click="search()" class="px-2">
                         {{ __("Search") }}
@@ -41,13 +41,22 @@
                             'ns-box rounded-lg p-0 flex flex-col border transition-all overflow-hidden',
                             isOutOfStock(product)
                                 ? 'ns-out-of-stock opacity-40 cursor-not-allowed'
-                                : 'cursor-pointer hover:shadow-md hover:border-info'
+                                : 'cursor-pointer hover:shadow-md hover:border-info',
                         ]"
                     >
-                        <div class="aspect-4/3 bg-box-elevation-background flex items-center justify-center overflow-hidden">
+                        <div
+                            class="aspect-4/3 bg-box-elevation-background flex items-center justify-center overflow-hidden"
+                        >
                             <img
-                                v-if="product.galleries && product.galleries.length > 0"
-                                :src="product.galleries.filter(i => i.featured)[0]?.url || product.galleries[0].url"
+                                v-if="
+                                    product.galleries &&
+                                    product.galleries.length > 0
+                                "
+                                :src="
+                                    product.galleries.filter(
+                                        (i) => i.featured,
+                                    )[0]?.url || product.galleries[0].url
+                                "
                                 class="object-cover h-full w-full"
                                 :alt="product.name"
                             />
@@ -59,7 +68,7 @@
                         <div class="p-3 flex flex-col gap-1 flex-1">
                             <div class="flex items-start justify-between gap-1">
                                 <h4
-                                    class="text-fontcolor font-semibold text-base leading-tight line-clamp-2 flex-1"
+                                    class="text-fontcolor font-semibold text-lg leading-tight line-clamp-2 flex-1"
                                 >
                                     {{ product.name }}
                                 </h4>
@@ -70,24 +79,25 @@
                                     {{ __("OOS") }}
                                 </span>
                             </div>
-                            <small class="text-soft-secondary text-sm">
+                            <small class="text-soft-secondary text-base">
                                 {{ product.category?.name }}
                             </small>
-                            <div class="mt-auto flex items-center justify-between pt-1">
+                            <div
+                                class="mt-auto flex items-center justify-between pt-1"
+                            >
                                 <span class="text-sm text-soft-secondary">
                                     {{ __("Stock") }}:
                                 </span>
-                                <span class="text-base font-bold text-fontcolor">
+                                <span
+                                    class="text-base font-bold text-fontcolor"
+                                >
                                     {{ totalQuantity(product) }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div
-                    v-else
-                    class="text-fontcolor text-center p-2"
-                >
+                <div v-else class="text-fontcolor text-center p-2">
                     {{
                         __(
                             "There is nothing to display. Have you started the search ?",
@@ -148,20 +158,28 @@ export default {
     methods: {
         __,
 
-        isOutOfStock( product ) {
-            if ( ! product.unit_quantities || product.unit_quantities.length === 0 ) {
+        isOutOfStock(product) {
+            if (
+                !product.unit_quantities ||
+                product.unit_quantities.length === 0
+            ) {
                 return true;
             }
-            return product.unit_quantities.every( q => parseFloat( q.quantity ) <= 0 );
+            return product.unit_quantities.every(
+                (q) => parseFloat(q.quantity) <= 0,
+            );
         },
 
-        totalQuantity( product ) {
-            if ( ! product.unit_quantities || product.unit_quantities.length === 0 ) {
+        totalQuantity(product) {
+            if (
+                !product.unit_quantities ||
+                product.unit_quantities.length === 0
+            ) {
                 return 0;
             }
             return product.unit_quantities
-                .map( q => parseFloat( q.quantity ) )
-                .reduce( ( a, b ) => a + b, 0 );
+                .map((q) => parseFloat(q.quantity))
+                .reduce((a, b) => a + b, 0);
         },
 
         popupCloser,
@@ -193,7 +211,10 @@ export default {
         search() {
             this.isLoading = true;
             nsHttpClient
-                .post("/api/products/search", { search: this.searchValue, limit: 20 })
+                .post("/api/products/search", {
+                    search: this.searchValue,
+                    limit: 20,
+                })
                 .subscribe({
                     next: (result) => {
                         this.isLoading = false;

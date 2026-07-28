@@ -314,8 +314,8 @@ export default {
                             @click="setAmount(amount)"
                             :class="
                                 selectedAmount === amount
-                                    ? 'border-secondary bg-red-50 dark:bg-red-900/20 text-secondary dark:text-red-300'
-                                    : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-secondary'
+                                    ? 'border-secondary bg-red-50 dark:bg-red-900/20 text-secondary dark:text-red-600'
+                                    : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-black hover:border-secondary'
                             "
                             class="px-4 py-2 border-2 rounded-lg font-bold text-sm cursor-pointer transition-colors"
                         >
@@ -347,7 +347,7 @@ export default {
                     v-if="changeDue > 0"
                     class="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg mb-6"
                 >
-                    <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                    <span class="text-sm text-gray-700 dark:text-black">{{
                         __("Change Due")
                     }}</span>
                     <span class="text-xl font-extrabold text-primary"

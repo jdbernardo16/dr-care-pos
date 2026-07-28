@@ -59,13 +59,13 @@
                         class="flex-auto outline-hidden px-2"
                     />
                 </div>
-                    <button
-                        :title="__('Search for products.')"
-                        @click="openSearchPopup()"
-                        class="cursor-pointer w-10 h-10 rounded-full bg-red-600 flex items-center justify-center outline-hidden flex-shrink-0"
-                    >
-                        <i class="las la-search text-white"></i>
-                    </button>
+                <button
+                    :title="__('Search for products.')"
+                    @click="openSearchPopup()"
+                    class="cursor-pointer w-10 h-10 rounded-full bg-red-600 flex items-center justify-center outline-hidden flex-shrink-0"
+                >
+                    <i class="las la-search text-white"></i>
+                </button>
             </div>
             <div style="height: 0px">
                 <div v-if="isLoading" class="fade-in-entrance ns-loader">
@@ -169,13 +169,17 @@
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 32 32"
                                     class="w-16 h-16 opacity-10 fill-current"
-                                ><path d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"/></svg>
+                                >
+                                    <path
+                                        d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"
+                                    />
+                                </svg>
                             </div>
                             <div class="w-full absolute z-10 -bottom-10">
                                 <div
                                     class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2"
                                 >
-                                    <h3 class="text-base text-center w-full">
+                                    <h3 class="text-lg text-center w-full">
                                         {{ product.name }}
                                     </h3>
                                     <template
@@ -191,7 +195,7 @@
                                             "
                                         >
                                             <span
-                                                class="text-base"
+                                                class="text-lg"
                                                 v-if="
                                                     product.unit_quantities &&
                                                     product.unit_quantities
@@ -213,7 +217,7 @@
                                                     options.ns_pos_prefered_price ===
                                                     'gross_prices'
                                                 "
-                                                class="text-base"
+                                                class="text-lg"
                                             >
                                                 {{
                                                     nsCurrency(
@@ -223,7 +227,7 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span v-else class="text-base">
+                                            <span v-else class="text-lg">
                                                 {{
                                                     nsCurrency(
                                                         product
@@ -261,12 +265,16 @@
                                 :alt="category.name"
                             />
                         </div>
-                            <svg
-                                v-if="!category.preview_url"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 32 32"
-                                class="w-16 h-16 opacity-10 fill-current"
-                            ><path d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"/></svg>
+                        <svg
+                            v-if="!category.preview_url"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 32 32"
+                            class="w-16 h-16 opacity-10 fill-current"
+                        >
+                            <path
+                                d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"
+                            />
+                        </svg>
                         <div
                             class="absolute inset-0 flex items-center justify-center pointer-events-none"
                             style="background: rgb(255 255 255 / 0.85)"
@@ -355,13 +363,17 @@
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 32 32"
                                 class="w-16 h-16 opacity-10 fill-current"
-                            ><path d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"/></svg>
+                            >
+                                <path
+                                    d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"
+                                />
+                            </svg>
                         </div>
                         <div class="w-full absolute z-10 -bottom-10">
                             <div
                                 class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2"
                             >
-                                <h3 class="text-base text-center w-full">
+                                <h3 class="text-lg text-center w-full">
                                     {{ product.name }}
                                 </h3>
                                 <template
@@ -671,7 +683,11 @@ export default {
         },
 
         openSearchPopup() {
-            Popup.show(nsPosSearchProductVue, {}, { popupClass: 'w-full h-full max-w-full max-h-full' });
+            Popup.show(
+                nsPosSearchProductVue,
+                {},
+                { popupClass: "w-full h-full max-w-full max-h-full" },
+            );
         },
 
         hasNoFeatured(product) {

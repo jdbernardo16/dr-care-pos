@@ -605,7 +605,7 @@ git commit -m "pos: restyle cart with Loyverse-inspired item rows, totals, and C
                     v-if="changeDue > 0"
                     class="flex justify-between items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg mb-6"
                 >
-                    <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                    <span class="text-sm text-black dark:text-gray-300">{{
                         __("Change Due")
                     }}</span>
                     <span class="text-xl font-extrabold text-emerald-600"
