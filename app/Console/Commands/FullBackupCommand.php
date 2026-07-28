@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use Phar;
+use PharData;
 
 class FullBackupCommand extends Command
 {
@@ -36,23 +38,34 @@ class FullBackupCommand extends Command
         $imagesArchivePath = $backupDisk->path($imagesArchive);
 
         $this->info("Archiving images to: {$imagesArchivePath}...");
-        $command = sprintf(
-            'tar -czf %s -C %s .',
-            escapeshellarg($imagesArchivePath),
-            escapeshellarg($imagesDir)
-        );
-        exec($command, $output, $exitCode);
 
-        if ($exitCode !== 0) {
-            $this->error('Failed to archive images.');
-            return 1;
-        }
+        $this->createTarGz($imagesDir, $imagesArchivePath);
 
         $this->info("Backup complete: {$snapshotName}");
 
         $this->cleanOldBackups((int) $this->option('delete-older-than'));
 
         return 0;
+    }
+
+    protected function createTarGz(string $sourceDir, string $outputPath): void
+    {
+        $tarPath = preg_replace('/\.gz$/', '', $outputPath);
+
+        $phar = new PharData($tarPath);
+        $phar->buildFromDirectory($sourceDir);
+
+        $phar->compress(Phar::GZ);
+
+        if (file_exists($tarPath)) {
+            unlink($tarPath);
+        }
+    }
+
+    protected function extractTarGz(string $archivePath, string $extractTo): void
+    {
+        $phar = new PharData($archivePath);
+        $phar->extractTo($extractTo, null, true);
     }
 
     protected function cleanOldBackups(int $days): void

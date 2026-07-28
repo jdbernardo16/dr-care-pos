@@ -189,15 +189,7 @@ class RestoreWithImagesCommand extends Command
         $archivePath = $backupDisk->path($latest);
         $extractTo = storage_path('app/public');
 
-        $command = sprintf(
-            'tar -xzf %s -C %s',
-            escapeshellarg($archivePath),
-            escapeshellarg($extractTo)
-        );
-        exec($command, $output, $exitCode);
-
-        if ($exitCode !== 0) {
-            $this->error('Failed to extract images archive.');
-        }
+        $phar = new \PharData($archivePath);
+        $phar->extractTo($extractTo, null, true);
     }
 }
