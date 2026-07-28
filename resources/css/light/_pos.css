@@ -18,7 +18,7 @@
     .header-buttons {
         .ns-button button,
         button {
-            @apply rounded-lg text-sm font-medium px-3 py-2;
+            @apply rounded-lg text-base font-medium px-4 py-3;
             transition: background 0.15s ease;
 
             &:hover {
@@ -34,7 +34,7 @@
             gap: 0.25rem;
 
             .tab {
-                @apply rounded-t-xl px-5 py-3 text-base font-semibold;
+                @apply rounded-t-xl px-5 py-3 text-lg font-semibold;
                 transition: color 0.15s ease;
             }
 
@@ -42,7 +42,7 @@
                 @apply bg-tab-active font-semibold text-fontcolor;
 
                 > span.products-count {
-                    @apply bg-success-primary text-white text-xs font-bold ml-1.5;
+                    @apply bg-success-primary text-white text-sm font-bold ml-1.5;
                     min-width: 1.5rem;
                     height: 1.5rem;
                 }
@@ -64,7 +64,7 @@
                     @apply flex-wrap;
 
                     .ns-button button {
-                        @apply bg-transparent text-sm font-medium px-3 py-2.5 min-h-[2.75rem] rounded-none border-r border-gray-200/50;
+                        @apply bg-transparent text-base font-medium px-3 py-2.5 min-h-[3rem] rounded-none border-r border-gray-200/50;
                         transition: background 0.15s ease;
 
                         &:hover {
@@ -76,7 +76,7 @@
 
             /* Table header (Product | Quantity | Total) */
             #cart-table-header {
-                @apply text-sm font-semibold text-gray-500 uppercase tracking-wider;
+                @apply text-base font-semibold text-gray-500 uppercase tracking-wider;
 
                 > div {
                     @apply border-b border-gray-200/50 py-2.5;
@@ -101,7 +101,7 @@
                     }
 
                     .product-details h3 {
-                        @apply text-base font-semibold;
+                        @apply text-lg font-semibold;
                     }
 
                     .product-options a {

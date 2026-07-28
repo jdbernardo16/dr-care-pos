@@ -150,13 +150,13 @@
                                             (i) => i.featured,
                                         )[0].url
                                     "
-                                    class="object-cover h-full"
+                                    class="object-cover h-full w-full"
                                     :alt="product.name"
                                 />
                                 <img
                                     v-else-if="hasNoFeatured(product)"
                                     :src="product.galleries[0].url"
-                                    class="object-cover h-full"
+                                    class="object-cover h-full w-full"
                                     :alt="product.name"
                                 />
                                 <i
@@ -255,7 +255,7 @@
                             <img
                                 v-if="category.preview_url"
                                 :src="category.preview_url"
-                                class="object-cover h-full"
+                                class="object-cover h-full w-full"
                                 :alt="category.name"
                             />
                             <i
@@ -334,13 +334,13 @@
                                         (i) => i.featured,
                                     )[0].url
                                 "
-                                class="object-cover h-full"
+                                class="object-contain h-full w-full"
                                 :alt="product.name"
                             />
                             <img
                                 v-else-if="hasNoFeatured(product)"
                                 :src="product.galleries[0].url"
-                                class="object-cover h-full"
+                                class="object-contain h-full w-full"
                                 :alt="product.name"
                             />
                             <i
@@ -666,7 +666,7 @@ export default {
         },
 
         openSearchPopup() {
-            Popup.show(nsPosSearchProductVue);
+            Popup.show(nsPosSearchProductVue, {}, { popupClass: 'w-full h-full max-w-full max-h-full' });
         },
 
         hasNoFeatured(product) {
