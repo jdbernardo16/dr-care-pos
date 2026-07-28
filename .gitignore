@@ -80,3 +80,5 @@ playwright/.auth/
 /playwright/.cache/
 /playwright/.auth/
 
+.DS_Store
+**/.DS_Store
