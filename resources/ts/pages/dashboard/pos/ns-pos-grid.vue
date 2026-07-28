@@ -23,15 +23,8 @@
             id="grid-container"
             class="rounded shadow overflow-hidden flex-auto flex flex-col"
         >
-            <div id="grid-header" class="p-2 border-b">
-                <div class="border rounded flex overflow-hidden">
-                    <button
-                        :title="__('Search for products.')"
-                        @click="openSearchPopup()"
-                        class="w-10 h-10 border-r outline-hidden"
-                    >
-                        <i class="las la-search"></i>
-                    </button>
+            <div id="grid-header" class="p-2 border-b flex items-center gap-2">
+                <div class="border rounded flex overflow-hidden flex-auto">
                     <button
                         :title="__('Toggle merging similar products.')"
                         @click="posToggleMerge()"
@@ -66,6 +59,13 @@
                         class="flex-auto outline-hidden px-2"
                     />
                 </div>
+                    <button
+                        :title="__('Search for products.')"
+                        @click="openSearchPopup()"
+                        class="cursor-pointer w-10 h-10 rounded-full bg-red-600 flex items-center justify-center outline-hidden flex-shrink-0"
+                    >
+                        <i class="las la-search text-white"></i>
+                    </button>
             </div>
             <div style="height: 0px">
                 <div v-if="isLoading" class="fade-in-entrance ns-loader">
@@ -159,15 +159,17 @@
                                     class="object-cover h-full w-full"
                                     :alt="product.name"
                                 />
-                                <i
+                                <svg
                                     v-else="
                                         !product.galleries ||
                                         product.galleries.filter(
                                             (i) => i.featured,
                                         ).length === 0
                                     "
-                                    class="las la-image text-6xl opacity-10"
-                                ></i>
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 32 32"
+                                    class="w-16 h-16 opacity-10 fill-current"
+                                ><path d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"/></svg>
                             </div>
                             <div class="w-full absolute z-10 -bottom-10">
                                 <div
@@ -247,30 +249,31 @@
                         @click="loadCategories(category)"
                         v-for="category of categories"
                         :key="category.id"
-                        class="cell-item w-full h-36 cursor-pointer border flex flex-col items-center justify-center overflow-hidden relative"
+                        class="cell-item w-full h-36 cursor-pointer border flex items-center justify-center overflow-hidden relative"
                     >
                         <div
-                            class="h-full w-full flex items-center justify-center"
+                            v-if="category.preview_url"
+                            class="w-full h-full rounded-lg border-2 border-box-edge shadow-xs flex items-center justify-center overflow-hidden bg-white"
                         >
                             <img
-                                v-if="category.preview_url"
                                 :src="category.preview_url"
-                                class="object-cover h-full w-full"
+                                class="object-contain h-full w-full"
                                 :alt="category.name"
                             />
-                            <i
-                                class="las la-image text-6xl opacity-10"
-                                v-if="!category.preview_url"
-                            ></i>
                         </div>
-                        <div class="w-full absolute z-10 -bottom-10">
-                            <div
-                                class="cell-item-label relative w-full flex items-center justify-center -top-10 h-20 py-2"
-                            >
-                                <h3 class="text-base font-bold py-2 text-center">
-                                    {{ category.name }}
-                                </h3>
-                            </div>
+                            <svg
+                                v-if="!category.preview_url"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 32 32"
+                                class="w-16 h-16 opacity-10 fill-current"
+                            ><path d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"/></svg>
+                        <div
+                            class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                            style="background: rgb(255 255 255 / 0.85)"
+                        >
+                            <h3 class="text-sm font-bold text-center px-3">
+                                {{ category.name }}
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -343,14 +346,16 @@
                                 class="object-contain h-full w-full"
                                 :alt="product.name"
                             />
-                            <i
+                            <svg
                                 v-else="
                                     !product.galleries ||
                                     product.galleries.filter((i) => i.featured)
                                         .length === 0
                                 "
-                                class="las la-image text-6xl opacity-10"
-                            ></i>
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 32 32"
+                                class="w-16 h-16 opacity-10 fill-current"
+                            ><path d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"/></svg>
                         </div>
                         <div class="w-full absolute z-10 -bottom-10">
                             <div

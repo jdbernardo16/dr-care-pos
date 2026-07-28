@@ -525,7 +525,7 @@ git commit -m "pos: restyle cart with Loyverse-inspired item rows, totals, and C
         v-if="order"
     >
         <div
-            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden"
         >
             <div class="p-6">
                 <!-- Total -->

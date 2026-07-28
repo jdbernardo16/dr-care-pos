@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 class FetchProductImagesCommand extends Command
 {
     protected $signature = 'ns:fetch-product-images
+        {--categories : Fetch images for categories instead of products}
         {--category= : Only process products in a specific category name}
         {--limit= : Max products to process}
         {--force : Re-process even if thumbnail_id is already set}
@@ -39,6 +40,28 @@ class FetchProductImagesCommand extends Command
         $limit = $this->option('limit');
         $delay = (int) $this->option('delay');
 
+        $adminUser = Role::namespace('admin')->users->first();
+        if ($adminUser) {
+            Auth::login($adminUser);
+        }
+
+        $this->http = new Client([
+            'timeout' => 15,
+            'http_errors' => false,
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ],
+        ]);
+
+        if ($this->option('categories')) {
+            return $this->handleCategories($mediaService, $quality, $maxWidth, $force, $limit, $delay);
+        }
+
+        return $this->handleProducts($mediaService, $quality, $maxWidth, $force, $categoryName, $limit, $delay);
+    }
+
+    private function handleProducts(MediaService $mediaService, int $quality, int $maxWidth, bool $force, ?string $categoryName, ?string $limit, int $delay): int
+    {
         $query = Product::query();
         if ($categoryName) {
             $categoryIds = ProductCategory::where('name', $categoryName)->pluck('id');
@@ -69,19 +92,6 @@ class FetchProductImagesCommand extends Command
         }
 
         $this->info("Processing {$total} products...");
-
-        $adminUser = Role::namespace('admin')->users->first();
-        if ($adminUser) {
-            Auth::login($adminUser);
-        }
-
-        $this->http = new Client([
-            'timeout' => 15,
-            'http_errors' => false,
-            'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            ],
-        ]);
 
         $found = 0;
         $skipped = 0;
@@ -123,7 +133,7 @@ class FetchProductImagesCommand extends Command
                 return;
             }
 
-            $mediaId = $this->uploadImage($mediaService, $webpPath, $product);
+            $mediaId = $this->uploadImage($mediaService, $webpPath, $product->name);
             @unlink($webpPath);
 
             if (!$mediaId) {
@@ -132,6 +142,99 @@ class FetchProductImagesCommand extends Command
             }
 
             $this->assignImage($product, $mediaId);
+            $found++;
+        });
+
+        $this->newLine();
+        $this->newLine();
+        $this->table(
+            ['Status', 'Count'],
+            [
+                ['Found & assigned', $found],
+                ['Skipped (already have)', $skipped],
+                ['No image found', $failed],
+                ['Total', $found + $skipped + $failed],
+            ]
+        );
+
+        return Command::SUCCESS;
+    }
+
+    private function handleCategories(MediaService $mediaService, int $quality, int $maxWidth, bool $force, ?string $limit, int $delay): int
+    {
+        $query = ProductCategory::query();
+        if (!$force) {
+            $query->whereNull('preview_url');
+        }
+        if ($limit) {
+            $query->limit((int) $limit);
+        }
+
+        $categories = $query->orderBy('id')->get();
+        $total = $categories->count();
+
+        if ($total === 0) {
+            $this->info('No categories to process.');
+            return Command::SUCCESS;
+        }
+
+        $this->info("Processing {$total} categories...");
+
+        $found = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        $this->withProgressBar($categories, function (ProductCategory $category) use ($mediaService, $quality, $maxWidth, $force, $delay, &$found, &$skipped, &$failed) {
+            if (!$force && $category->preview_url) {
+                $skipped++;
+                return;
+            }
+
+            if ($this->requestCount > 0 && $delay > 0) {
+                usleep($delay * 1000);
+            }
+
+            $queries = [
+                $category->name . ' category Philippines medicine',
+                $category->name . ' Philippines medicine',
+                $category->name . ' Philippines product',
+                $category->name,
+            ];
+            $imageUrl = null;
+            foreach ($queries as $q) {
+                $imageUrl = $this->searchImageDdg($q);
+                if ($imageUrl) break;
+            }
+            $this->requestCount++;
+
+            if (!$imageUrl) {
+                $failed++;
+                return;
+            }
+
+            $sourcePath = $this->downloadImage($imageUrl);
+            if (!$sourcePath) {
+                $failed++;
+                return;
+            }
+
+            $webpPath = $this->convertToWebp($sourcePath, $maxWidth, $quality);
+            @unlink($sourcePath);
+
+            if (!$webpPath) {
+                $failed++;
+                return;
+            }
+
+            $mediaId = $this->uploadImage($mediaService, $webpPath, $category->name);
+            @unlink($webpPath);
+
+            if (!$mediaId) {
+                $failed++;
+                return;
+            }
+
+            $this->assignCategoryImage($category, $mediaId);
             $found++;
         });
 
@@ -281,12 +384,12 @@ class FetchProductImagesCommand extends Command
         }
     }
 
-    private function uploadImage(MediaService $mediaService, string $webpPath, Product $product): ?int
+    private function uploadImage(MediaService $mediaService, string $webpPath, string $name): ?int
     {
         try {
             $uploadedFile = new UploadedFile(
                 $webpPath,
-                $this->slugify($product->name) . '.webp',
+                $this->slugify($name) . '.webp',
                 'image/webp',
                 null,
                 true
@@ -327,6 +430,19 @@ class FetchProductImagesCommand extends Command
                 'name' => $product->name . ' Image',
             ]
         );
+    }
+
+    private function assignCategoryImage(ProductCategory $category, int $mediaId): void
+    {
+        $media = Media::find($mediaId);
+        if (!$media) {
+            return;
+        }
+
+        $url = Storage::disk('public')->url($media->slug . '.' . $media->extension);
+
+        $category->preview_url = $url;
+        $category->save();
     }
 
     private function slugify(string $text): string
