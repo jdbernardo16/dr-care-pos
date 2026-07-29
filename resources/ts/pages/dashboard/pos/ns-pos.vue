@@ -19,7 +19,6 @@
                         :products="lastCompletedOrder?.products || []"
                         :payments="lastCompletedOrder?.payments || []"
                         :order-total="lastCompletedOrder?.total || 0"
-                        :change-due="lastCompletedOrder?.change_due || 0"
                         :order="lastCompletedOrder"
                     ></ns-pos-transaction-summary>
                 </div>

@@ -62,8 +62,13 @@ export default {
         products: { type: Array, default: () => [] },
         payments: { type: Array, default: () => [] },
         orderTotal: { type: Number, default: 0 },
-        changeDue: { type: Number, default: 0 },
         order: { type: Object, default: () => ({}) },
+    },
+    computed: {
+        changeDue() {
+            const totalPaid = (this.payments || []).reduce((sum, p) => sum + (parseFloat(p.value) || 0), 0);
+            return Math.max(0, totalPaid - (this.orderTotal || 0));
+        },
     },
     methods: {
         __,
