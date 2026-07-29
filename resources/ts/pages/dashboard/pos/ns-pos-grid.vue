@@ -38,24 +38,18 @@
                         <i class="las la-compress-arrows-alt"></i>
                     </button>
                     <button
-                        :title="__('Toggle auto focus.')"
-                        @click="
-                            options.ns_pos_force_autofocus =
-                                !options.ns_pos_force_autofocus
-                        "
-                        :class="
-                            options.ns_pos_force_autofocus
-                                ? 'pos-button-clicked'
-                                : ''
-                        "
-                        class="outline-hidden w-10 h-10 border-r"
+                        :title="scanMode ? __('Scanning barcode...') : __('Search by product name')"
+                        @click="scanMode = !scanMode"
+                        :class="scanMode ? 'bg-primary text-white' : ''"
+                        class="outline-hidden w-10 h-10 border-r cursor-pointer flex items-center justify-center"
                     >
-                        <i class="las la-barcode"></i>
+                        <i class="las" :class="scanMode ? 'la-camera' : 'la-search'"></i>
                     </button>
                     <input
                         ref="search"
                         v-model="barcode"
                         type="text"
+                        :placeholder="scanMode ? __('Scan barcode...') : __('Search product...')"
                         class="flex-auto outline-hidden px-2"
                     />
                 </div>
@@ -471,6 +465,7 @@ export default {
             gridItemsWidth: 0,
             gridItemsHeight: 0,
             isLoading: false,
+            scanMode: false,
         };
     },
     computed: {
@@ -498,7 +493,7 @@ export default {
             },
             deep: true,
         },
-        barcode() {
+        'barcode,scanMode'() {
             if (this.options.ns_pos_force_autofocus) {
                 clearTimeout(this.searchTimeout);
 
@@ -699,88 +694,40 @@ export default {
         },
 
         submitSearch(value) {
-            if (value.length > 0) {
+            if (value.length <= 0) return;
+
+            if (this.scanMode) {
+                // Barcode mode — single product lookup
                 const url = nsHooks.applyFilters(
                     "ns-pos-submit-search-url",
                     `/api/products/search/using-barcode/${value}`,
                     value,
                 );
-
                 nsHttpClient.get(url).subscribe({
                     next: (result) => {
                         this.barcode = "";
-                        const product = {};
-
-                        const unitQuantity =
-                            result.unitQuantity ||
-                            result.product.selectedUnitQuantity ||
-                            result.product.unit_quantities?.[0];
-                        const unit = result.unit || unitQuantity?.unit;
-
-                        product.name = result.product.name;
-                        product.id = result.product.id;
-                        product.product_type = result.product.product_type;
-                        product.rate = result.product.rate;
-                        product.tax_group_id = result.product.tax_group_id;
-                        product.tax_type = result.product.tax_type;
-                        product.unit_id = unit.id;
-                        product.unit_price = unitQuantity.sale_price;
-                        product.price_gross = unitQuantity.sale_price_gross;
-                        product.price_net = unitQuantity.sale_price_net;
-                        product.unit_name = unit.name;
-
-                        // Check if this is a scale barcode with embedded data
-                        if (result.scale) {
-                            const scaleData = result.scale;
-
-                            // The backend already sets the selectedUnitQuantity based on PLU
-                            // We just need to set the quantity or price based on scale type
-
-                            // Set quantity or price based on scale barcode type
-                            if (scaleData.type === "weight") {
-                                // For weight-based scales, set the quantity
-                                product.quantity = scaleData.value;
-
-                                // Show notification with unit name
-                                const unitName = scaleData.unit?.name || "kg";
-                                nsSnackBar.info(
-                                    __(
-                                        "Scale barcode detected: {weight} {unit}",
-                                    )
-                                        .replace(
-                                            "{weight}",
-                                            scaleData.value.toFixed(3),
-                                        )
-                                        .replace("{unit}", unitName),
-                                );
-                            } else if (scaleData.type === "price") {
-                                // For price-based scales, we need to calculate quantity
-                                // based on the price and unit price
-                                const unitPrice =
-                                    result.product.selectedUnitQuantity
-                                        ?.sale_price ||
-                                    result.product.unit_quantities[0]
-                                        ?.sale_price ||
-                                    0;
-                                if (unitPrice > 0) {
-                                    product.quantity =
-                                        scaleData.value / unitPrice;
-                                }
-
-                                // Show notification
-                                nsSnackBar.info(
-                                    __(
-                                        "Scale barcode detected: {price}",
-                                    ).replace(
-                                        "{price}",
-                                        this.nsCurrency(scaleData.value),
-                                    ),
-                                );
-                            }
+                        this.addScannedProductToCart(result);
+                    },
+                    error: (error) => {
+                        this.barcode = "";
+                        nsSnackBar.error(error.message);
+                    },
+                });
+            } else {
+                // Search mode — product list lookup
+                nsHttpClient.post("/api/products/search", {
+                    search: value,
+                    limit: 20,
+                }).subscribe({
+                    next: (result) => {
+                        this.barcode = "";
+                        if (Array.isArray(result) && result.length > 0) {
+                            // Populate grid with search results
+                            this.products = result;
+                            this.categories = [];
+                        } else {
+                            nsSnackBar.info(__("No products match your search."));
                         }
-
-                        console.log(JSON.parse(JSON.stringify(product)));
-                        POS.addToCart(product);
                     },
                     error: (error) => {
                         this.barcode = "";
@@ -788,6 +735,55 @@ export default {
                     },
                 });
             }
+        },
+
+        addScannedProductToCart(result) {
+            const product = {};
+
+            const unitQuantity =
+                result.unitQuantity ||
+                result.product.selectedUnitQuantity ||
+                result.product.unit_quantities?.[0];
+            const unit = result.unit || unitQuantity?.unit;
+
+            product.name = result.product.name;
+            product.id = result.product.id;
+            product.product_type = result.product.product_type;
+            product.rate = result.product.rate;
+            product.tax_group_id = result.product.tax_group_id;
+            product.tax_type = result.product.tax_type;
+            product.unit_id = unit.id;
+            product.unit_price = unitQuantity.sale_price;
+            product.price_gross = unitQuantity.sale_price_gross;
+            product.price_net = unitQuantity.sale_price_net;
+            product.unit_name = unit.name;
+
+            // Handle scale barcodes (existing logic)
+            if (result.scale) {
+                const scaleData = result.scale;
+                if (scaleData.type === "weight") {
+                    product.quantity = scaleData.value;
+                    const unitName = scaleData.unit?.name || "kg";
+                    nsSnackBar.info(
+                        __("Scale barcode detected: {weight} {unit}")
+                            .replace("{weight}", scaleData.value.toFixed(3))
+                            .replace("{unit}", unitName),
+                    );
+                } else if (scaleData.type === "price") {
+                    const unitPrice =
+                        result.product.selectedUnitQuantity?.sale_price ||
+                        result.product.unit_quantities[0]?.sale_price || 0;
+                    if (unitPrice > 0) {
+                        product.quantity = scaleData.value / unitPrice;
+                    }
+                    nsSnackBar.info(
+                        __("Scale barcode detected: {price}")
+                            .replace("{price}", this.nsCurrency(scaleData.value)),
+                    );
+                }
+            }
+
+            POS.addToCart(product);
         },
 
         checkFocus() {
