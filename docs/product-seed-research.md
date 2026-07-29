@@ -12,7 +12,8 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Skin Care |
 | **Form** | Lotion |
 | **Unit Group** | Pharmacy Topical (tube) |
-| **Selling Price** | ₱65.00 |
+| **Cost Price** | ₱41.74 |
+| **Selling Price** | ₱55.00 |
 | **Barcode (GTIN)** | 4800135016312 |
 | **Source** | Watsons Philippines |
 | **Qty to Stock** | 3 |
@@ -27,7 +28,8 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Snack Food (not in system — needs new category) |
 | **Form** | Pack |
 | **Unit Group** | Pharmacy Pieces |
-| **Selling Price** | ₱10.00 |
+| **Cost Price** | ₱8.25 |
+| **Selling Price** | ₱11.00 |
 | **Barcode** | Not found online |
 | **Source** | Lazada Philippines |
 | **Qty to Stock** | 5 |
@@ -43,6 +45,7 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Snack Food (not in system — needs new category) |
 | **Form** | Pack |
 | **Unit Group** | Pharmacy Pieces |
+| **Cost Price** | ₱8.50 |
 | **Selling Price** | ₱11.00 |
 | **Barcode** | Not found online |
 | **Source** | Lazada Philippines |
@@ -73,7 +76,8 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Heart Health |
 | **Form** | Tablet |
 | **Unit Group** | Pharmacy Pieces |
-| **Selling Price** | ❓ PENDING |
+| **Cost Price** | ₱4.11 |
+| **Selling Price** | ₱8.00 |
 | **Barcode** | ❓ Not found (specific brand) |
 | **Reference Price** | Generic Irbesartan 150mg (TGP) ~₱12.60/tab |
 | **Qty** | 100 |
@@ -90,10 +94,11 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Vitamins & Supplements |
 | **Form** | Tablet |
 | **Unit Group** | Pharmacy Pieces |
-| **Selling Price** | ~₱0.90–₱1.07/tab (₱90–₱107/box of 100) |
+| **Cost Price** | ₱0.62 |
+| **Selling Price** | ₱2.00 |
 | **Barcode** | ❓ Not found online |
 | **Source** | Lazada Philippines |
-| **Qty** | 132 |
+| **Qty** | 142 |
 
 **Note:** Ferrous Sulfate 325mg is equivalent to 105.6mg elemental iron.
 
@@ -107,7 +112,8 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Pain Relief (Gout) |
 | **Form** | Tablet |
 | **Unit Group** | Pharmacy Pieces |
-| **Selling Price** | ❓ PENDING |
+| **Cost Price** | ₱6.50 |
+| **Selling Price** | ₱25.00 |
 | **Barcode** | ❓ Not found (specific brand) |
 | **Reference Price** | Generic Febuxostat 80mg (TGP) ~₱28.88/tab |
 | **Qty** | 30 |
@@ -124,7 +130,8 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Skin Care |
 | **Form** | ❓ PENDING — is this cream, ointment, or nasal spray? |
 | **Unit Group** | Pharmacy Topical (tube) if cream/ointment; Pieces if spray |
-| **Selling Price** | ❓ PENDING |
+| **Cost Price** | ₱110.00 |
+| **Selling Price** | ₱220.00 |
 | **Barcode** | ❓ Not found (specific brand) |
 | **Reference Price** | Mometasone cream 30g ~₱160–₱410 online |
 | **Qty** | 3 |
@@ -140,7 +147,8 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Category** | Heart Health (Vein health) |
 | **Form** | Tablet |
 | **Unit Group** | Pharmacy Pieces |
-| **Selling Price** | ❓ PENDING |
+| **Cost Price** | ₱9.66 |
+| **Selling Price** | ₱20.00 |
 | **Barcode** | ❓ Not found (specific brand) |
 | **Reference Price** | Generic Diosmin+Hesperidin (TGP Ambica) ~₱236.25/30 tabs = ~₱7.88/tab |
 | **Qty** | 55 |
@@ -157,7 +165,3 @@ Research conducted on 2026-07-29 via Watsons, Lazada, and other online sources.
 | **Berry Knots** | Needs new "Snacks" category or skip? |
 | **Loaded Nutty** | Needs new "Snacks" category or skip? |
 | **Nomason** | Is it cream, ointment, or spray? |
-| **Irbetris 150mg** | Selling price |
-| **Saphuric 80mg** | Selling price |
-| **Nomason** | Selling price |
-| **Diosgen 450/50mg** | Selling price |
