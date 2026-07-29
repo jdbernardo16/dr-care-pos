@@ -53,13 +53,15 @@
                         class="flex-auto outline-hidden px-2"
                     />
                 </div>
-                <button
-                    :title="__('Search for products.')"
-                    @click="openSearchPopup()"
-                    class="cursor-pointer w-10 h-10 rounded-full bg-red-600 flex items-center justify-center outline-hidden flex-shrink-0"
-                >
-                    <i class="las la-search text-white"></i>
-                </button>
+                <template v-if="false">
+                    <button
+                        :title="__('Search for products.')"
+                        @click="openSearchPopup()"
+                        class="cursor-pointer w-10 h-10 rounded-full bg-red-600 flex items-center justify-center outline-hidden flex-shrink-0"
+                    >
+                        <i class="las la-search text-white"></i>
+                    </button>
+                </template>
             </div>
             <div style="height: 0px">
                 <div v-if="isLoading" class="fade-in-entrance ns-loader">
