@@ -38,12 +38,11 @@
                 </div>
 
                 <div class="p-3 border-t border-box-edge flex gap-2">
-                    <button @click="printReceipt" class="flex-1 py-3 bg-primary text-white rounded-xl font-bold cursor-pointer hover:bg-secondary transition-colors flex items-center justify-center gap-2">
-                        <i class="las la-print text-xl"></i>
-                        {{ __("Print Receipt") }}
-                    </button>
-                    <button @click="newSale" class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold cursor-pointer hover:bg-gray-200 transition-colors">
+                    <button @click="newSale" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold cursor-pointer hover:bg-red-700 transition-colors flex items-center justify-center gap-2 h-16">
                         {{ __("New Sale") }}
+                    </button>
+                    <button @click="printReceipt" class="flex-1 py-3 bg-white text-black border-2 border-gray-300 rounded-xl font-bold cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 h-16">
+                        <i class="las la-print text-black text-2xl"></i>
                     </button>
                 </div>
             </div>
