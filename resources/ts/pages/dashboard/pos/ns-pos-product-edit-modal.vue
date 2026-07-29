@@ -112,17 +112,26 @@ export default {
         },
 
         save() {
+            const quantities = {
+                ...(this.product.$quantities ? this.product.$quantities() : {}),
+                custom_price_edit: this.editUnitPrice,
+                custom_price_gross: this.editUnitPrice,
+                custom_price_net: this.editUnitPrice,
+            };
+
             const update = {
                 quantity: this.editQuantity,
                 unit_price: this.editUnitPrice,
+                price_gross: this.editUnitPrice,
+                price_net: this.editUnitPrice,
                 discount_type: this.discountType,
                 discount_percentage: this.discountType === "percentage" ? this.discountValue : 0,
                 discount: this.discountType === "flat" ? this.discountValue : 0,
                 mode: "custom",
+                $quantities: () => quantities,
             };
 
             POS.updateProduct(this.product, update, this.index);
-            POS.recomputeProducts(POS.products.getValue());
             POS.refreshCart();
 
             nsSnackBar.success(__("Product updated."));
