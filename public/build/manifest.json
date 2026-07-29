@@ -321,7 +321,7 @@
     ]
   },
   "resources/ts/app-init.ts": {
-    "file": "assets/app-init-BixHSblz.js",
+    "file": "assets/app-init-DeH6mtzp.js",
     "name": "app-init",
     "src": "resources/ts/app-init.ts",
     "isEntry": true,
@@ -1095,7 +1095,7 @@
     ]
   },
   "resources/ts/pages/dashboard/reports/ns-sale-report.vue": {
-    "file": "assets/ns-sale-report-wBjzRMES.js",
+    "file": "assets/ns-sale-report-ywdkfJR_.js",
     "name": "ns-sale-report",
     "src": "resources/ts/pages/dashboard/reports/ns-sale-report.vue",
     "isDynamicEntry": true,

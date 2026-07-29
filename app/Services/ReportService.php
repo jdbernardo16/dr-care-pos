@@ -685,11 +685,12 @@ class ReportService
         $allSales = $orders->map( function ( $order ) {
             $productTaxes = $order->products()->sum( 'tax_value' );
             $totalPurchasePrice = $order->products()->sum( 'total_purchase_price' );
+            $productDiscounts = $order->products()->get()->sum( fn( $product ) => $product->discount * $product->quantity );
 
             return [
-                'subtotal' => $order->subtotal,
+                'subtotal' => $order->subtotal + $productDiscounts,
                 'product_taxes' => $productTaxes,
-                'sales_discounts' => $order->discount,
+                'sales_discounts' => $order->discount + $productDiscounts,
                 'sales_taxes' => $order->tax_value,
                 'shipping' => $order->shipping,
                 'total' => $order->total,
@@ -757,10 +758,11 @@ class ReportService
                 $product = $products->where( 'product_id', $id )->first();
                 $filtredProdcuts = $products->where( 'product_id', $id )->all();
 
-                $summable = [ 'quantity', 'discount', 'wholesale_tax_value', 'sale_tax_value', 'tax_value', 'total_price_net', 'total_price', 'total_price_gross', 'total_purchase_price' ];
+                $summable = [ 'quantity', 'wholesale_tax_value', 'sale_tax_value', 'tax_value', 'total_price_net', 'total_price', 'total_price_gross', 'total_purchase_price' ];
                 foreach ( $summable as $key ) {
                     $product->$key = collect( $filtredProdcuts )->sum( $key );
                 }
+                $product->discount = collect( $filtredProdcuts )->sum( fn( $p ) => $p->discount * $p->quantity );
 
                 return $product;
             } )->values(),
@@ -834,17 +836,19 @@ class ReportService
              * to summarize them.
              */
             $rawProducts->each( function ( $product ) use ( &$mergedProducts ) {
+                $totalDiscount = $product->discount * $product->quantity;
+
                 if ( isset( $mergedProducts[ $product->product_id ] ) ) {
                     $mergedProducts[ $product->product_id ][ 'quantity' ] += $product->quantity;
                     $mergedProducts[ $product->product_id ][ 'tax_value' ] += $product->tax_value;
-                    $mergedProducts[ $product->product_id ][ 'discount' ] += $product->discount;
+                    $mergedProducts[ $product->product_id ][ 'discount' ] += $totalDiscount;
                     $mergedProducts[ $product->product_id ][ 'total_price' ] += $product->total_price;
                     $mergedProducts[ $product->product_id ][ 'total_purchase_price' ] += $product->total_purchase_price;
                 } else {
                     $mergedProducts[ $product->product_id ] = array_merge( $product->toArray(), [
                         'quantity' => $product->quantity,
                         'tax_value' => $product->tax_value,
-                        'discount' => $product->discount,
+                        'discount' => $totalDiscount,
                         'total_price' => $product->total_price,
                         'total_purchase_price' => $product->total_purchase_price,
                         'name' => $product->name,

@@ -456,9 +456,8 @@
                                             {{
                                                 nsCurrency(
                                                     product.total_price -
-                                                        (product.total_purchase_price +
-                                                            product.tax_value +
-                                                            product.discount),
+                                                        product.total_purchase_price -
+                                                        product.tax_value,
                                                 )
                                             }}
                                         </td>
@@ -538,18 +537,14 @@
                                                     category.products,
                                                     "total_price",
                                                 ) -
-                                                    (computeTotal(
+                                                    computeTotal(
                                                         category.products,
                                                         "total_purchase_price",
-                                                    ) +
-                                                        computeTotal(
-                                                            category.products,
-                                                            "tax_value",
-                                                        ) +
-                                                        computeTotal(
-                                                            category.products,
-                                                            "discount",
-                                                        )),
+                                                    ) -
+                                                    computeTotal(
+                                                        category.products,
+                                                        "tax_value",
+                                                    ),
                                             )
                                         }}
                                     </td>

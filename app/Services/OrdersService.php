@@ -778,12 +778,8 @@ class OrdersService
 
     private function __saveOrderPayments( $order, $payments, $customer )
     {
-        /**
-         * As we're about to record new payments,
-         * we first need to delete previous payments that
-         * might have been made. Probably we'll need to keep these
-         * order and only update them.
-         */
+        $order->payments()->delete();
+
         return collect( $payments )->map( function ( $payment ) use ( $order ) {
             return $this->__saveOrderSinglePayment( $payment, $order );
         } );
