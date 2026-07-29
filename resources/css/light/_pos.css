@@ -248,7 +248,7 @@
                     @apply border rounded-xl overflow-hidden;
 
                     button {
-                        @apply border-r border-gray-200/50 w-10 h-10 flex items-center justify-center;
+                        @apply border-r border-gray-200/50 w-14 h-14 flex items-center justify-center;
                         transition: background 0.15s ease;
 
                         &:hover {

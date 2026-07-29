@@ -33,7 +33,7 @@
                                 ? 'pos-button-clicked'
                                 : ''
                         "
-                        class="outline-hidden w-10 h-10 border-r"
+                        class="outline-hidden w-14 h-14 border-r"
                     >
                         <i class="las la-compress-arrows-alt"></i>
                     </button>
@@ -41,7 +41,7 @@
                         :title="scanMode ? __('Scanning barcode...') : __('Search by product name')"
                         @click="scanMode = !scanMode"
                         :class="scanMode ? 'bg-primary text-white' : ''"
-                        class="outline-hidden w-10 h-10 border-r cursor-pointer flex items-center justify-center"
+                        class="outline-hidden w-14 h-14 border-r cursor-pointer flex items-center justify-center"
                     >
                         <i class="las" :class="scanMode ? 'la-camera' : 'la-search'"></i>
                     </button>
