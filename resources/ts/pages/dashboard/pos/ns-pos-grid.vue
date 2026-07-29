@@ -50,7 +50,7 @@
                         v-model="barcode"
                         type="text"
                         :placeholder="scanMode ? __('Scan barcode...') : __('Search product...')"
-                        class="flex-auto outline-hidden px-2"
+                        class="flex-auto outline-hidden px-2 text-2xl"
                     />
                 </div>
                 <button
