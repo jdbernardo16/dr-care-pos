@@ -7,10 +7,10 @@
                     <span class="font-bold text-xl text-green-700">{{ __("Transaction Complete") }}</span>
                 </div>
 
-                <div class="overflow-y-auto flex-auto p-3 space-y-3">
+                <div class="overflow-y-auto flex-auto p-4 space-y-4">
                     <div>
-                        <h4 class="font-semibold text-fontcolor mb-2 text-sm uppercase tracking-wide">{{ __("Items") }}</h4>
-                        <div v-for="(product, index) of products" :key="index" class="flex justify-between py-1.5 text-sm border-b border-box-edge last:border-b-0">
+                        <h4 class="font-bold text-fontcolor mb-2 text-base uppercase tracking-wide">{{ __("Items") }}</h4>
+                        <div v-for="(product, index) of products" :key="index" class="flex justify-between py-2 text-base border-b border-box-edge last:border-b-0">
                             <span class="text-fontcolor flex-1 min-w-0 truncate">{{ product.name }} <span v-if="product.unit_name" class="text-fontcolor-soft">&mdash; {{ product.unit_name }}</span></span>
                             <span class="text-fontcolor-soft ml-2 flex-shrink-0">&times;{{ displayProductQuantity(product) }}</span>
                         </div>
@@ -19,16 +19,16 @@
                     <div class="border-t border-box-edge pt-2"></div>
 
                     <div>
-                        <h4 class="font-semibold text-fontcolor mb-2 text-sm uppercase tracking-wide">{{ __("Payment") }}</h4>
-                        <div v-for="(payment, index) of payments" :key="index" class="flex justify-between py-1.5 text-sm">
-                            <span class="text-fontcolor">{{ getPaymentLabel(payment) }}</span>
-                            <span class="font-semibold">{{ nsCurrency(payment.value) }}</span>
+                        <h4 class="font-bold text-fontcolor mb-2 text-base uppercase tracking-wide">{{ __("Payment") }}</h4>
+                        <div v-for="(payment, index) of payments" :key="index" class="flex justify-between py-2 text-base">
+                            <span class="text-fontcolor font-medium">{{ getPaymentLabel(payment) }}</span>
+                            <span class="font-bold">{{ nsCurrency(payment.value) }}</span>
                         </div>
                     </div>
 
-                    <div v-if="changeDue > 0" class="flex justify-between py-1.5 text-sm text-red-600 bg-red-50 px-2 rounded">
-                        <span>{{ __("Change Due") }}</span>
-                        <span class="font-semibold">{{ nsCurrency(changeDue) }}</span>
+                    <div v-if="changeDue > 0" class="flex justify-between py-2 text-base text-red-600 bg-red-50 px-3 rounded-lg">
+                        <span class="font-semibold">{{ __("Change Due") }}</span>
+                        <span class="font-bold">{{ nsCurrency(changeDue) }}</span>
                     </div>
 
                     <div class="border-t-2 border-fontcolor pt-3 flex justify-between font-bold text-lg">
@@ -85,10 +85,6 @@ export default {
 
         newSale() {
             POS.reset();
-            const visibleSection = POS.visibleSection;
-            if (visibleSection) {
-                visibleSection.next('both');
-            }
         },
     },
 };
