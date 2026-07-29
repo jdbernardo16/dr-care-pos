@@ -649,9 +649,8 @@ export default {
             ) {
                 return 0;
             }
-            return product.unit_quantities
-                .map((q) => parseFloat(q.quantity))
-                .reduce((a, b) => a + b, 0);
+            const first = product.unit_quantities[0];
+            return parseFloat(first.quantity) || 0;
         },
 
         hasNoFeatured(product) {
