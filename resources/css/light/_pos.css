@@ -180,7 +180,7 @@
             /* Bottom action buttons */
             #cart-bottom-buttons {
                 @apply border-t border-gray-200/50 rounded-b-xl overflow-hidden;
-                height: 4rem;
+                height: 6rem;
 
                 #pay-button {
                     @apply bg-emerald-600 text-white font-bold;
