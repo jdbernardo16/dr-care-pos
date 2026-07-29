@@ -856,7 +856,13 @@ export default {
         },
 
         addToTheCart(product) {
+            POS.processingAddQueue = true;
             POS.addToCart(product);
+            POS.processingAddQueue = false;
+
+            if (this.products.length > 0 && this.categories.length === 0) {
+                this.loadCategories(this.currentCategory);
+            }
         },
     },
 };
