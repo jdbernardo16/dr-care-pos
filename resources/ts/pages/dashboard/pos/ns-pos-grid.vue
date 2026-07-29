@@ -372,56 +372,9 @@
                                 <h3 class="text-lg text-center w-full">
                                     {{ product.name }}
                                 </h3>
-                                <template
-                                    v-if="
-                                        product.unit_quantities &&
-                                        product.unit_quantities.length === 1
-                                    "
-                                >
-                                    <template
-                                        v-if="options.ns_pos_vat === 'disabled'"
-                                    >
-                                        <span
-                                            class="text-base"
-                                            v-if="
-                                                product.unit_quantities &&
-                                                product.unit_quantities
-                                                    .length === 1
-                                            "
-                                        >
-                                            {{
-                                                nsCurrency(
-                                                    product.unit_quantities[0]
-                                                        .sale_price,
-                                                )
-                                            }}
-                                        </span>
-                                    </template>
-                                    <template v-else>
-                                        <span
-                                            v-if="
-                                                options.ns_pos_prefered_price ===
-                                                'gross_prices'
-                                            "
-                                            class="text-base"
-                                        >
-                                            {{
-                                                nsCurrency(
-                                                    product.unit_quantities[0]
-                                                        .sale_price_gross,
-                                                )
-                                            }}
-                                        </span>
-                                        <span v-else class="text-base">
-                                            {{
-                                                nsCurrency(
-                                                    product.unit_quantities[0]
-                                                        .sale_price_net,
-                                                )
-                                            }}
-                                        </span>
-                                    </template>
-                                </template>
+                                <span class="text-sm text-fontcolor-soft">
+                                    {{ __("Stock") }}: {{ totalQuantity(product) }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -687,6 +640,18 @@ export default {
                 {},
                 { popupClass: "w-full h-full max-w-full max-h-full" },
             );
+        },
+
+        totalQuantity(product) {
+            if (
+                !product.unit_quantities ||
+                product.unit_quantities.length === 0
+            ) {
+                return 0;
+            }
+            return product.unit_quantities
+                .map((q) => parseFloat(q.quantity))
+                .reduce((a, b) => a + b, 0);
         },
 
         hasNoFeatured(product) {
