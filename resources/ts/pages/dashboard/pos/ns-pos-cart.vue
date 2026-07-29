@@ -25,7 +25,7 @@
                         </div>
                     </div>
 
-                    <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-box-edge" v-for="(product, index) of products">
+                    <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-box-edge cursor-pointer hover:bg-box-elevation-background" v-for="(product, index) of products" @click="openEditModal(product, index)">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 min-w-0">
                                 <div class="font-semibold text-lg lg:text-xl text-fontcolor break-words leading-tight">
@@ -106,6 +106,7 @@ import nsPosCouponsLoadPopupVue from '~/popups/ns-pos-coupons-load-popup.vue';
 import nsPosOrderSettingsVue from '~/popups/ns-pos-order-settings.vue';
 import nsPosProductPricePopupVue from '~/popups/ns-pos-product-price-popup.vue';
 import nsPosQuickProductPopupVue from '~/popups/ns-pos-quick-product-popup.vue';
+import nsPosProductEditModalVue from './ns-pos-product-edit-modal.vue';
 
 declare const POS, nsShortcuts, nsHotPress;
 
@@ -573,6 +574,24 @@ export default {
 
         allowQuantityModification( product ) {
             return product.product_type === 'product';
+        },
+
+        async openEditModal(product, index) {
+            await ActionPermissions.canProceed('nexopos.cart.products');
+
+            try {
+                await new Promise( ( resolve, reject ) => {
+                    Popup.show(nsPosProductEditModalVue, {
+                        product: Object.assign({}, product),
+                        index,
+                        settings: this.settings,
+                        resolve,
+                        reject,
+                    });
+                });
+            } catch (exception) {
+                // popup closed
+            }
         },
 
         /**
