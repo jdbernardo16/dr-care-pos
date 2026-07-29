@@ -30,9 +30,13 @@
                             class="product-item px-3 py-3 border-b border-box-edge cursor-pointer hover:bg-box-elevation-background transition-transform duration-200"
                             :class="swipedIndex === index ? '-translate-x-16' : ''"
                             @click="!isSwiping && openEditModal(product, index)"
-                            @touchstart="onTouchStart($event, index)"
-                            @touchmove="onTouchMove($event)"
-                            @touchend="onTouchEnd($event)"
+                            @touchstart="onDragStart($event, index)"
+                            @touchmove="onDragMove($event)"
+                            @touchend="onDragEnd($event)"
+                            @mousedown="onDragStart($event, index)"
+                            @mousemove="onDragMove($event)"
+                            @mouseup="onDragEnd($event)"
+                            @mouseleave="onDragEnd($event)"
                         >
                             <div class="flex justify-between items-start">
                                 <div class="flex-1 min-w-0">
@@ -633,25 +637,37 @@ export default {
             Popup.show( nsPosShippingPopupVue );
         },
 
-        onTouchStart(event, index) {
-            this.touchStartX = event.touches[0].clientX;
+        getClientX(event) {
+            return event.touches
+                ? event.touches[0].clientX
+                : event.clientX;
+        },
+
+        getEndClientX(event) {
+            return event.changedTouches
+                ? event.changedTouches[0].clientX
+                : event.clientX;
+        },
+
+        onDragStart(event, index) {
+            this.touchStartX = this.getClientX(event);
             this.swipedIndex = index;
             this.isSwiping = false;
         },
 
-        onTouchMove(event) {
+        onDragMove(event) {
             if (this.swipedIndex === null) return;
-            const touchX = event.touches[0].clientX;
-            const diff = this.touchStartX - touchX;
+            const currentX = this.getClientX(event);
+            const diff = this.touchStartX - currentX;
             if (diff > 10) {
                 this.isSwiping = true;
             }
         },
 
-        onTouchEnd(event) {
+        onDragEnd(event) {
             if (this.swipedIndex === null) return;
-            const touchEndX = event.changedTouches[0].clientX;
-            const diff = this.touchStartX - touchEndX;
+            const endX = this.getEndClientX(event);
+            const diff = this.touchStartX - endX;
             if (diff > 80) {
                 // Keep the delete button visible
             } else {
