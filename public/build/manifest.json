@@ -831,7 +831,7 @@
     ]
   },
   "resources/ts/pages/dashboard/pos/ns-pos-cart.vue": {
-    "file": "assets/ns-pos-cart-CgePQl2K.js",
+    "file": "assets/ns-pos-cart-Qp4m-lzD.js",
     "name": "ns-pos-cart",
     "src": "resources/ts/pages/dashboard/pos/ns-pos-cart.vue",
     "isDynamicEntry": true,
@@ -871,7 +871,7 @@
     ]
   },
   "resources/ts/pages/dashboard/pos/ns-pos.vue": {
-    "file": "assets/ns-pos-CtdnupIA.js",
+    "file": "assets/ns-pos-BabZ3i0v.js",
     "name": "ns-pos",
     "src": "resources/ts/pages/dashboard/pos/ns-pos.vue",
     "isDynamicEntry": true,
@@ -1326,7 +1326,7 @@
     ]
   },
   "resources/ts/pos.ts": {
-    "file": "assets/pos-BVgODZSr.js",
+    "file": "assets/pos-BsAmEenR.js",
     "name": "pos",
     "src": "resources/ts/pos.ts",
     "isEntry": true,
