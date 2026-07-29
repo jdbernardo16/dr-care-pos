@@ -25,32 +25,43 @@
                         </div>
                     </div>
 
-                    <div :product-index="index" :key="product.barcode" class="product-item px-3 py-3 border-b border-box-edge cursor-pointer hover:bg-box-elevation-background" v-for="(product, index) of products" @click="openEditModal(product, index)">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1 min-w-0">
-                                <div class="font-semibold text-lg lg:text-xl text-fontcolor break-words leading-tight">
-                                    {{ product.name }}
-                                    <span class="text-fontcolor-soft font-normal text-base whitespace-nowrap" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
+                    <div class="relative overflow-hidden" v-for="(product, index) of products" :key="product.barcode || index">
+                        <div
+                            class="product-item px-3 py-3 border-b border-box-edge cursor-pointer hover:bg-box-elevation-background transition-transform duration-200"
+                            :class="swipedIndex === index ? '-translate-x-16' : ''"
+                            @click="!isSwiping && openEditModal(product, index)"
+                            @touchstart="onTouchStart($event, index)"
+                            @touchmove="onTouchMove($event)"
+                            @touchend="onTouchEnd($event)"
+                        >
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-lg lg:text-xl text-fontcolor break-words leading-tight">
+                                        {{ product.name }}
+                                        <span class="text-fontcolor-soft font-normal text-base whitespace-nowrap" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-1 text-base lg:text-lg text-fontcolor">
+                                        <span class="flex items-center gap-1">
+                                            <span class="text-fontcolor-soft">&times;</span>
+                                            <span class="font-semibold text-fontcolor bg-input-background px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
+                                            <span class="text-fontcolor-soft">@</span>
+                                            <span>{{ nsCurrency(product.unit_price) }}</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2 mt-1 text-base">
+                                        <a @click="changeProductPrice(product)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Price' ) }}: {{ nsCurrency(product.unit_price) }}</a>
+                                        <a v-if="allowQuantityModification(product)" @click="openDiscountPopup(product, 'product', index)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span>: {{ nsCurrency(product.discount) }}</a>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-3 mt-1 text-base lg:text-lg text-fontcolor">
-                                    <span class="flex items-center gap-1">
-                                        <span class="text-fontcolor-soft">&times;</span>
-                                        <span class="font-semibold text-fontcolor bg-input-background px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
-                                        <span class="text-fontcolor-soft">@</span>
-                                        <span>{{ nsCurrency(product.unit_price) }}</span>
-                                    </span>
-                                    <button @click="removeUsingIndex(index)" class="text-error-secondary hover:text-error-tertiary text-base">
-                                        <i class="las la-trash-alt"></i>
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2 mt-1 text-base">
-                                    <a @click="changeProductPrice(product)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Price' ) }}: {{ nsCurrency(product.unit_price) }}</a>
-                                    <a v-if="allowQuantityModification(product)" @click="openDiscountPopup(product, 'product', index)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span>: {{ nsCurrency(product.discount) }}</a>
+                                <div class="text-lg lg:text-xl font-bold text-fontcolor flex-shrink-0 ml-4">
+                                    {{ nsCurrency(product.total_price) }}
                                 </div>
                             </div>
-                            <div class="text-lg lg:text-xl font-bold text-fontcolor flex-shrink-0 ml-4">
-                                {{ nsCurrency(product.total_price) }}
-                            </div>
+                        </div>
+                        <div class="absolute right-0 top-0 h-full flex items-center transition-opacity duration-200" :class="swipedIndex === index ? 'opacity-100' : 'opacity-0 pointer-events-none'">
+                            <button @click="removeUsingIndex(index)" class="h-full bg-red-600 text-white px-4 flex items-center justify-center text-xl cursor-pointer rounded-r">
+                                <i class="las la-trash-alt"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -125,6 +136,9 @@ export default {
         return {
             popup : null,
             products: [],
+            swipedIndex: null,
+            isSwiping: false,
+            touchStartX: 0,
             visibleSection: null,
             visibleSectionSubscriber: null,
             optionsSubscriber: null,
@@ -617,7 +631,33 @@ export default {
 
         openShippingPopup() {
             Popup.show( nsPosShippingPopupVue );
-        }
+        },
+
+        onTouchStart(event, index) {
+            this.touchStartX = event.touches[0].clientX;
+            this.swipedIndex = index;
+            this.isSwiping = false;
+        },
+
+        onTouchMove(event) {
+            if (this.swipedIndex === null) return;
+            const touchX = event.touches[0].clientX;
+            const diff = this.touchStartX - touchX;
+            if (diff > 10) {
+                this.isSwiping = true;
+            }
+        },
+
+        onTouchEnd(event) {
+            if (this.swipedIndex === null) return;
+            const touchEndX = event.changedTouches[0].clientX;
+            const diff = this.touchStartX - touchEndX;
+            if (diff > 80) {
+                // Keep the delete button visible
+            } else {
+                this.swipedIndex = null;
+            }
+        },
     }
 }
 </script>
