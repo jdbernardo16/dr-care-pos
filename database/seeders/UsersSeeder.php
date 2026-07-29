@@ -19,6 +19,7 @@ class UsersSeeder extends Seeder
 
         $this->createOrUpdateUser('admin', 'admin@drcare.test', 'admin', $authorId);
         $this->createOrUpdateUser('cashier', 'cashier@drcare.test', 'nexopos.store.cashier', $authorId);
+        $this->createOrUpdateUser('renzoOng', 'renzoong@drcare.test', 'nexopos.store.cashier', $authorId);
 
         $this->createDeveloperRole();
         $this->createOrUpdateUser('developer', 'developer@drcare.test', 'nexopos.developer', $authorId);

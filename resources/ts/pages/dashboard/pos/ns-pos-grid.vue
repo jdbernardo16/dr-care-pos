@@ -493,14 +493,16 @@ export default {
             },
             deep: true,
         },
-        'barcode,scanMode'() {
-            if (this.options.ns_pos_force_autofocus) {
-                clearTimeout(this.searchTimeout);
+        barcode() {
+            clearTimeout(this.searchTimeout);
 
-                this.searchTimeout = setTimeout(() => {
-                    this.submitSearch(this.barcode);
-                }, 200);
-            }
+            this.searchTimeout = setTimeout(() => {
+                this.submitSearch(this.barcode);
+            }, 200);
+        },
+        scanMode() {
+            this.barcode = '';
+            this.$refs.search.focus();
         },
     },
     mounted() {
@@ -720,7 +722,6 @@ export default {
                     limit: 20,
                 }).subscribe({
                     next: (result) => {
-                        this.barcode = "";
                         if (Array.isArray(result) && result.length > 0) {
                             // Populate grid with search results
                             this.products = result;
@@ -730,7 +731,6 @@ export default {
                         }
                     },
                     error: (error) => {
-                        this.barcode = "";
                         nsSnackBar.error(error.message);
                     },
                 });
@@ -855,12 +855,17 @@ export default {
             POS.breadcrumbs.next(this.breadcrumb);
         },
 
-        addToTheCart(product) {
-            POS.processingAddQueue = true;
-            POS.addToCart(product);
-            POS.processingAddQueue = false;
+        async addToTheCart(product) {
+            const options = POS.options.getValue();
+            const originalValue = options.ns_pos_show_quantity;
+            options.ns_pos_show_quantity = false;
+            POS.defineOptions(options);
+            await POS.addToCart(product);
+            options.ns_pos_show_quantity = originalValue;
+            POS.defineOptions(options);
 
             if (this.products.length > 0 && this.categories.length === 0) {
+                this.barcode = '';
                 this.loadCategories(this.currentCategory);
             }
         },

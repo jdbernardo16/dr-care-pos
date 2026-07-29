@@ -1,56 +1,51 @@
 <template>
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" @click.self="close">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-fontcolor">{{ product.name }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900">{{ product.name }}</h3>
                     <button @click="close" class="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer">&times;</button>
                 </div>
-                <p class="text-fontcolor-soft mb-4">&mdash; {{ product.unit_name }}</p>
+                <p class="text-gray-500 mb-4">&mdash; {{ product.unit_name }}</p>
 
-                <!-- Quantity -->
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-fontcolor mb-2">{{ __("Quantity") }}</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __("Quantity") }}</label>
                     <div class="flex items-center gap-2">
-                        <button @click="decrementQuantity" :disabled="editQuantity <= 1" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100">
+                        <button @click="decrementQuantity" :disabled="editQuantity <= 1" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 text-gray-700 bg-white">
                             -
                         </button>
-                        <input type="number" v-model.number="editQuantity" min="1" class="flex-1 text-center border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold outline-hidden focus:ring-2 focus:ring-primary" />
-                        <button @click="incrementQuantity" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer hover:bg-gray-100">
+                        <input type="number" v-model.number="editQuantity" min="1" class="flex-1 text-center border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold outline-hidden focus:ring-2 focus:ring-primary text-gray-900 bg-white" />
+                        <button @click="incrementQuantity" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer hover:bg-gray-100 text-gray-700 bg-white">
                             +
                         </button>
                     </div>
                 </div>
 
-                <!-- Unit Price -->
                 <div class="mb-4" v-if="unitPriceEditable">
-                    <label class="block text-sm font-semibold text-fontcolor mb-2">{{ __("Unit Price") }}</label>
-                    <input type="number" v-model.number="editUnitPrice" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold outline-hidden focus:ring-2 focus:ring-primary" />
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __("Unit Price") }}</label>
+                    <input type="number" v-model.number="editUnitPrice" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold outline-hidden focus:ring-2 focus:ring-primary text-gray-900 bg-white" />
                 </div>
                 <div class="mb-4" v-else>
-                    <label class="block text-sm font-semibold text-fontcolor mb-2">{{ __("Unit Price") }}</label>
-                    <p class="text-lg font-semibold">{{ nsCurrency(product.unit_price) }}</p>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __("Unit Price") }}</label>
+                    <p class="text-lg font-semibold text-gray-900">{{ nsCurrency(product.unit_price) }}</p>
                 </div>
 
-                <!-- Discount -->
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-fontcolor mb-2">{{ __("Discount") }}</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __("Discount") }}</label>
                     <div class="flex gap-2">
-                        <select v-model="discountType" class="border border-gray-300 rounded-lg px-3 py-2 outline-hidden">
+                        <select v-model="discountType" class="border border-gray-300 rounded-lg px-3 py-2 outline-hidden text-gray-900 bg-white">
                             <option value="percentage">{{ __("Percentage") }}</option>
                             <option value="flat">{{ __("Flat") }}</option>
                         </select>
-                        <input type="number" v-model.number="discountValue" min="0" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 outline-hidden focus:ring-2 focus:ring-primary" :placeholder="discountType === 'percentage' ? '%' : '0.00'" />
+                        <input type="number" v-model.number="discountValue" min="0" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 outline-hidden focus:ring-2 focus:ring-primary text-gray-900 bg-white" :placeholder="discountType === 'percentage' ? '%' : '0.00'" />
                     </div>
                 </div>
 
-                <!-- Subtotal -->
                 <div class="flex justify-between items-center py-3 border-t border-gray-200 mt-4">
-                    <span class="font-bold text-fontcolor text-lg">{{ __("Subtotal") }}</span>
+                    <span class="font-bold text-gray-900 text-lg">{{ __("Subtotal") }}</span>
                     <span class="font-bold text-primary text-xl">{{ nsCurrency(subtotal) }}</span>
                 </div>
 
-                <!-- Actions -->
                 <div class="flex gap-3 mt-4">
                     <button @click="close" class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold cursor-pointer hover:bg-gray-200 transition-colors">
                         {{ __("Cancel") }}
