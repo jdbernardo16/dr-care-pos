@@ -9,13 +9,13 @@
                 <p class="text-gray-500 mb-4">&mdash; {{ product.unit_name }}</p>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __("Quantity") }}</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __("Quantity") }} <span class="text-gray-400 font-normal">({{ __("Stock") }}: {{ maxQuantity }})</span></label>
                     <div class="flex items-center gap-2">
                         <button @click="decrementQuantity" :disabled="editQuantity <= 1" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 text-gray-700 bg-white">
                             -
                         </button>
-                        <input type="number" v-model.number="editQuantity" min="1" class="flex-1 text-center border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold outline-hidden focus:ring-2 focus:ring-primary text-gray-900 bg-white" />
-                        <button @click="incrementQuantity" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer hover:bg-gray-100 text-gray-700 bg-white">
+                        <input type="number" v-model.number="editQuantity" min="1" :max="maxQuantity" class="flex-1 text-center border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold outline-hidden focus:ring-2 focus:ring-primary text-gray-900 bg-white" />
+                        <button @click="incrementQuantity" :disabled="editQuantity >= maxQuantity" class="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-xl font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 text-gray-700 bg-white">
                             +
                         </button>
                     </div>
@@ -86,6 +86,10 @@ export default {
         unitPriceEditable() {
             return this.settings.unit_price_editable && this.product.product_type !== "dynamic";
         },
+        maxQuantity() {
+            const q = this.product.$quantities ? this.product.$quantities() : null;
+            return q ? parseFloat(q.quantity) || 0 : 999;
+        },
         subtotal() {
             const lineTotal = this.editQuantity * this.editUnitPrice;
             if (this.discountType === "percentage") {
@@ -104,7 +108,7 @@ export default {
         },
 
         incrementQuantity() {
-            this.editQuantity++;
+            if (this.editQuantity < this.maxQuantity) this.editQuantity++;
         },
 
         close() {

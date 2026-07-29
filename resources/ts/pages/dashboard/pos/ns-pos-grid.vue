@@ -373,7 +373,9 @@
                                     {{ product.name }}
                                 </h3>
                                 <span class="text-sm text-fontcolor-soft">
-                                    {{ __("Stock") }}: {{ totalQuantity(product) }}
+                                    <template v-if="product.unit_quantities && product.unit_quantities.length > 0">
+                                        {{ product.unit_quantities[0].unit?.name || __('Unit') }}: {{ totalQuantity(product) }}
+                                    </template>
                                 </span>
                             </div>
                         </div>
