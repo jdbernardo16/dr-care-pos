@@ -262,7 +262,7 @@
                     }
 
                     input {
-                        @apply bg-transparent px-3 h-10 text-2xl;
+                        @apply bg-transparent px-3 h-14 text-2xl;
                         outline: none;
 
                         &:focus {
