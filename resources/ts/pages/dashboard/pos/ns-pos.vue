@@ -9,11 +9,19 @@
         </div>
         <div class="flex-auto overflow-hidden flex p-2">
             <div class="flex flex-auto overflow-hidden -m-2">
-                <div :class="visibleSection === 'both' ? 'w-[62%]' : 'w-full'" class="p-2 flex overflow-hidden" v-if="[ 'both', 'grid' ].includes( visibleSection )">
+                <div :class="visibleSection === 'both' || visibleSection === 'summary' ? 'w-[62%]' : 'w-full'" class="p-2 flex overflow-hidden" v-if="[ 'both', 'grid', 'summary' ].includes( visibleSection )">
                     <ns-pos-grid></ns-pos-grid>
                 </div>
-                <div :class="visibleSection === 'both' ? 'w-[38%]' : 'w-full'" class="flex overflow-hidden p-2" v-if="[ 'both', 'cart' ].includes( visibleSection )">
-                    <ns-pos-cart></ns-pos-cart>
+                <div :class="visibleSection === 'both' || visibleSection === 'summary' ? 'w-[38%]' : 'w-full'" class="flex overflow-hidden p-2" v-if="[ 'both', 'cart', 'summary' ].includes( visibleSection )">
+                    <ns-pos-cart v-if="visibleSection !== 'summary'"></ns-pos-cart>
+                    <ns-pos-transaction-summary
+                        v-else
+                        :products="lastCompletedOrder?.products || []"
+                        :payments="lastCompletedOrder?.payments || []"
+                        :order-total="lastCompletedOrder?.total || 0"
+                        :change-due="lastCompletedOrder?.change_due || 0"
+                        :order="lastCompletedOrder"
+                    ></ns-pos-transaction-summary>
                 </div>
             </div>
         </div>
@@ -22,6 +30,7 @@
 <script>
 import nsPosCart from './ns-pos-cart.vue';
 import nsPosGrid from './ns-pos-grid.vue';
+import nsPosTransactionSummary from './ns-pos-transaction-summary.vue';
 
 export default {
     name: 'ns-pos',
@@ -32,6 +41,10 @@ export default {
     },
     mounted() {
         this.visibleSectionSubscriber   =   POS.visibleSection.subscribe( section => {
+            if (section === 'summary') {
+                const order = POS.lastCompletedOrder ? POS.lastCompletedOrder.getValue() : null;
+                this.lastCompletedOrder = order;
+            }
             this.visibleSection    =   section;
         });
 
@@ -56,11 +69,13 @@ export default {
         return {
             visibleSection: null,
             visibleSectionSubscriber: null,
+            lastCompletedOrder: null,
         }
     },
     components: {
         nsPosCart,
         nsPosGrid,
+        nsPosTransactionSummary,
     }
 }
 </script>

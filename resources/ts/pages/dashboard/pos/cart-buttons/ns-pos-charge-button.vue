@@ -18,7 +18,9 @@ export default {
         __,
         nsCurrency,
         async payOrder() {
-            POS.runPaymentQueue();
+            POS.runPaymentQueue((result) => {
+                POS.showTransactionSummary(result.data.order);
+            });
         },
     },
     mounted() {

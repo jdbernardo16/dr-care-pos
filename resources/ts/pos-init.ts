@@ -111,10 +111,11 @@ export class POS {
     private _initialQueue: (() => Promise<StatusResponse>)[] = [];
     private _options: BehaviorSubject<{ [key: string]: any }>;
     private _responsive = new Responsive();
-    private _visibleSection: BehaviorSubject<"cart" | "grid" | "both">;
+    private _visibleSection: BehaviorSubject<"cart" | "grid" | "both" | "summary">;
     private _isSubmitting = false;
     private _processingAddQueue = false;
     private _selectedPaymentType: BehaviorSubject<PaymentType>;
+    private _lastCompletedOrder: BehaviorSubject<any>;
     private _userPermissions: BehaviorSubject<{ [key: string]: any }[]>;
 
     public print: Print;
@@ -184,6 +185,10 @@ export class POS {
 
     get selectedPaymentType() {
         return this._selectedPaymentType;
+    }
+
+    get lastCompletedOrder() {
+        return this._lastCompletedOrder;
     }
 
     get order() {
@@ -284,6 +289,7 @@ export class POS {
         this._settings = new BehaviorSubject<{ [key: string]: any }>({});
         this._order = new BehaviorSubject<Order>(this.defaultOrder());
         this._selectedPaymentType = new BehaviorSubject<PaymentType>(null);
+        this._lastCompletedOrder = new BehaviorSubject<any>(null);
         this._cartButtons = new BehaviorSubject<{ [key: string]: any }>({});
         this._cartHeaderButtons = new BehaviorSubject<{ [key: string]: any }>(
             {},
@@ -2377,7 +2383,7 @@ export class POS {
         };
     }
 
-    async runPaymentQueue() {
+    async runPaymentQueue(onSuccess?) {
         const queues = nsHooks.applyFilters("ns-pay-queue", [
             ProductsQueue,
             CustomerQueue,
@@ -2388,7 +2394,9 @@ export class POS {
         for (let index in queues) {
             try {
                 const promise = new queues[index](this.order.getValue());
-                const response = await promise.run();
+                const response = await (queues[index] === PaymentQueue
+                    ? promise.run(onSuccess)
+                    : promise.run());
             } catch (exception) {
                 /**
                  * in case there is something broken
@@ -2398,6 +2406,11 @@ export class POS {
                 return false;
             }
         }
+    }
+
+    showTransactionSummary(order) {
+        this._lastCompletedOrder.next(order);
+        this._visibleSection.next('summary');
     }
 
     computeDiscount(product) {

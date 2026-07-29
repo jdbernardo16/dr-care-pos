@@ -19,7 +19,7 @@ declare const POS, nsHooks, nsCloseButton, nsButton, shallowRef;
 
 export default {
     name: "ns-pos-payment",
-    props: ["popup"],
+    props: ["popup", "onSuccess"],
     data() {
         return {
             paymentTypesSubscription: null,
@@ -233,7 +233,9 @@ export default {
 
                         nsSnackBar.success(result.message);
 
-                        POS.printOrderReceipt(result.data.order, "silent");
+                        if (typeof this.onSuccess === 'function') {
+                            this.onSuccess(result);
+                        }
 
                         // close payment popup
                         this.popup.close();
