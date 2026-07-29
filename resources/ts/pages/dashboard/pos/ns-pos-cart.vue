@@ -90,7 +90,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center px-2 py-2 border-t border-box-edge gap-1" id="cart-bottom-buttons">
+                <div class="flex items-center px-2 pt-2 pb-3 border-t border-box-edge gap-1" id="cart-bottom-buttons">
                     <ns-pos-charge-button :order="order"></ns-pos-charge-button>
                     <ns-pos-more-button :order="order"></ns-pos-more-button>
                 </div>
