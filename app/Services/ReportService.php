@@ -680,7 +680,7 @@ class ReportService
         }
     }
 
-    private function getSalesSummary( $orders )
+    private function getSalesSummary( $orders, $refundTotal = 0 )
     {
         $allSales = $orders->map( function ( $order ) {
             $productTaxes = $order->products()->sum( 'tax_value' );
@@ -712,7 +712,30 @@ class ReportService
             'profit' => Currency::define( $allSales->sum( 'profit' ) )->toFloat(),
             'total_purchase_price' => Currency::define( $allSales->sum( 'total_purchase_price' ) )->toFloat(),
             'total' => Currency::define( $allSales->sum( 'total' ) )->toFloat(),
+            'refunds' => $refundTotal,
         ];
+    }
+
+    private function getRefundTotal( $start, $end, $user_id = null, $categories_id = [] ): float
+    {
+        $request = Order::whereIn( 'payment_status', [
+                Order::PAYMENT_REFUNDED,
+                Order::PAYMENT_PARTIALLY_REFUNDED,
+            ] )
+            ->from( $start )
+            ->to( $end );
+
+        if ( ! empty( $user_id ) ) {
+            $request = $request->where( 'author_id', $user_id );
+        }
+
+        if ( ! empty( $categories_id ) ) {
+            $request = $request->whereHas( 'products', function ( $query ) use ( $categories_id ) {
+                $query->whereIn( 'product_category_id', $categories_id );
+            } );
+        }
+
+        return (float) $request->sum( 'total' );
     }
 
     /**
@@ -749,7 +772,8 @@ class ReportService
         }
 
         $orders = $request->get();
-        $summary = $this->getSalesSummary( $orders );
+        $refundTotal = $this->getRefundTotal( $start, $end, $user_id, $categories_id );
+        $summary = $this->getSalesSummary( $orders, $refundTotal );
         $products = $orders->map( fn( $order ) => $order->products )->flatten();
         $productsIds = $products->map( fn( $product ) => $product->product_id )->unique();
 
@@ -807,7 +831,8 @@ class ReportService
          * We'll pull the sales
          * summary
          */
-        $summary = $this->getSalesSummary( $orders );
+        $refundTotal = $this->getRefundTotal( $start, $end, $user_id, $categories_id );
+        $summary = $this->getSalesSummary( $orders, $refundTotal );
 
         $products = $orders->map( fn( $order ) => $order->products )->flatten();
         $category_ids = $orders->map( fn( $order ) => $order->products->map( fn( $product ) => $product->product_category_id ) );

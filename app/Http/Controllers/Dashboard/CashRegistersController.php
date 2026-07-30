@@ -13,6 +13,7 @@ use App\Crud\RegisterCrud;
 use App\Crud\RegisterHistoryCrud;
 use App\Exceptions\NotAllowedException;
 use App\Http\Controllers\DashboardController;
+use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\PaymentType;
 use App\Models\Register;
@@ -67,6 +68,11 @@ class CashRegistersController extends DashboardController
 
             return $register;
         } );
+    }
+
+    public function getSessionSummary(Register $register)
+    {
+        return $this->registersService->getRegisterSessionSummary($register);
     }
 
     /**
@@ -247,6 +253,46 @@ class CashRegistersController extends DashboardController
                         ];
                     } );
 
+                // Non-cash payment entries & summary (GCash, Bank, etc. — not recorded in register history)
+                $paidOrderIds = Order::paid()
+                    ->where('register_id', $register->id)
+                    ->where('created_at', '>=', $lastOpening->created_at)
+                    ->pluck('id');
+
+                $cashPaymentIdentifiers = PaymentType::where('is_cash', true)->pluck('identifier')->toArray();
+
+                $nonCashPayments = OrderPayment::whereIn('order_id', $paidOrderIds)
+                    ->whereNotIn('identifier', $cashPaymentIdentifiers)
+                    ->with('order')
+                    ->get();
+
+                foreach ($nonCashPayments as $np) {
+                    $paymentType = PaymentType::where('identifier', $np->identifier)->first();
+                    $label = $paymentType ? $paymentType->label : $np->identifier;
+                    $history->push((object) [
+                        'id' => 'noncash-' . $np->id,
+                        'action' => 'register-noncash-payment',
+                        'label' => sprintf(__('Payment %s on %s'), $label, $np->order->code ?? ''),
+                        'value' => (float) $np->value,
+                        'description' => null,
+                        'account_name' => null,
+                        'created_at' => $np->created_at ?? $np->order->created_at ?? now(),
+                    ]);
+                }
+
+                $history = $history->sortBy('created_at')->values();
+
+                $nonCashPaymentSummary = $nonCashPayments
+                    ->groupBy('identifier')
+                    ->map(function ($payments, $identifier) {
+                        $paymentType = PaymentType::where('identifier', $identifier)->first();
+                        return [
+                            'label' => sprintf(__('Total %s'), $paymentType ? $paymentType->label : $identifier),
+                            'value' => (float) $payments->sum('value'),
+                            'color' => 'info',
+                        ];
+                    })->values()->toArray();
+
                 $summary = [
                     [
                         'label' => __( 'Initial Balance' ),
@@ -254,6 +300,7 @@ class CashRegistersController extends DashboardController
                         'color' => 'info',
                     ],
                     ...$totalPaymentTypeSummary,
+                    ...$nonCashPaymentSummary,
                     [
                         'label' => __( 'Total Change' ),
                         'value' => $totalCashChange,

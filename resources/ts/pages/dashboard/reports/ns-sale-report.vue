@@ -109,141 +109,61 @@
                     <div class="w-full md:w-1/2 px-4">
                         <div class="shadow rounded my-4 ns-box">
                             <div class="border-b ns-box-body">
-                                <table class="table ns-table w-full">
-                                    <tbody class="text-fontcolor">
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left text-fontcolor"
-                                            >
-                                                {{ __("Sub Total") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right text-fontcolor"
-                                            >
-                                                {{
-                                                    nsCurrency(summary.subtotal)
-                                                }}
-                                            </td>
-                                        </tr>
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left text-fontcolor"
-                                            >
-                                                {{ __("Sales Discounts") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right text-fontcolor"
-                                            >
-                                                {{
-                                                    nsCurrency(
-                                                        summary.sales_discounts,
-                                                    )
-                                                }}
-                                            </td>
-                                        </tr>
-                                        <tr
-                                            class=""
-                                            v-if="summary.product_taxes > 0"
-                                        >
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left text-fontcolor"
-                                            >
-                                                {{ __("Product Taxes") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right text-fontcolor"
-                                            >
-                                                {{
-                                                    nsCurrency(
-                                                        summary.product_taxes,
-                                                    )
-                                                }}
-                                            </td>
-                                        </tr>
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left font-bold text-lg text-fontcolor"
-                                            >
-                                                {{ __("Total") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right font-bold text-lg text-fontcolor"
-                                            >
-                                                {{ nsCurrency(summary.total) }}
-                                            </td>
-                                        </tr>
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left text-fontcolor-soft"
-                                            >
-                                                {{ __("Cost Of Goods") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right text-fontcolor-soft"
-                                            >
-                                                {{
-                                                    nsCurrency(
-                                                        summary.total_purchase_price,
-                                                    )
-                                                }}
-                                            </td>
-                                        </tr>
-                                        <tr class="">
-                                            <td
-                                                width="200"
-                                                class="font-semibold p-2 border text-left text-fontcolor"
-                                            >
-                                                {{ __("Profit") }}
-                                            </td>
-                                            <td
-                                                class="p-2 border text-right text-fontcolor"
-                                            >
-                                                {{ nsCurrency(summary.profit) }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="p-2 bg-info-primary info font-bold text-sm uppercase tracking-wide">{{ __("Sales Summary") }}</div>
+                                <div class="text-sm">
+                                    <div class="flex justify-between px-3 py-1.5 border-b ns-border">
+                                        <span>{{ __("Gross Sales") }}</span>
+                                        <span class="font-semibold">{{ nsCurrency(summary.subtotal) }}</span>
+                                    </div>
+                                    <div class="flex justify-between px-3 py-1.5 border-b ns-border">
+                                        <span>{{ __("Discounts") }}</span>
+                                        <span class="font-semibold text-error-primary">{{ nsCurrency(summary.sales_discounts) }}</span>
+                                    </div>
+                                    <div class="flex justify-between px-3 py-1.5 border-b ns-border" v-if="summary.refunds">
+                                        <span>{{ __("Refunds") }}</span>
+                                        <span class="font-semibold text-error-primary">{{ nsCurrency(summary.refunds) }}</span>
+                                    </div>
+                                    <div class="flex justify-between px-3 py-2 bg-info-primary info font-bold border-b ns-border">
+                                        <span>{{ __("Net Sales") }}</span>
+                                        <span>{{ nsCurrency(summary.total) }}</span>
+                                    </div>
+                                    <div v-for="payment of payments" :key="payment.identifier" class="flex justify-between px-3 py-1.5 border-b ns-border pl-6">
+                                        <span>{{ payment.label }}</span>
+                                        <span class="font-semibold">{{ nsCurrency(payment.total) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shadow rounded my-4 ns-box">
+                            <div class="border-b ns-box-body">
+                                <div class="p-2 bg-success-primary success font-bold text-sm uppercase tracking-wide">{{ __("Cost & Profit") }}</div>
+                                <div class="text-sm">
+                                    <div class="flex justify-between px-3 py-1.5 border-b ns-border">
+                                        <span>{{ __("Cost Of Goods") }}</span>
+                                        <span class="font-semibold">{{ nsCurrency(summary.total_purchase_price) }}</span>
+                                    </div>
+                                    <div class="flex justify-between px-3 py-2 bg-success-secondary success font-bold">
+                                        <span>{{ __("Profit") }}</span>
+                                        <span>{{ nsCurrency(summary.profit) }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="w-full md:w-1/2 px-4">
                         <div class="shadow rounded my-4 ns-box" v-if="payments.length > 0">
                             <div class="border-b ns-box-body">
-                                <table class="table ns-table w-full">
-                                    <thead class="text-fontcolor">
-                                        <tr>
-                                            <th class="border p-2 text-left">
-                                                {{ __("Payment Type") }}
-                                            </th>
-                                            <th width="150" class="border p-2 text-right">
-                                                {{ __("Total") }}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-fontcolor">
-                                        <tr v-for="payment of payments" :key="payment.identifier">
-                                            <td class="p-2 border">{{ payment.label }}</td>
-                                            <td class="p-2 border text-right">
-                                                {{ nsCurrency(payment.total) }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot class="text-fontcolor font-semibold">
-                                        <tr>
-                                            <td class="p-2 border text-font">
-                                                {{ __("Total") }}
-                                            </td>
-                                            <td class="p-2 border text-right">
-                                                {{ nsCurrency(paymentsTotal) }}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                <div class="p-2 bg-success-primary success font-bold text-sm uppercase tracking-wide">{{ __("Payment Summary") }}</div>
+                                <div class="text-sm">
+                                    <div v-for="payment of payments" :key="payment.identifier" class="flex justify-between px-3 py-1.5 border-b ns-border">
+                                        <span>{{ payment.label }}</span>
+                                        <span class="font-semibold">{{ nsCurrency(payment.total) }}</span>
+                                    </div>
+                                    <div class="flex justify-between px-3 py-2 bg-success-secondary success font-bold">
+                                        <span>{{ __("Total") }}</span>
+                                        <span>{{ nsCurrency(paymentsTotal) }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1045,10 +965,7 @@ export default {
                         this.isLoading = false;
                         this.result = response.result;
                         this.summary = response.summary;
-                        this.payments = (response.payments || []).filter( payment => {
-                            const label = ( payment.label || '' ).toLowerCase();
-                            return label.includes( 'gcash' ) || label.includes( 'g-cash' ) || label.includes( 'cash' );
-                        });
+                        this.payments = (response.payments || []);
                     },
                     error: (error) => {
                         this.isLoading = false;
