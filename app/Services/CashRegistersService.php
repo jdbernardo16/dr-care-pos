@@ -509,17 +509,22 @@ class CashRegistersService
         $paidOut = (float) $histories->where('action', RegisterHistory::ACTION_CASHOUT)->sum('value');
         $change = (float) $histories->where('action', RegisterHistory::ACTION_ORDER_CHANGE)->sum('value');
 
+        // Change from paid orders only (excludes voided orders)
+        $paidChange = (float) $histories->where('action', RegisterHistory::ACTION_ORDER_CHANGE)
+            ->whereIn('order_id', $orderIds)
+            ->sum('value');
+
         // Payment breakdown from paid orders (all types) — deduct change from cash payments
         $paymentBreakdownRaw = OrderPayment::whereIn('order_id', $orderIds)
             ->select('identifier', DB::raw('SUM(value) as total_amount'))
             ->groupBy('identifier')
             ->get();
 
-        $paymentBreakdown = $paymentBreakdownRaw->map(function ($payment) use ($cashPaymentIdentifiers, $change) {
+        $paymentBreakdown = $paymentBreakdownRaw->map(function ($payment) use ($cashPaymentIdentifiers, $paidChange) {
             $paymentType = PaymentType::where('identifier', $payment->identifier)->first();
             $value = (float) $payment->total_amount;
             if (in_array($payment->identifier, $cashPaymentIdentifiers)) {
-                $value = max(0, $value - $change);
+                $value = max(0, $value - $paidChange);
             }
             return [
                 'label' => $paymentType ? $paymentType->label : $payment->identifier,
