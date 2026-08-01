@@ -15,11 +15,15 @@ use TorMorten\Eventy\Facades\Events as Hook;
 class AttendanceCrud extends CrudService
 {
     const AUTOLOAD = true;
+
     const IDENTIFIER = 'ns.attendance';
 
     protected $table = 'nexopos_attendance';
+
     protected $slug = 'attendance';
+
     protected $namespace = 'ns.attendance';
+
     protected $model = Attendance::class;
 
     protected $permissions = [
@@ -44,7 +48,9 @@ class AttendanceCrud extends CrudService
     ];
 
     protected $listWhere = [];
+
     protected $whereIn = [];
+
     public $fillable = [];
 
     public function __construct()
@@ -58,7 +64,7 @@ class AttendanceCrud extends CrudService
 
         // Non-admin users only see their own attendance records
         $user = Auth::user();
-        if ( $user && ! $user->hasRoles( [ 'admin' ] ) ) {
+        if ( $user && ! $user->hasRoles( [ 'admin', 'nexopos.developer' ] ) ) {
             $query->where( 'nexopos_attendance.user_id', $user->id );
         }
     }
@@ -90,11 +96,11 @@ class AttendanceCrud extends CrudService
                             'type' => 'select',
                             'name' => 'user_id',
                             'label' => __( 'Employee' ),
-                            'options' => Helper::toJsOptions( 
-                                User::whereDoesntHave( 'roles', function( $query ) {
+                            'options' => Helper::toJsOptions(
+                                User::whereDoesntHave( 'roles', function ( $query ) {
                                     $query->where( 'namespace', 'nexopos.store.customer' );
                                 } )->get(),
-                                function( $user ) {
+                                function ( $user ) {
                                     return [
                                         'value' => $user->id,
                                         'label' => trim( $user->first_name . ' ' . $user->last_name ) ?: $user->username,

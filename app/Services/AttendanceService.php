@@ -12,12 +12,18 @@ class AttendanceService
 {
     public function clockIn( $userId, $note = null )
     {
-        $activeRecord = Attendance::forUser( $userId )
+        $activeRecords = Attendance::forUser( $userId )
             ->clockedInOrOnBreak()
-            ->first();
+            ->get();
 
-        if ( $activeRecord instanceof Attendance ) {
+        $activeToday = $activeRecords->first( fn( $record ) => $record->clock_in_at->isToday() );
+
+        if ( $activeToday instanceof Attendance ) {
             throw new NotAllowedException( __( 'You\'re already clocked in or on break. Please clock out first.' ) );
+        }
+
+        foreach ( $activeRecords as $record ) {
+            $this->closeStaleShift( $record );
         }
 
         $attendance = new Attendance;
@@ -136,6 +142,39 @@ class AttendanceService
         $record->save();
     }
 
+    /**
+     * Closes a shift that was left open on a previous day,
+     * so a new clock-in is not blocked by a forgotten clock-out.
+     */
+    private function closeStaleShift( Attendance $record )
+    {
+        if ( $record->status === Attendance::STATUS_ON_BREAK && $record->break_start ) {
+            $breakStart = Carbon::parse( $record->break_start );
+            $breakEnd = $record->clock_in_at->copy()->endOfDay();
+            $breakMinutes = $breakStart->diffInMinutes( $breakEnd );
+            $existingBreak = (float) $record->break_hours;
+
+            $record->break_end = $breakEnd;
+            $record->break_hours = $existingBreak + round( $breakMinutes / 60, 2 );
+            $record->status = Attendance::STATUS_CLOCKED_IN;
+        }
+
+        $clockIn = Carbon::parse( $record->clock_in_at );
+        $clockOut = $clockIn->copy()->endOfDay();
+        $totalMinutes = $clockIn->diffInMinutes( $clockOut );
+        $breakMinutes = (float) $record->break_hours * 60;
+        $netMinutes = $totalMinutes - $breakMinutes;
+        $netHours = round( $netMinutes / 60, 2 );
+
+        $record->clock_out_at = $clockOut;
+        $record->clock_out_ip = request()->ip();
+        $record->clock_out_note = __( 'Auto-closed (forgot to clock out)' );
+        $record->total_hours = round( $totalMinutes / 60, 2 );
+        $record->net_hours = $netHours;
+        $record->status = Attendance::STATUS_CLOCKED_OUT;
+        $record->save();
+    }
+
     public function getCurrentStatus( $userId )
     {
         $todayRecord = Attendance::forUser( $userId )
@@ -199,7 +238,7 @@ class AttendanceService
 
         // Non-admin users only see their own history
         $user = Auth::user();
-        $isAdmin = $user && $user->hasRoles( [ 'admin' ] );
+        $isAdmin = $user && $user->hasRoles( [ 'admin', 'nexopos.developer' ] );
 
         if ( ! $isAdmin ) {
             $query->where( 'user_id', $user ? $user->id : 0 );
