@@ -87,7 +87,7 @@ export default {
                 const { product, data }         =   this.popup.params;
                 const quantity                  =   parseFloat( this.finalValue );
 
-                if ( quantity === 0 ) {
+                if ( quantity === 0 && this.popup.params.action !== 'set' ) {
                     return nsSnackBar.error( __( 'Please provide a quantity' ) );
                 }
 

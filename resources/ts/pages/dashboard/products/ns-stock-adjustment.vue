@@ -152,7 +152,7 @@ export default {
         openQuantityPopup( product ) {
             const oldQuantity   =   product.quantity;
             const promise   =   new Promise( ( resolve, reject ) => {
-                Popup.show( nsProcurementQuantityVue, { resolve, reject, quantity : product.adjust_quantity });
+                Popup.show( nsProcurementQuantityVue, { resolve, reject, quantity : product.adjust_quantity, action : product.adjust_action });
             });
 
             promise.then( result => {
