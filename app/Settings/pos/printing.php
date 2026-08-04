@@ -35,6 +35,7 @@ return [
             'type' => 'select',
             'options' => Helper::kvToJsOptions( [
                 'default' => __( 'Default Printing (web)' ),
+                'xprinter' => __( 'XPrinter Thermal 58mm (QZ Tray)' ),
             ] ),
             'description' => __( 'Determine what is the gateway used for printing.' ),
         ],

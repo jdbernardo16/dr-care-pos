@@ -19,6 +19,7 @@ import { ProductUnitQuantity } from "./interfaces/product-unit-quantity";
 import { __ } from "./libraries/lang";
 import { Popup } from "./libraries/popup";
 import Print from "./libraries/print";
+import { registerXprinterGateway } from "./libraries/xprinter";
 import { Responsive } from "./libraries/responsive";
 import Tax from "./libraries/tax";
 import delivery from "./pages/dashboard/pos/queues/order-type/delivery";
@@ -169,6 +170,7 @@ export class POS {
             urls: systemUrls,
             options: systemOptions,
         });
+        registerXprinterGateway();
     }
 
     get screen() {
