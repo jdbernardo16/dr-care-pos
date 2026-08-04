@@ -212,6 +212,26 @@ class Options
     }
 
     /**
+     * Returns the VAT status label to display on receipts
+     * based on the configured POS VAT type.
+     */
+    public function getVatStatusLabel(): string
+    {
+        return $this->isVatEnabled() ? __( 'VAT' ) : __( 'Non-VAT' );
+    }
+
+    /**
+     * Determine whether the store is VAT-registered based on
+     * the configured POS VAT type.
+     */
+    public function isVatEnabled(): bool
+    {
+        $vatType = $this->get( 'ns_pos_vat', 'disabled' );
+
+        return in_array( $vatType, [ 'flat_vat', 'variable_vat', 'products_vat', 'products_variable_vat' ] );
+    }
+
+    /**
      * Delete an option using a specific key.
      **/
     public function delete( string $key ): void

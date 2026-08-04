@@ -20,7 +20,7 @@ $pos_vat          =   $order->settings?->where( 'key', 'ns_pos_vat' )->first()?-
             <div>{{ ns()->option->get( 'ns_store_address' ) }}</div>
             @endif
             @if ( ns()->option->get( 'ns_store_tin' ) )
-            <div>{{ __( 'TIN:' ) }} {{ ns()->option->get( 'ns_store_tin' ) }} &mdash; {{ __( 'Non-VAT' ) }}</div>
+            <div>{{ __( 'TIN:' ) }} {{ ns()->option->get( 'ns_store_tin' ) }}@if (ns()->option->isVatEnabled()) &mdash; {{ ns()->option->getVatStatusLabel() }}@endif</div>
             @endif
         </div>
         <div class="p-2 border-b border-gray-700">

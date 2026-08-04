@@ -37,7 +37,7 @@ class RawbtPrintService
         }
 
         if ( $storeTin ) {
-            $out .= $this->line( 'TIN: ' . $storeTin . ' - Non-VAT', 'center' );
+            $out .= $this->line( 'TIN: ' . $storeTin . ( ns()->option->isVatEnabled() ? ' - ' . ns()->option->getVatStatusLabel() : '' ), 'center' );
         }
 
         $out .= $this->feed( 1 );
@@ -385,9 +385,9 @@ class RawbtPrintService
      * Split a template string (may contain <br> or newlines) into
      * trimmed, non-empty lines.
      */
-    private function splitLines( string $content ): array
+    private function splitLines( ?string $content ): array
     {
-        $content = strip_tags( str_replace( [ '<br>', '<br />', '<br/>' ], "\n", $content ) );
+        $content = strip_tags( str_replace( [ '<br>', '<br />', '<br/>' ], "\n", $content ?? '' ) );
 
         return array_values( array_filter( array_map( 'trim', preg_split( '/\R/', $content ) ?: [] ), fn( $line ) => $line !== '' ) );
     }

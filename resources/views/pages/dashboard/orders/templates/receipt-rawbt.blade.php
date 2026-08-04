@@ -68,7 +68,7 @@ if ( $storeAddress ) {
 }
 
 if ( $storeTin ) {
-    $lines[] = $center( sprintf( 'TIN: %s - Non-VAT', $storeTin ) );
+    $lines[] = $center( sprintf( 'TIN: %s%s', $storeTin, ns()->option->isVatEnabled() ? ' - ' . ns()->option->getVatStatusLabel() : '' ) );
 }
 
 $lines[] = '';

@@ -71,7 +71,7 @@ $storeTin = ns()->option->get('ns_store_tin');
     <div class="info">{{ $storeAddress }}</div>
     @endif
     @if ($storeTin)
-    <div class="info">{{ __('TIN:') }} {{ $storeTin }} &mdash; {{ __('Non-VAT') }}</div>
+    <div class="info">{{ __('TIN:') }} {{ $storeTin }}@if (ns()->option->isVatEnabled()) &mdash; {{ ns()->option->getVatStatusLabel() }}@endif</div>
     @endif
 </div>
 <div class="receipt-type">{{ strtoupper(__('SALES RECEIPT')) }}</div>
