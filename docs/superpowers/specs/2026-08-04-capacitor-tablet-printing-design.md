@@ -35,6 +35,15 @@ Android tablet (APK)
 
 ## 4. Components
 
+### 4.0 Repository split (decided during planning)
+
+Two repositories:
+
+- **`drcare` (web repo)** — everything the WebView loads from the server: `printer-utils.ts`, `bluetooth-spp.ts` (JS bridge client), `xprinter.ts` native branch. Must live here because the web bundle is built and served by the Laravel app.
+- **`drcare-tablet` (new app repo)** — the Android shell: `capacitor.config.json`, `www/` stub, `android/` platform (MainActivity, `BluetoothSppPlugin.java`, manifests, signing), user instructions.
+
+The only cross-repo contract is the native bridge API (plugin name `BluetoothSpp`; methods `list() → {devices}`, `connect({name})`, `write({data: base64})`, `disconnect()`). JS-only changes never require an APK rebuild (the WebView fetches the bundle from the server); Java/plugin changes do.
+
 ### 4.1 Capacitor scaffold
 - Add `@capacitor/core`, `@capacitor/cli`, `@capacitor/android` to `package.json`
 - `capacitor.config.json`:
