@@ -7,6 +7,8 @@ $ordersService = app()->make(OrdersService::class);
 $isThermal58 = ns()->option->get('ns_invoice_receipt_template') === 'thermal_58';
 $storeName = ns()->option->get('ns_store_name');
 $storeLogo = ns()->option->get('ns_invoice_receipt_logo');
+$storeAddress = ns()->option->get('ns_store_address');
+$storeTin = ns()->option->get('ns_store_tin');
 ?>
 <style>
     @page { margin: 0; }
@@ -18,11 +20,12 @@ $storeLogo = ns()->option->get('ns_invoice_receipt_logo');
         color: #000;
         width: {{ $isThermal58 ? '48mm' : '76mm' }};
         margin: 0 auto;
-        padding: 4px 3px 12px;
+        padding: 8px 3px 28px;
     }
     .header { text-align: center; margin-bottom: 6px; }
     .header h2 { font-size: 14px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px; }
     .header img { max-width: 70%; height: auto; margin-bottom: 4px; }
+    .header .info { font-size: 9px; line-height: 1.3; word-break: break-word; }
     .receipt-type {
         text-align: center;
         font-size: 11px;
@@ -46,15 +49,23 @@ $storeLogo = ns()->option->get('ns_invoice_receipt_logo');
     td.pad-top { padding-top: 4px; }
     .total-row td { border-top: 1px solid #000; padding-top: 3px; font-weight: bold; }
     .total-row td.right { font-size: 12px; }
-    .footer { text-align: center; font-size: 9px; margin-top: 8px; }
+    .footer { text-align: center; font-size: 9px; margin-top: 8px; white-space: pre-line; }
     .product-name { font-size: 10px; word-break: break-word; }
     .product-meta { font-size: 9px; color: #333; }
+    .spacer { line-height: 1.5; }
 </style>
+<div class="spacer">&nbsp;</div>
 <div class="header">
     @if (empty($storeLogo))
     <h2>{{ $storeName }}</h2>
     @else
     <img src="{{ $storeLogo }}" alt="{{ $storeName }}">
+    @endif
+    @if ($storeAddress)
+    <div class="info">{{ $storeAddress }}</div>
+    @endif
+    @if ($storeTin)
+    <div class="info">{{ __('TIN:') }} {{ $storeTin }} &mdash; {{ __('Non-VAT') }}</div>
     @endif
 </div>
 <div class="receipt-type">{{ strtoupper(__('REFUND RECEIPT')) }}</div>
@@ -116,4 +127,5 @@ $storeLogo = ns()->option->get('ns_invoice_receipt_logo');
 <div class="footer">
     {{ ns()->option->get('ns_invoice_receipt_footer') }}
 </div>
+<div class="spacer">&nbsp;</div>
 @includeWhen(request()->query('autoprint') === 'true', '/pages/dashboard/orders/templates/_autoprint')

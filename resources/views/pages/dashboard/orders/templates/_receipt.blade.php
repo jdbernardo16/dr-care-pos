@@ -15,6 +15,14 @@ $pos_vat          =   $order->settings?->where( 'key', 'ns_pos_vat' )->first()?-
             <img src="{{ ns()->option->get( 'ns_invoice_receipt_logo' ) }}" alt="{{ ns()->option->get( 'ns_store_name' ) }}">
             @endif
         </div>
+        <div class="text-center text-sm text-gray-700 leading-5">
+            @if ( ns()->option->get( 'ns_store_address' ) )
+            <div>{{ ns()->option->get( 'ns_store_address' ) }}</div>
+            @endif
+            @if ( ns()->option->get( 'ns_store_tin' ) )
+            <div>{{ __( 'TIN:' ) }} {{ ns()->option->get( 'ns_store_tin' ) }} &mdash; {{ __( 'Non-VAT' ) }}</div>
+            @endif
+        </div>
         <div class="p-2 border-b border-gray-700">
             <div class="flex flex-wrap -mx-2 text-sm">
                 <div class="px-2 w-1/2">

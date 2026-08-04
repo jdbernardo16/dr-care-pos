@@ -11,7 +11,6 @@ import nsPosLoadingPopupVue from "./ns-pos-loading-popup.vue";
 import samplePaymentVue from "~/pages/dashboard/pos/payments/sample-payment.vue";
 import nsSelectPopupVue from "./ns-select-popup.vue";
 import { nsCurrency, nsRawCurrency } from "~/filters/currency";
-import { ref } from "vue";
 import { nsConfirmPopup } from "~/components/components";
 import { HttpStatusResponse } from "~/interfaces/http-status-response";
 
@@ -46,7 +45,7 @@ export default {
     },
     mounted() {
         this.orderSubscription = POS.order.subscribe((order) => {
-            this.order = ref(order);
+            this.order = order;
         });
 
         this.activePaymentSubscription = POS.selectedPaymentType.subscribe(

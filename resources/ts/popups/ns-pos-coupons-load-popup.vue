@@ -113,7 +113,6 @@ import { nsHttpClient, nsSnackBar } from '~/bootstrap';
 import { __ } from "~/libraries/lang";
 import nsPosCustomerSelectPopupVue from './ns-pos-customer-select-popup.vue';
 import nsNotice from '~/components/ns-notice.vue';
-import { ref } from "vue";
 
 export default {
     name: 'ns-pos-coupons-load-popup',
@@ -135,7 +134,7 @@ export default {
         this.popupCloser();
 
         this.orderSubscriber    =   POS.order.subscribe( order => {
-            this.order = ref(order);
+            this.order = order;
             
             if ( this.order.coupons.length > 0 ) {
                 this.activeTab  =   'active-coupons';
