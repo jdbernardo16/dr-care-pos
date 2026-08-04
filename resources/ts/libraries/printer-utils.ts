@@ -42,3 +42,51 @@ export function toBase64(bytes: Uint8Array): string {
     }
     return btoa(binary);
 }
+
+/**
+ * Map of Unicode characters to ESC/POS-safe ASCII equivalents.
+ * Thermal printer codepages (CP437 etc.) only cover ASCII + a few Latin-1
+ * chars — everything else prints as "?" or raw control bytes.
+ */
+const ESCPOS_SAFE_MAP: Record<string, string> = {
+    "₱": "P",       // peso sign
+    "×": "x",       // multiplication sign
+    "÷": "/",       // division sign
+    "–": "-",       // en dash
+    "—": "-",       // em dash
+    "→": ">",       // right arrow
+    "←": "<",       // left arrow
+    "↑": "^",       // up arrow
+    "↓": "v",       // down arrow
+    "•": "*",       // bullet
+    "·": "*",       // middle dot
+    "✓": "v",       // check mark
+    "★": "*",       // star
+    "€": "E",       // euro (may be in some codepages, safe fallback)
+    "£": "L",       // pound
+    "¥": "Y",       // yen
+    "©": "(c)",     // copyright
+    "®": "(r)",     // registered
+    "™": "(tm)",    // trademark
+    "°": "deg",     // degree
+    "±": "+/-",     // plus-minus
+    "≤": "<=",      // less-than-or-equal
+    "≥": ">=",      // greater-than-or-equal
+    "≠": "!=",      // not equal
+    "∞": "inf",     // infinity
+    "…": "...",     // ellipsis
+    "'": "'",       // curly apostrophe
+    "‘": "'",
+    "’": "'",
+    "“": '"',       // curly quotes
+    "”": '"',
+    " ": " ",       // non-breaking space
+};
+
+/**
+ * Replace Unicode characters not representable in ESC/POS codepages with
+ * printer-safe ASCII equivalents.
+ */
+export function sanitizeEscpos(text: string): string {
+    return text.replace(/[₱×÷–—→←↑↓•·✓★€£¥©®™°±≤≥≠∞…'‘’“”\u00a0]/g, (ch) => ESCPOS_SAFE_MAP[ch] || ch);
+}

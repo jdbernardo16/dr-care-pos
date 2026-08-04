@@ -1,6 +1,6 @@
 import qz from "qz-tray";
 import ReceiptPrinterEncoder from "@point-of-sale/receipt-printer-encoder";
-import { pickPrinterName, isNativePlatform } from "./printer-utils";
+import { pickPrinterName, isNativePlatform, sanitizeEscpos } from "./printer-utils";
 import { sppListDevices, sppConnect, sppWriteBytes, sppDisconnect } from "./bluetooth-spp";
 
 /**
@@ -63,10 +63,11 @@ async function fetchReceiptDom(url: string): Promise<Document> {
     return new DOMParser().parseFromString(html, "text/html");
 }
 
-/** Strip HTML to plain text, collapsing whitespace. */
+/** Strip HTML to plain text, collapsing whitespace, then sanitize for ESC/POS. */
 function textOf(el: Element | null): string {
     if (!el) return "";
-    return (el.textContent || "").replace(/\s+/g, " ").trim();
+    const raw = (el.textContent || "").replace(/\s+/g, " ").trim();
+    return sanitizeEscpos(raw);
 }
 
 /**
@@ -177,7 +178,7 @@ async function receiptDomToEscpos(doc: Document): Promise<Uint8Array> {
     if (columns) {
         const cols = columns.querySelectorAll(".col");
         cols.forEach((col) => {
-            (col.textContent || "")
+            sanitizeEscpos(col.textContent || "")
                 .split("\n")
                 .map((l) => l.replace(/\s+/g, " ").trim())
                 .filter(Boolean)
@@ -266,7 +267,7 @@ async function receiptDomToEscpos(doc: Document): Promise<Uint8Array> {
     if (footer) {
         encoder.newline();
         encoder.align("center");
-        (footer.textContent || "")
+        (sanitizeEscpos(footer.textContent || ""))
             .split("\n")
             .map((l) => l.trim())
             .filter(Boolean)
