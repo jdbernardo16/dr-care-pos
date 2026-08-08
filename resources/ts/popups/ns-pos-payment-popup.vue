@@ -42,6 +42,15 @@ export default {
                 this.order.customer.group.minimal_credit_payment;
             return (this.order.total * minimalPaymentPercent) / 100;
         },
+        quickAmountOptions() {
+            if (
+                this.activePayment &&
+                this.activePayment.identifier !== "cash-payment"
+            ) {
+                return ["exact"];
+            }
+            return this.quickAmounts;
+        },
     },
     mounted() {
         this.orderSubscription = POS.order.subscribe((order) => {
@@ -76,6 +85,15 @@ export default {
         );
 
         this.computeQuickAmounts();
+
+        // Always default to cash whenever the payment popup opens,
+        // regardless of the payment method used in the previous transaction.
+        const cashPayment = this.paymentsType.find(
+            (payment) => payment.identifier === "cash-payment",
+        );
+        if (cashPayment) {
+            this.select(cashPayment);
+        }
 
         nsHooks.doAction("ns-pos-payment-mounted", this);
     },
@@ -141,6 +159,11 @@ export default {
         select(payment) {
             this.showPayment = false;
             POS.setPaymentActive(payment);
+            // A non-cash payment (e.g. GCash) is not meant to give change,
+            // so any denomination previously selected is reset to the exact amount.
+            if (payment.identifier !== "cash-payment") {
+                this.setAmount("exact");
+            }
         },
         closePopup() {
             console.log(this.popup);
@@ -310,7 +333,7 @@ export default {
                     </div>
                     <div class="flex gap-2 flex-wrap">
                         <div
-                            v-for="amount in quickAmounts"
+                            v-for="amount in quickAmountOptions"
                             :key="amount"
                             @click="setAmount(amount)"
                             :class="
@@ -345,7 +368,7 @@ export default {
 
                 <!-- Change Due -->
                 <div
-                    v-if="changeDue > 0"
+                    v-if="changeDue > 0 && activePayment?.identifier === 'cash-payment'"
                     class="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg mb-6"
                 >
                     <span class="text-sm text-gray-700 dark:text-black">{{

@@ -52,6 +52,14 @@
                         :placeholder="scanMode ? __('Scan barcode...') : __('Search product...')"
                         class="flex-auto outline-hidden px-2"
                     />
+                    <button
+                        v-if="barcode.length > 0"
+                        :title="__('Clear search')"
+                        @click="clearSearch()"
+                        class="outline-hidden w-14 h-14 border-l cursor-pointer flex items-center justify-center"
+                    >
+                        <i class="las la-times text-xl"></i>
+                    </button>
                 </div>
                 <template v-if="false">
                     <button
@@ -690,6 +698,10 @@ export default {
                     limit: 20,
                 }).subscribe({
                     next: (result) => {
+                        // ignore stale responses if the search value changed
+                        // or the search was cleared in the meantime
+                        if (this.barcode !== value) return;
+
                         if (Array.isArray(result) && result.length > 0) {
                             // Populate grid with search results
                             this.products = result;
@@ -769,6 +781,9 @@ export default {
         },
 
         loadCategories(parent) {
+            // Clear any leftover search text when navigating categories,
+            // so the grid always reflects the category view.
+            this.barcode = '';
             this.isLoading = true;
             nsHttpClient
                 .get(`/api/categories/pos/${parent ? parent.id : ""}`)
@@ -832,10 +847,18 @@ export default {
             options.ns_pos_show_quantity = originalValue;
             POS.defineOptions(options);
 
-            if (this.products.length > 0 && this.categories.length === 0) {
-                this.barcode = '';
+            // Keep the search results visible after adding a product,
+            // so the cashier can add multiple products from the same search.
+            // The search is cleared manually via the clear button.
+            if (this.barcode.length === 0) {
                 this.loadCategories(this.currentCategory);
             }
+        },
+
+        clearSearch() {
+            this.barcode = '';
+            this.loadCategories(this.currentCategory);
+            this.$refs.search.focus();
         },
     },
 };
