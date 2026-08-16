@@ -25,6 +25,10 @@
 </template>
 <script lang="ts">
 import { Popup } from "~/libraries/popup";
+import { nsSnackBar } from "~/bootstrap";
+import { __ } from "~/libraries/lang";
+import ActionPermissions from "~/libraries/action-permissions";
+
 import nsPosDiscountPopupVue from "~/popups/ns-pos-discount-popup.vue";
 import nsPosNotePopupVue from "~/popups/ns-pos-note-popup.vue";
 import nsPosTaxPopupVue from "~/popups/ns-pos-tax-popup.vue";
@@ -32,12 +36,14 @@ import nsPosCouponsLoadPopupVue from "~/popups/ns-pos-coupons-load-popup.vue";
 import nsPosOrderSettingsVue from "~/popups/ns-pos-order-settings.vue";
 import nsPosQuickProductPopupVue from "~/popups/ns-pos-quick-product-popup.vue";
 import nsPosConfirmPopup from "~/popups/ns-pos-confirm-popup.vue";
-import nsPosOrderTypePopupVue from "~/popups/ns-pos-order-type-popup.vue";
-import nsPosCustomerPopupVue from "~/popups/ns-pos-customer-select-popup.vue";
-import nsPosShippingPopupVue from "~/popups/ns-pos-shipping-popup.vue";
-import { nsSnackBar } from "~/bootstrap";
+import nsPosHoldOrdersPopupVue from "~/popups/ns-pos-hold-orders-popup.vue";
+import nsPosLoadingPopupVue from "~/popups/ns-pos-loading-popup.vue";
 
-declare const POS, __;
+import { ProductsQueue } from "~/pages/dashboard/pos/queues/order/products-queue";
+import { CustomerQueue } from "~/pages/dashboard/pos/queues/order/customer-queue";
+import { TypeQueue } from "~/pages/dashboard/pos/queues/order/type-queue";
+
+declare const POS, nsHooks;
 
 export default {
     inheritAttrs: false,
@@ -79,81 +85,44 @@ export default {
                 items.push({
                     label: __("Hold"),
                     icon: "las la-pause",
-                    action: () => {
-                        const order = POS.order.getValue();
-                        if (order.products.length === 0) {
-                            return nsSnackBar.error(
-                                __("Unable to hold an empty order."),
-                            );
-                        }
-                        POS.holdOrder(order);
-                    },
+                    action: () => this.holdOrder(),
                 });
                 items.push({
                     label: __("Discount"),
                     icon: "las la-percent",
-                    action: () => {
-                        Popup.show(nsPosDiscountPopupVue, {
-                            order: this.order,
-                            type: "cart",
-                        });
-                    },
+                    action: () => this.openDiscountPopup(),
                 });
                 items.push({
                     label: __("Void"),
                     icon: "las la-trash",
-                    action: () => {
-                        Popup.show(nsPosConfirmPopup, {
-                            title: __("Void Order"),
-                            message: __(
-                                "Would you like to void the entire order?",
-                            ),
-                            onAction: (action) => {
-                                if (action) {
-                                    POS.voidOrder();
-                                }
-                            },
-                        });
-                    },
+                    action: () => this.voidOrder(),
                 });
             }
 
             items.push({
                 label: __("Comments"),
                 icon: "las la-comment",
-                action: () => {
-                    Popup.show(nsPosNotePopupVue, { order: this.order });
-                },
+                action: () => this.openNotePopup(),
             });
             items.push({
                 label: __("Taxes"),
                 icon: "las la-balance-scale-left",
-                action: () => {
-                    Popup.show(nsPosTaxPopupVue, { order: this.order });
-                },
+                action: () => this.selectTaxGroup(),
             });
             items.push({
                 label: __("Coupons"),
                 icon: "las la-tags",
-                action: () => {
-                    Popup.show(nsPosCouponsLoadPopupVue, { order: this.order });
-                },
+                action: () => this.selectCoupon(),
             });
             items.push({
                 label: __("Settings"),
                 icon: "las la-tools",
-                action: () => {
-                    Popup.show(nsPosOrderSettingsVue, { order: this.order });
-                },
+                action: () => this.defineOrderSettings(),
             });
             items.push({
                 label: __("Quick Product"),
                 icon: "las la-plus",
-                action: () => {
-                    Popup.show(nsPosQuickProductPopupVue, {
-                        order: this.order,
-                    });
-                },
+                action: () => this.openAddQuickProduct(),
             });
 
             this.menuActions = items;
@@ -167,6 +136,260 @@ export default {
         handleClickOutside(e) {
             if (this.$el && !this.$el.contains(e.target)) {
                 this.showMenu = false;
+            }
+        },
+        async holdOrder() {
+            const order = POS.order.getValue();
+
+            if (order.products.length === 0) {
+                return nsSnackBar.error(
+                    __("Unable to hold an empty order."),
+                );
+            }
+
+            /**
+             * We'll check if the user has the right to hold an order.
+             */
+            await ActionPermissions.canProceed('nexopos.cart.hold');
+
+            if (order.payment_status !== 'hold' && order.payments.length > 0) {
+                return nsSnackBar.error(
+                    __(
+                        "Unable to hold an order which payment status has been updated already.",
+                    ),
+                );
+            }
+
+            const queues = nsHooks.applyFilters('ns-hold-queue', [
+                ProductsQueue,
+                CustomerQueue,
+                TypeQueue,
+            ]);
+
+            for (let index in queues) {
+                try {
+                    const promise = new queues[index](order);
+                    await promise.run();
+                } catch (exception) {
+                    /**
+                     * in case there is something broken
+                     * on the promise, we just stop the queue.
+                     */
+                    return false;
+                }
+            }
+
+            /**
+             * overriding hold popup
+             * This will be useful to inject custom
+             * hold popup.
+             */
+            const popup = nsHooks.applyFilters(
+                'ns-override-hold-popup',
+                () => {
+                    const promise = new Promise((resolve, reject) => {
+                        Popup.show(nsPosHoldOrdersPopupVue, {
+                            resolve,
+                            reject,
+                            order,
+                        });
+                    });
+
+                    promise
+                        .then((result: any) => {
+                            order.title = result.title;
+                            order.payment_status = 'hold';
+                            POS.order.next(order);
+
+                            const popup = Popup.show(nsPosLoadingPopupVue);
+
+                            POS.submitOrder().then(
+                                (result) => {
+                                    popup.close();
+                                    nsSnackBar.success(result.message);
+                                },
+                                (error) => {
+                                    popup.close();
+                                    nsSnackBar.error(error.message);
+                                },
+                            );
+                        })
+                        .catch((exception) => {
+                            console.log(exception);
+                        });
+                },
+            );
+
+            popup();
+        },
+        async openDiscountPopup() {
+            const settings = POS.settings.getValue();
+
+            if (!settings.cart_discount) {
+                return nsSnackBar.error(
+                    __(`You're not allowed to add a discount on the cart.`),
+                );
+            }
+
+            await ActionPermissions.canProceed('nexopos.cart.discount');
+
+            try {
+                const reference = this.order;
+                const type = "cart";
+
+                await new Promise((resolve, reject) => {
+                    Popup.show(nsPosDiscountPopupVue, {
+                        reference,
+                        resolve,
+                        reject,
+                        type,
+                        onSubmit(response) {
+                            if (
+                                response.discount_type === "flat" &&
+                                response.discount > reference.total_price
+                            ) {
+                                return nsSnackBar.error(
+                                    __(
+                                        "The discount amount can't exceed the total price of the product.",
+                                    ),
+                                );
+                            }
+
+                            if (type === "product") {
+                                POS.updateProduct(reference, response);
+                            } else if (type === "cart") {
+                                POS.updateCart(reference, response);
+                            }
+                        },
+                    });
+                });
+            } catch (exception) {
+                // the popup might just be closed...
+            }
+        },
+        voidOrder() {
+            Popup.show(nsPosConfirmPopup, {
+                title: __("Void Order"),
+                message: __("Would you like to void the entire order?"),
+                onAction: (action) => {
+                    if (action) {
+                        POS.voidOrder();
+                    }
+                },
+            });
+        },
+        async openNotePopup() {
+            /**
+             * We'll ensure the user has the right to add comments to an order.
+             */
+            await ActionPermissions.canProceed('nexopos.cart.comments');
+
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    const note = this.order.note;
+                    const note_visibility = this.order.note_visibility;
+                    Popup.show(nsPosNotePopupVue, {
+                        resolve,
+                        reject,
+                        note,
+                        note_visibility,
+                    });
+                });
+
+                const order = { ...this.order, ...response };
+                POS.order.next(order);
+            } catch (exception) {
+                if (exception !== false) {
+                    nsSnackBar.error(exception.message);
+                }
+            }
+        },
+        async selectTaxGroup(activeTab = 'settings') {
+            /**
+             * We'll check if the user has the right to manage taxes.
+             */
+            await ActionPermissions.canProceed('nexopos.cart.taxes');
+
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    const taxes = this.order.taxes;
+                    const tax_group_id = this.order.tax_group_id;
+                    const tax_type = this.order.tax_type;
+                    Popup.show(nsPosTaxPopupVue, {
+                        resolve,
+                        reject,
+                        taxes,
+                        tax_group_id,
+                        tax_type,
+                        activeTab,
+                    });
+                });
+
+                const order = { ...this.order, ...response };
+
+                POS.order.next(order);
+                POS.refreshCart();
+            } catch (exception) {
+                // popup is closed... not needed to log or do anything else
+            }
+        },
+        async selectCoupon() {
+            /**
+             * We'll check if the user has the right to manage coupons.
+             */
+            await ActionPermissions.canProceed('nexopos.cart.coupons');
+
+            try {
+                await new Promise((resolve, reject) => {
+                    Popup.show(nsPosCouponsLoadPopupVue, { resolve, reject });
+                });
+            } catch (exception) {
+                // something happened
+            }
+        },
+        async defineOrderSettings() {
+            const settings = POS.settings.getValue();
+
+            if (!settings.edit_settings) {
+                return nsSnackBar.error(
+                    __("You're not allowed to edit the order settings."),
+                );
+            }
+
+            /**
+             * We'll check if the user has the right to define order settings.
+             */
+            await ActionPermissions.canProceed('defineOrderSettings');
+
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    Popup.show(nsPosOrderSettingsVue, {
+                        resolve,
+                        reject,
+                        order: this.order,
+                    });
+                });
+
+                /**
+                 * We'll update the order
+                 */
+                POS.order.next({ ...this.order, ...response });
+            } catch (exception) {
+                // we shouldn't catch any exception here.
+            }
+        },
+        async openAddQuickProduct() {
+            /**
+             * We'll check if the user has the right to add a quick product.
+             */
+            await ActionPermissions.canProceed('nexopos.cart.products');
+
+            try {
+                await new Promise((resolve, reject) => {
+                    Popup.show(nsPosQuickProductPopupVue, { resolve, reject });
+                });
+            } catch (exception) {
+                // ...
             }
         },
     },
