@@ -166,7 +166,7 @@ class CashRegistersService
             $cashRegisterHistory->payment_type_id = $orderPayment->type->id;
             $cashRegisterHistory->order_id = $orderPayment->order_id;
             $cashRegisterHistory->action = RegisterHistory::ACTION_ORDER_PAYMENT;
-            $cashRegisterHistory->author_id = $orderPayment->order->author_id;
+            $cashRegisterHistory->author_id = $orderPayment->author_id;
             $cashRegisterHistory->balance_before = $register->balance;
             $cashRegisterHistory->value = ns()->currency->define( $orderPayment->value )->toFloat();
             $cashRegisterHistory->balance_after = ns()->currency->define( $register->balance )->additionateBy( $orderPayment->value )->toFloat();

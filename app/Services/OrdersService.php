@@ -869,7 +869,7 @@ class OrdersService
 
         $orderPayment->identifier = $payment['identifier'];
         $orderPayment->value = $this->currencyService->define( $payment['value'] )->toFloat();
-        $orderPayment->author_id = $order->author_id;
+        $orderPayment->author_id = Auth::id(); // the payment is attributed to the user that performs the transaction
 
         return $orderPayment;
     }
@@ -1528,6 +1528,14 @@ class OrdersService
         }
 
         /**
+         * We'll keep a reference to the previous payment status
+         * so we can determine whether the order was a hold and
+         * is now being charged. In that case, the transaction
+         * should be attributed to the user that performs it.
+         */
+        $previousPaymentStatus = $order->payment_status ?? null;
+
+        /**
          * If any other attributes needs to be
          * saved while creating the order, it should be
          * explicitly allowed on this filter
@@ -1568,6 +1576,19 @@ class OrdersService
         $order->process_status = 'pending';
         $order->support_instalments = $fields[ 'support_instalments' ] ?? true; // by default instalments are supported
         $order->author_id = $fields[ 'author_id' ] ?? Auth::id(); // the author can now be changed
+
+        /**
+         * When a hold order is being charged, we'll make sure
+         * the transaction is attributed to the user that actually
+         * performs the charge and the date reflects the moment
+         * the transaction was completed. This prevent the sale
+         * from being attributed to the user that created the hold.
+         */
+        if ( $previousPaymentStatus === Order::PAYMENT_HOLD && $paymentStatus !== Order::PAYMENT_HOLD ) {
+            $order->author_id = Auth::id();
+            $order->created_at = ns()->date->getNow()->toDateTimeString();
+            $order->updated_at = ns()->date->getNow()->toDateTimeString();
+        }
         $order->title = $fields[ 'title' ] ?? null;
         $order->tax_value = $this->currencyService->define( $fields[ 'tax_value' ] ?? 0 )->toFloat();
         $order->products_tax_value = $this->currencyService->define( $fields[ 'products_tax_value' ] ?? 0 )->toFloat();
