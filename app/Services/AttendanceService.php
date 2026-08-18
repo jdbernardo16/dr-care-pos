@@ -185,10 +185,6 @@ class AttendanceService
             ->orderBy( 'id', 'desc' )
             ->first();
 
-        if ( $todayRecord instanceof Attendance ) {
-            return $this->buildCurrentStatusResponse( $todayRecord );
-        }
-
         return $this->buildCurrentStatusResponse( $todayRecord );
     }
 
