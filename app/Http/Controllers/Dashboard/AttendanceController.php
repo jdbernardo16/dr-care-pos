@@ -1,18 +1,13 @@
 <?php
 
-/**
- * NexoPOS Controller
- *
- * @since  1.0
- **/
-
 namespace App\Http\Controllers\Dashboard;
 
 use App\Crud\AttendanceCrud;
 use App\Http\Controllers\DashboardController;
 use App\Models\Attendance;
-use App\Services\AttendanceService;
+use App\Models\AttendanceDevice;
 use App\Services\AttendanceDeviceService;
+use App\Services\AttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -104,5 +99,27 @@ class AttendanceController extends DashboardController
     public function generateEnrollmentCode()
     {
         return $this->attendanceDeviceService->generateEnrollmentCode();
+    }
+
+    public function listDevices()
+    {
+        return $this->attendanceDeviceService->listDevices();
+    }
+
+    public function toggleDevice( AttendanceDevice $device )
+    {
+        return $this->attendanceDeviceService->toggleDevice( $device );
+    }
+
+    public function deleteDevice( AttendanceDevice $device )
+    {
+        return $this->attendanceDeviceService->deleteDevice( $device );
+    }
+
+    public function devicesPage()
+    {
+        return view( 'pages.dashboard.attendance.devices', [
+            'title' => __( 'Clock-in Devices' ),
+        ] );
     }
 }

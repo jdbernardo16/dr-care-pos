@@ -28,3 +28,9 @@ Route::post( 'attendance/enroll-device', [ AttendanceController::class, 'enrollD
 
 Route::post( 'attendance/generate-enrollment-code', [ AttendanceController::class, 'generateEnrollmentCode' ] )
     ->middleware( NsRestrictMiddleware::arguments( 'attendance.clock' ), 'throttle:30,1' );
+
+Route::middleware( NsRestrictMiddleware::arguments( 'attendance.read' ) )->group( function () {
+    Route::get( 'attendance/devices', [ AttendanceController::class, 'listDevices' ] );
+    Route::post( 'attendance/devices/{device}/toggle', [ AttendanceController::class, 'toggleDevice' ] );
+    Route::delete( 'attendance/devices/{device}', [ AttendanceController::class, 'deleteDevice' ] );
+} );
