@@ -12,13 +12,15 @@ use App\Crud\AttendanceCrud;
 use App\Http\Controllers\DashboardController;
 use App\Models\Attendance;
 use App\Services\AttendanceService;
+use App\Services\AttendanceDeviceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends DashboardController
 {
     public function __construct(
-        protected AttendanceService $attendanceService
+        protected AttendanceService $attendanceService,
+        protected AttendanceDeviceService $attendanceDeviceService
     ) {}
 
     public function clockIn( Request $request )
@@ -90,5 +92,17 @@ class AttendanceController extends DashboardController
     public function editAttendance( Attendance $attendance )
     {
         return AttendanceCrud::form( $attendance );
+    }
+
+    public function enrollDevice( Request $request )
+    {
+        return $this->attendanceDeviceService->enrollDevice( $request->only( [
+            'code', 'device_id', 'device_secret', 'label',
+        ] ) );
+    }
+
+    public function generateEnrollmentCode()
+    {
+        return $this->attendanceDeviceService->generateEnrollmentCode();
     }
 }

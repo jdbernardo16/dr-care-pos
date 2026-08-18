@@ -21,3 +21,9 @@ Route::middleware( NsRestrictMiddleware::arguments( 'attendance.read' ) )->group
     Route::get( 'attendance/staff-status', [ AttendanceController::class, 'getStaffStatus' ] );
     Route::get( 'attendance/history', [ AttendanceController::class, 'getHistory' ] );
 } );
+
+Route::post( 'attendance/enroll-device', [ AttendanceController::class, 'enrollDevice' ] )
+    ->middleware( NsRestrictMiddleware::arguments( 'attendance.clock' ), 'throttle:10,1' );
+
+Route::post( 'attendance/generate-enrollment-code', [ AttendanceController::class, 'generateEnrollmentCode' ] )
+    ->middleware( NsRestrictMiddleware::arguments( 'attendance.clock' ), 'throttle:30,1' );

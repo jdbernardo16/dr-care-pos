@@ -10,6 +10,10 @@ class AttendanceDevice extends NsModel
 
     protected $table = 'nexopos_attendance_devices';
 
+    protected $hidden = [
+        'secret_hash',
+    ];
+
     protected $fillable = [
         'device_id',
         'secret_hash',

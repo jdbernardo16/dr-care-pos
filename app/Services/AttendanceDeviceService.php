@@ -55,7 +55,9 @@ class AttendanceDeviceService
             return false;
         }
 
-        $device->update( [ 'last_used_at' => now() ] );
+        if ( ! $device->last_used_at || $device->last_used_at->diffInSeconds( now() ) >= 60 ) {
+            $device->update( [ 'last_used_at' => now() ] );
+        }
 
         return true;
     }
@@ -103,13 +105,24 @@ class AttendanceDeviceService
         }
 
         $cacheKey = self::CODE_CACHE_PREFIX . $code;
-        $expiresAt = Cache::get( $cacheKey );
 
-        if ( ! is_numeric( $expiresAt ) || (int) $expiresAt < now()->timestamp ) {
-            throw new NotAllowedException( __( 'This enrollment code is invalid or has expired.' ) );
+        $lock = Cache::lock( $cacheKey . '.lock', 5 );
+
+        if ( ! $lock->get() ) {
+            throw new NotAllowedException( __( 'This enrollment code is being used by another request. Please try again.' ) );
         }
 
-        Cache::forget( $cacheKey );
+        try {
+            $expiresAt = Cache::get( $cacheKey );
+
+            if ( ! is_numeric( $expiresAt ) || (int) $expiresAt < now()->timestamp ) {
+                throw new NotAllowedException( __( 'This enrollment code is invalid or has expired.' ) );
+            }
+
+            Cache::forget( $cacheKey );
+        } finally {
+            $lock->release();
+        }
 
         $device = AttendanceDevice::forDeviceId( $deviceId )->first();
 
