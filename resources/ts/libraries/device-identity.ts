@@ -13,7 +13,13 @@ function generateSecret(): string {
 }
 
 export function getDeviceIdentity(): DeviceIdentity {
-    const raw = localStorage.getItem( STORAGE_KEY );
+    let raw: string | null = null;
+
+    try {
+        raw = localStorage.getItem( STORAGE_KEY );
+    } catch ( e ) {
+        // storage unavailable — fall through and generate a fresh identity
+    }
 
     if ( raw ) {
         try {
@@ -22,7 +28,7 @@ export function getDeviceIdentity(): DeviceIdentity {
                 return parsed;
             }
         } catch ( e ) {
-            // fall through and regenerate
+            // corrupt payload — fall through and regenerate
         }
     }
 
@@ -31,7 +37,11 @@ export function getDeviceIdentity(): DeviceIdentity {
         device_secret: generateSecret(),
     };
 
-    localStorage.setItem( STORAGE_KEY, JSON.stringify( identity ) );
+    try {
+        localStorage.setItem( STORAGE_KEY, JSON.stringify( identity ) );
+    } catch ( e ) {
+        // storage unavailable — still return the identity for this session
+    }
 
     return identity;
 }
