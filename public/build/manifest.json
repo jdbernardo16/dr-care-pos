@@ -321,7 +321,7 @@
     ]
   },
   "resources/ts/app-init.ts": {
-    "file": "assets/app-init-T9xe20x5.js",
+    "file": "assets/app-init-BXSUFjUD.js",
     "name": "app-init",
     "src": "resources/ts/app-init.ts",
     "isEntry": true,
@@ -371,6 +371,7 @@
       "resources/ts/pages/dashboard/transactions/ns-transactions-rules.vue",
       "resources/ts/components/ns-scale-settings-preview.vue",
       "resources/ts/pages/dashboard/attendance/attendance-clock.vue",
+      "resources/ts/pages/dashboard/attendance/attendance-devices.vue",
       "resources/ts/pages/dashboard/payroll/payroll-list.vue",
       "resources/ts/pages/dashboard/payroll/payroll-create.vue",
       "resources/ts/pages/dashboard/payroll/payroll-detail.vue",
@@ -553,6 +554,21 @@
       "_runtime-core.esm-bundler-Nq5RqvGU.js",
       "_currency-D3_TCvZd.js",
       "_chart--HL2-LwL.js"
+    ]
+  },
+  "resources/ts/pages/dashboard/attendance/attendance-devices.vue": {
+    "file": "assets/attendance-devices-DuwgmBb4.js",
+    "name": "attendance-devices",
+    "src": "resources/ts/pages/dashboard/attendance/attendance-devices.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/ts/bootstrap.ts",
+      "_lang-BINodpp-.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js",
+      "_runtime-core.esm-bundler-Nq5RqvGU.js",
+      "_currency-D3_TCvZd.js",
+      "_chart--HL2-LwL.js",
+      "_runtime-dom.esm-bundler-D2tXEx0D.js"
     ]
   },
   "resources/ts/pages/dashboard/create-coupons.vue": {
