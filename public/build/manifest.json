@@ -321,7 +321,7 @@
     ]
   },
   "resources/ts/app-init.ts": {
-    "file": "assets/app-init-DJJ8-QYI.js",
+    "file": "assets/app-init-CHk3MR3V.js",
     "name": "app-init",
     "src": "resources/ts/app-init.ts",
     "isEntry": true,
@@ -557,7 +557,7 @@
     ]
   },
   "resources/ts/pages/dashboard/attendance/attendance-devices.vue": {
-    "file": "assets/attendance-devices-z_9GAfG-.js",
+    "file": "assets/attendance-devices-CKvjuF56.js",
     "name": "attendance-devices",
     "src": "resources/ts/pages/dashboard/attendance/attendance-devices.vue",
     "isDynamicEntry": true,
