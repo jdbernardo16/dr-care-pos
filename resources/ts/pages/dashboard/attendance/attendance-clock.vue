@@ -2,6 +2,33 @@
     <div
         class="ns-attendance-clock ns-box rounded-lg border shadow bg-surface p-6 max-w-md mx-auto text-center my-8"
     >
+        <!-- Unregistered device prompt -->
+        <div v-if="!deviceVerified && !isAdminUser" class="mb-6 border border-orange-300 bg-orange-50 rounded-lg p-4">
+            <h3 class="font-bold text-orange-700 mb-1">{{ __( "Device Not Registered" ) }}</h3>
+            <p class="text-sm text-orange-600 mb-3">
+                {{ __( "Clock in/out is only available on the store's registered device. Ask the owner for the enrollment code." ) }}
+            </p>
+            <div class="flex flex-col gap-2">
+                <input
+                    v-model="enrollmentCode"
+                    :placeholder="__('6-digit enrollment code')"
+                    class="ns-input w-full border rounded p-2 text-sm text-primary bg-surface"
+                />
+                <input
+                    v-model="deviceLabel"
+                    :placeholder="__('Device name (optional)')"
+                    class="ns-input w-full border rounded p-2 text-sm text-primary bg-surface"
+                />
+                <button
+                    @click="enrollDevice"
+                    :disabled="enrolling"
+                    class="bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 px-4 py-2 rounded-lg text-sm font-semibold"
+                >
+                    {{ enrolling ? __( "Processing..." ) : __( "Register This Device" ) }}
+                </button>
+            </div>
+        </div>
+
         <div class="text-5xl font-bold text-primary mb-2">
             {{ currentTime }}
         </div>
@@ -135,6 +162,7 @@
 <script>
 import { nsHttpClient, nsSnackBar } from "~/bootstrap";
 import { __ } from "~/libraries/lang";
+import { getDeviceIdentity } from "~/libraries/device-identity";
 
 export default {
     name: "nsAttendanceClock",
@@ -150,6 +178,11 @@ export default {
             currentTime: "",
             currentDate: "",
             clockInterval: null,
+            deviceVerified: true,
+            isAdminUser: false,
+            enrollmentCode: "",
+            deviceLabel: "",
+            enrolling: false,
         };
     },
     computed: {
@@ -217,6 +250,8 @@ export default {
                 this.isClockedIn = response.data.is_clocked_in;
                 this.isOnBreak = response.data.is_on_break;
                 this.lastRecord = response.data.record;
+                this.deviceVerified = response.data.device_verified ?? true;
+                this.isAdminUser = response.data.is_admin ?? false;
 
                 // Find the most recent completed shift (previous day)
                 if ( ! this.isClockedIn ) {
@@ -243,6 +278,41 @@ export default {
                 }
             } catch ( e ) {
                 // silent
+            }
+        },
+        async enrollDevice() {
+            if ( ! this.enrollmentCode ) {
+                nsSnackBar.error( __( "Please enter the enrollment code." ) );
+                return;
+            }
+
+            this.enrolling = true;
+
+            try {
+                const identity = getDeviceIdentity();
+
+                const response = await new Promise( ( resolve, reject ) => {
+                    nsHttpClient
+                        .post( "/api/attendance/enroll-device", {
+                            code: this.enrollmentCode,
+                            device_id: identity.device_id,
+                            device_secret: identity.device_secret,
+                            label: this.deviceLabel,
+                        } )
+                        .subscribe( {
+                            next: ( response ) => resolve( response ),
+                            error: ( error ) => reject( error ),
+                        } );
+                } );
+
+                nsSnackBar.success( response.message || __( "Device registered." ) );
+                this.deviceVerified = true;
+                this.enrollmentCode = "";
+                this.deviceLabel = "";
+            } catch ( error ) {
+                nsSnackBar.error( error.message || __( "An error occurred." ) );
+            } finally {
+                this.enrolling = false;
             }
         },
         async toggleClock() {
@@ -286,6 +356,9 @@ export default {
                 }
                 this.note = "";
             } catch ( error ) {
+                if ( error.message && error.message.includes( "registered device" ) ) {
+                    this.deviceVerified = false;
+                }
                 nsSnackBar.error( error.message || __( "An error occurred." ) );
             } finally {
                 this.loading = false;
@@ -326,6 +399,9 @@ export default {
                     );
                 }
             } catch ( error ) {
+                if ( error.message && error.message.includes( "registered device" ) ) {
+                    this.deviceVerified = false;
+                }
                 nsSnackBar.error( error.message || __( "An error occurred." ) );
             } finally {
                 this.breakLoading = false;
