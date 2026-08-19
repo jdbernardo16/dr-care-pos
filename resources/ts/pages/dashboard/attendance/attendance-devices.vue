@@ -14,7 +14,7 @@
         <div v-if="enrollmentCode" class="mb-4 border border-blue-300 bg-blue-50 rounded-lg p-4">
             <h3 class="font-bold text-blue-700 mb-1">{{ __( "Enrollment Code" ) }}</h3>
             <p class="text-3xl font-mono font-bold text-blue-800 tracking-widest mb-1">{{ enrollmentCode }}</p>
-            <p class="text-xs text-blue-600">{{ __( "Expires" ) }}: {{ expiresAt }}</p>
+            <p class="text-xs text-blue-600">{{ __( "Expires" ) }}: {{ formatDateTime( expiresAt ) }}</p>
             <p class="text-xs text-blue-600">{{ __( "Enter this on the tablet to register it. Single use." ) }}</p>
         </div>
 
@@ -39,8 +39,8 @@
                         <span class="font-semibold">{{ device.label }}</span>
                         <span class="block text-xs text-secondary">{{ device.device_id }}</span>
                     </td>
-                    <td class="py-2 text-secondary">{{ device.enrolled_at }}</td>
-                    <td class="py-2 text-secondary">{{ device.last_used_at || __( "Never" ) }}</td>
+                    <td class="py-2 text-secondary">{{ formatDateTime( device.enrolled_at ) }}</td>
+                    <td class="py-2 text-secondary">{{ device.last_used_at ? formatDateTime( device.last_used_at ) : __( "Never" ) }}</td>
                     <td class="py-2">
                         <span
                             :class="device.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
@@ -52,13 +52,13 @@
                     <td class="py-2 text-right">
                         <button
                             @click="toggleDevice( device )"
-                            class="text-blue-500 hover:text-blue-700 mr-3"
+                            class="text-blue-500 hover:text-blue-700 mr-3 cursor-pointer"
                         >
                             {{ device.active ? __( "Deactivate" ) : __( "Activate" ) }}
                         </button>
                         <button
                             @click="deleteDevice( device )"
-                            class="text-red-500 hover:text-red-700"
+                            class="text-red-500 hover:text-red-700 cursor-pointer"
                         >
                             {{ __( "Delete" ) }}
                         </button>
@@ -88,6 +88,10 @@ export default {
     },
     methods: {
         __,
+        formatDateTime( dateString ) {
+            if ( ! dateString ) return __( "N/A" );
+            return window.moment( dateString ).format( "YYYY-MM-DD HH:mm:ss" );
+        },
         async fetchDevices() {
             try {
                 const response = await new Promise( ( resolve, reject ) => {
