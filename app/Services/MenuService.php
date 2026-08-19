@@ -456,6 +456,12 @@ class MenuService
                         permissions: [ 'attendance.create' ],
                         href: ns()->url( '/dashboard/attendance/create' )
                     ),
+                    AsideMenu::subMenu(
+                        label: __( 'Clock-in Devices' ),
+                        identifier: 'attendance-devices',
+                        permissions: [ 'attendance.read' ],
+                        href: ns()->url( '/dashboard/attendance/devices' )
+                    ),
                 ),
             ),
             // Payroll
