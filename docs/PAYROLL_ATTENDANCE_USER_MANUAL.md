@@ -445,3 +445,23 @@ When a payroll run is posted:
 | **Void** | A previously posted run that has been cancelled (accounting entry removed). |
 | **Direct Expense** | A one-time expense transaction (as opposed to recurring). |
 | **Salaries And Wages** | The Chart of Accounts expense account where payroll is recorded. |
+
+---
+
+## Clock-in Device Enrollment
+
+Clock in/out/break is only available on the store's registered device (the tablet).
+Admins and developers can always clock in from any device.
+
+To register a tablet:
+
+1. Sign in as an administrator.
+2. Open **Attendance → Clock-in Devices**.
+3. Click **Generate Enrollment Code** (valid 10 minutes, single use).
+4. On the tablet, open the Attendance Clock page. It shows "Device Not Registered".
+5. Enter the code (and an optional device name), then click **Register This Device**.
+
+If the tablet's browser data is cleared, the device loses its registration —
+repeat the steps above to re-enroll it. If a device is lost or a phone was
+mistakenly enrolled, an administrator can deactivate or delete it from the
+Clock-in Devices page.

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\NotAllowedException;
 use App\Models\Attendance;
 use App\Models\User;
+use App\Services\AttendanceDeviceService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,6 +31,7 @@ class AttendanceService
         $attendance->user_id = $userId;
         $attendance->clock_in_at = now();
         $attendance->clock_in_ip = request()->ip();
+        $attendance->clock_in_device_id = request()->header( 'X-Device-Id' );
         $attendance->clock_in_note = $note;
         $attendance->status = Attendance::STATUS_CLOCKED_IN;
         $attendance->author_id = Auth::id();
@@ -66,6 +68,7 @@ class AttendanceService
 
         $activeRecord->clock_out_at = $clockOut;
         $activeRecord->clock_out_ip = request()->ip();
+        $activeRecord->clock_out_device_id = request()->header( 'X-Device-Id' );
         $activeRecord->clock_out_note = $note;
         $activeRecord->total_hours = round( $totalMinutes / 60, 2 );
         $activeRecord->net_hours = $netHours;
@@ -182,27 +185,7 @@ class AttendanceService
             ->orderBy( 'id', 'desc' )
             ->first();
 
-        if ( $todayRecord instanceof Attendance ) {
-            return [
-                'status' => 'success',
-                'data' => [
-                    'is_clocked_in' => in_array( $todayRecord->status, [
-                        Attendance::STATUS_CLOCKED_IN, Attendance::STATUS_ON_BREAK,
-                    ] ),
-                    'is_on_break' => $todayRecord->status === Attendance::STATUS_ON_BREAK,
-                    'record' => $todayRecord,
-                ],
-            ];
-        }
-
-        return [
-            'status' => 'success',
-            'data' => [
-                'is_clocked_in' => false,
-                'is_on_break' => false,
-                'record' => null,
-            ],
-        ];
+        return $this->buildCurrentStatusResponse( $todayRecord );
     }
 
     public function getStaffStatus()
@@ -259,5 +242,27 @@ class AttendanceService
         }
 
         return $query->orderBy( 'id', 'desc' )->paginate( 50 );
+    }
+
+    private function buildCurrentStatusResponse( $todayRecord )
+    {
+        $attendanceDeviceService = app()->make( AttendanceDeviceService::class );
+
+        return [
+            'status' => 'success',
+            'data' => [
+                'is_clocked_in' => $todayRecord instanceof Attendance
+                    && in_array( $todayRecord->status, [
+                        Attendance::STATUS_CLOCKED_IN, Attendance::STATUS_ON_BREAK,
+                    ] ),
+                'is_on_break' => $todayRecord instanceof Attendance
+                    && $todayRecord->status === Attendance::STATUS_ON_BREAK,
+                'record' => $todayRecord,
+                'device_verified' => $attendanceDeviceService->canBypassDeviceCheck()
+                    ? true
+                    : $attendanceDeviceService->requestHasValidDevice(),
+                'is_admin' => $attendanceDeviceService->canBypassDeviceCheck(),
+            ],
+        ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Classes\AsideMenu;
 use App\Classes\Menu;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use TorMorten\Eventy\Facades\Eventy as Hook;
 
@@ -456,6 +457,12 @@ class MenuService
                         permissions: [ 'attendance.create' ],
                         href: ns()->url( '/dashboard/attendance/create' )
                     ),
+                    AsideMenu::subMenu(
+                        label: __( 'Clock-in Devices' ),
+                        identifier: 'attendance-devices',
+                        href: ns()->url( '/dashboard/attendance/devices' ),
+                        show: Auth::user() instanceof \App\Models\User && Auth::user()->hasRoles( [ 'admin', 'nexopos.developer' ] )
+                    ),
                 ),
             ),
             // Payroll
@@ -642,7 +649,7 @@ class MenuService
             return ( ! isset( $menu[ 'permissions' ] ) || Gate::any( $menu[ 'permissions' ] ) ) && ( ! isset( $menu[ 'show' ] ) || $menu[ 'show' ] === true );
         } )->map( function ( $menu ) {
             $menu[ 'childrens' ] = collect( $menu[ 'childrens' ] ?? [] )->filter( function ( $submenu ) {
-                return ! isset( $submenu[ 'permissions' ] ) || Gate::any( $submenu[ 'permissions' ] );
+                return ( ! isset( $submenu[ 'permissions' ] ) || Gate::any( $submenu[ 'permissions' ] ) ) && ( ! isset( $submenu[ 'show' ] ) || $submenu[ 'show' ] === true );
             } )->toArray();
 
             return $menu;

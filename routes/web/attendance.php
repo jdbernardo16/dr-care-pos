@@ -7,3 +7,4 @@ Route::get( '/attendance', [ AttendanceController::class, 'listAttendances' ] )-
 Route::get( '/attendance/create', [ AttendanceController::class, 'createAttendance' ] )->name( ns()->routeName( 'ns.dashboard.attendance-create' ) );
 Route::get( '/attendance/edit/{attendance}', [ AttendanceController::class, 'editAttendance' ] )->name( ns()->routeName( 'ns.dashboard.attendance-edit' ) );
 Route::get( '/attendance/clock', [ AttendanceController::class, 'clockPage' ] )->name( ns()->routeName( 'ns.dashboard.attendance-clock' ) );
+Route::get( '/attendance/devices', [ AttendanceController::class, 'devicesPage' ] )->name( ns()->routeName( 'ns.dashboard.attendance-devices' ) );

@@ -98,6 +98,9 @@ const nsScaleSettingsPreview = defineAsyncComponent(
 const nsAttendanceClock = defineAsyncComponent(
     () => import("~/pages/dashboard/attendance/attendance-clock.vue"),
 );
+const nsAttendanceDevices = defineAsyncComponent(
+    () => import("~/pages/dashboard/attendance/attendance-devices.vue"),
+);
 const nsPayrollList = defineAsyncComponent(
     () => import("./pages/dashboard/payroll/payroll-list.vue"),
 );
@@ -164,6 +167,7 @@ const allComponents = Object.assign(
         nsOrderInvoice,
         nsScaleSettingsPreview,
         nsAttendanceClock,
+        nsAttendanceDevices,
         nsPayrollList,
         nsPayrollCreate,
         nsPayrollDetail,
