@@ -23,6 +23,17 @@ export default {
     mounted() {
         // ...
     },
+    computed: {
+        hasIncomplete() {
+            return this.products.some( p => this.isIncomplete( p ) );
+        },
+        incompleteCount() {
+            return this.products.filter( p => this.isIncomplete( p ) ).length;
+        },
+        hasProducts() {
+            return this.products.length > 0;
+        }
+    },
     methods: {
         __,
         nsCurrency,
@@ -62,9 +73,6 @@ export default {
                 return nsSnackBar.error( __( 'The product already exists on the table.' ) );
             }
 
-            const action = this.actions.filter( action => action.value === 'deleted' );
-            let defaultAction = action.length === 1 ? action[0] : { value: 'deleted' };
-
             const finalProduct                  =   new Object;
             product.unit_quantity.unit          =   product.unit;
             finalProduct.selected               =   false;
@@ -72,8 +80,8 @@ export default {
             finalProduct.name                   =   product.name;
             finalProduct.adjust_unit            =   product.unit_quantity;
 
-            finalProduct.adjust_quantity            =   1;
-            finalProduct.adjust_action              =   defaultAction.value, // this is the default adjust_action
+            finalProduct.adjust_quantity            =   null;
+            finalProduct.adjust_action              =   '', // require user to choose operation explicitly
             finalProduct.adjust_reason              =   '',
             finalProduct.adjust_value               =   0;
             finalProduct.id                         =   product.product_id;
@@ -102,13 +110,10 @@ export default {
 
                         const defaultUnit = result[0].filter( unitQuantity => unitQuantity.unit.base_unit );
 
-                        const action = this.actions.filter( action => action.value === 'set' );
-                        let defaultAction = action.length === 1 ? action[0] : { value: 'set' };
-
                         suggestion.selected                         =   false;
                         suggestion.quantities                       =   result[0];
-                        suggestion.adjust_quantity                  =   1;
-                        suggestion.adjust_action                    =   defaultAction.value,
+                        suggestion.adjust_quantity                  =   null;
+                        suggestion.adjust_action                    =   '',
                         suggestion.adjust_reason                    =   '',
                         suggestion.adjust_unit                      =   defaultUnit.length > 0 && ! alreadyAdded ? defaultUnit[0]: '',
                         suggestion.adjust_value                     =   0;
@@ -139,13 +144,56 @@ export default {
             this.search         =   '';
             this.suggestions    =   [];
         },
+        getBeforeQuantity( product ) {
+            if ( product.accurate_tracking === 1 ) {
+                return parseFloat( product.available_quantity ) || 0;
+            }
+            if ( product.adjust_unit && product.adjust_unit !== '' && product.adjust_unit.quantity !== undefined ) {
+                return parseFloat( product.adjust_unit.quantity ) || 0;
+            }
+            return 0;
+        },
+        getAfterQuantity( product ) {
+            if ( product.adjust_quantity === null || product.adjust_quantity === '' || product.adjust_quantity === undefined || ! product.adjust_action ) {
+                return null;
+            }
+            const before = this.getBeforeQuantity( product );
+            const qty = parseFloat( product.adjust_quantity );
+            if ( isNaN( qty ) ) {
+                return null;
+            }
+            if ( product.adjust_action === 'set' ) {
+                return qty;
+            }
+            if ( product.adjust_action === 'added' ) {
+                return before + qty;
+            }
+            if ([ 'deleted', 'defective', 'lost' ].includes( product.adjust_action ) ) {
+                return before - qty;
+            }
+            return null;
+        },
+        isIncomplete( product ) {
+            const qtyMissing = product.adjust_quantity === null || product.adjust_quantity === '' || product.adjust_quantity === undefined || isNaN( parseFloat( product.adjust_quantity ) );
+            const actionMissing = ! product.adjust_action || product.adjust_action === '';
+            const unitMissing = ! product.adjust_unit || product.adjust_unit === '';
+            return qtyMissing || actionMissing || unitMissing;
+        },
+        getIncompleteProducts() {
+            return this.products.filter( p => this.isIncomplete( p ) );
+        },
         recalculateProduct( product ) {
             if ( product.adjust_unit !== '' ) {
-                if ([ 'deleted', 'defective', 'lost' ].includes( product.adjust_action ) ) {
-                    product.adjust_value        =   - ( product.adjust_quantity * product.adjust_unit.sale_price );
+                const qty = parseFloat( product.adjust_quantity );
+                if ( isNaN( qty ) || product.adjust_quantity === null || product.adjust_quantity === '' ) {
+                    product.adjust_value = 0;
+                } else if ([ 'deleted', 'defective', 'lost' ].includes( product.adjust_action ) ) {
+                    product.adjust_value        =   - ( qty * product.adjust_unit.sale_price );
                 } else {
-                    product.adjust_value        =   product.adjust_quantity * product.adjust_unit.sale_price;
+                    product.adjust_value        =   qty * product.adjust_unit.sale_price;
                 }
+            } else {
+                product.adjust_value = 0;
             }
             this.$forceUpdate();
         },
@@ -160,7 +208,7 @@ export default {
                  * will check the stock if the adjustment
                  * reduce the stock.
                  */
-                if ( ! [ 'added', 'set' ].includes( product.adjust_action ) ) {
+                if ([ 'deleted', 'defective', 'lost' ].includes( product.adjust_action ) ) {
                     if ( product.accurate_tracking !== undefined && result.quantity > product.available_quantity ) {
                         return nsSnackBar.error( __( 'The specified quantity exceed the available quantity.' ) );
                     } else if ( result.quantity > product.adjust_unit.quantity ) {
@@ -178,9 +226,64 @@ export default {
                 return nsSnackBar.error( __( 'Unable to proceed as the table is empty.' ) );
             }
 
+            const incomplete = this.getIncompleteProducts();
+            if ( incomplete.length > 0 ) {
+                const names = incomplete.map( p => p.name ).join( ', ' );
+                return nsSnackBar.error( __( 'Please set quantity for all rows or remove them. Incomplete: ' ) + names );
+            }
+
+            // Validate quantities
+            for ( const product of this.products ) {
+                const qty = parseFloat( product.adjust_quantity );
+                if ( isNaN( qty ) ) {
+                    return nsSnackBar.error( __( 'Invalid quantity for product: ' ) + product.name );
+                }
+                if ( qty < 0 ) {
+                    return nsSnackBar.error( __( 'The adjustment quantity can\'t be negative for the product ' ) + product.name );
+                }
+                if ( qty === 0 && product.adjust_action !== 'set' ) {
+                    return nsSnackBar.error( __( 'Please provide a quantity greater than 0 for product: ' ) + product.name );
+                }
+                // Prevent negative stock for reduce actions
+                if ([ 'deleted', 'defective', 'lost' ].includes( product.adjust_action ) ) {
+                    const before = this.getBeforeQuantity( product );
+                    if ( qty > before ) {
+                        return nsSnackBar.error( __( 'The specified quantity exceed the available quantity for product: ' ) + product.name );
+                    }
+                }
+            }
+
+            // Build warning for destructive Set operations that reduce stock (wipe risk)
+            const riskySetProducts = this.products.filter( p => {
+                if ( p.adjust_action !== 'set' ) return false;
+                const before = this.getBeforeQuantity( p );
+                const after = this.getAfterQuantity( p );
+                return after !== null && after < before;
+            });
+
+            let title = __( 'Confirm Your Action' );
+            let message = __( 'The stock adjustment is about to be made. Would you like to confirm ?' );
+
+            if ( riskySetProducts.length > 0 ) {
+                const details = riskySetProducts.map( p => {
+                    const before = this.getBeforeQuantity( p );
+                    const after = this.getAfterQuantity( p );
+                    return `${p.name} ${before} → ${after}`;
+                }).join( ', ' );
+                title = __( 'Warning: You are about to overwrite stock' );
+                message = __( 'You are about to set: ' ) + details + __( '. Are you sure?' );
+            } else {
+                // Also show preview for all set operations (even non-destructive) + added/lost preview
+                const allSet = this.products.filter( p => p.adjust_action === 'set' );
+                if ( allSet.length > 0 ) {
+                    const details = allSet.map( p => `${p.name} ${this.getBeforeQuantity(p)} → ${this.getAfterQuantity(p)}` ).join( ', ' );
+                    message = __( 'You are about to set: ' ) + details + __( '. Would you like to confirm ?' );
+                }
+            }
+
             Popup.show( nsPosConfirmPopupVue, { 
-                title: __( 'Confirm Your Action' ),
-                message: __( 'The stock adjustment is about to be made. Would you like to confirm ?' ),
+                title,
+                message,
                 onAction: ( action ) => {
                     if ( action ) {
                         nsHttpClient.post( '/api/products/adjustments', { products: this.products })
@@ -285,6 +388,7 @@ export default {
                 });
 
                 product.adjust_action    =   result;
+                this.recalculateProduct( product );
             } catch ( exception ) {
                 throw exception;
             }
@@ -351,13 +455,19 @@ export default {
                 </ul>
             </div>
         </div>
+        <div v-if="hasIncomplete && products.length > 0" class="mt-2 p-2 bg-warning-primary border border-warning-secondary rounded text-sm text-fontcolor">
+            <i class="las la-exclamation-triangle"></i>
+            {{ __( 'Please set quantity for all rows or remove them.' ) }} 
+            <span class="font-bold">{{ incompleteCount }} {{ __( 'incomplete' ) }}</span>
+        </div>
         <div class="ns-box rounded shadow my-2 w-full ">
             <table class="table w-full ns-table">
                 <thead class="border-b">
                     <tr>
                         <td class="p-2">{{ __( 'Product' ) }}</td>
-                        <td width="120" class="p-2 text-center hidden md:table-cell">{{ __( 'Quantity' ) }}</td>
-                        <td width="120" class="p-2 text-center hidden md:table-cell">{{ __( 'Value' ) }}</td>
+                        <td width="110" class="p-2 text-center hidden md:table-cell">{{ __( 'Quantity' ) }}</td>
+                        <td width="150" class="p-2 text-center hidden md:table-cell">{{ __( 'Stock Preview' ) }}</td>
+                        <td width="110" class="p-2 text-center hidden md:table-cell">{{ __( 'Value' ) }}</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -365,15 +475,44 @@ export default {
                         <td class="p-2 border-b text-center hidden md:table-cell" colspan="6">{{ __( 'Search and add some products' ) }}</td>
                         <td class="p-2 border-b text-center table-cell md:hidden" colspan="4">{{ __( 'Search and add some products' ) }}</td>
                     </tr>
-                    <tr :key="product.id" v-for="product of products">
+                    <tr :key="product.id" v-for="product of products" :class="isIncomplete(product) ? 'bg-warning-primary/30' : ''">
                         <td class="p-2 border">
                             <div class="flex justify-between">
                                 <div>
                                     <h3 class="font-bold cursor-pointer" @click="product.selected  =   ! product.selected"><input type="checkbox" :checked="product.selected" name="" id=""> {{ product.name }} ({{ ( product.accurate_tracking === 1 ? product.available_quantity : product.adjust_unit.quantity ) || 0 }})</h3>
+                                    <div class="text-xs mt-1">
+                                        <template v-if="getAfterQuantity(product) !== null">
+                                            <span :class="product.adjust_action === 'set' && getAfterQuantity(product) < getBeforeQuantity(product) ? 'text-error-tertiary font-bold' : 'text-fontcolor'">
+                                                {{ __( 'Stock:' ) }} {{ getBeforeQuantity(product) }} → {{ getAfterQuantity(product) }}
+                                            </span>
+                                            <span v-if="product.adjust_action === 'set' && getAfterQuantity(product) < getBeforeQuantity(product)" class="ml-1 text-error-tertiary">
+                                                ({{ getBeforeQuantity(product) - getAfterQuantity(product) }} {{ __( 'will be removed' ) }})
+                                            </span>
+                                            <span v-else-if="product.adjust_action === 'added'" class="ml-1 text-success-tertiary">
+                                                (+{{ product.adjust_quantity }})
+                                            </span>
+                                            <span v-else-if="['deleted','defective','lost'].includes(product.adjust_action)" class="ml-1 text-error-tertiary">
+                                                (-{{ product.adjust_quantity }})
+                                            </span>
+                                        </template>
+                                        <template v-else>
+                                            <span class="text-warning-tertiary font-semibold">
+                                                {{ __( 'Stock:' ) }} {{ getBeforeQuantity(product) }} → — ({{ __( 'set quantity & operation' ) }})
+                                            </span>
+                                        </template>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="md:hidden cursor-pointer border-dashed border-b border-info-secondary" @click="openQuantityPopup( product )">
-                                        {{ __( 'Quantity' ) }} : {{ product.adjust_quantity }}
+                                <div class="flex flex-col items-end">
+                                    <span class="md:hidden cursor-pointer border-dashed border-b py-1 text-xs" :class="isIncomplete(product) ? 'border-warning-secondary text-warning-tertiary' : 'border-info-secondary'" @click="openQuantityPopup( product )">
+                                        <template v-if="product.adjust_quantity === null || product.adjust_quantity === ''">
+                                            {{ __( 'Tap to set quantity' ) }}
+                                        </template>
+                                        <template v-else>
+                                            {{ __( 'Quantity' ) }} : {{ product.adjust_quantity }}
+                                        </template>
+                                    </span>
+                                    <span class="md:hidden text-xs mt-1" v-if="getAfterQuantity(product) !== null" :class="product.adjust_action === 'set' && getAfterQuantity(product) < getBeforeQuantity(product) ? 'text-error-tertiary font-bold' : 'text-fontcolor-soft'">
+                                        {{ getBeforeQuantity(product) }} → {{ getAfterQuantity(product) }}
                                     </span>
                                 </div>
                             </div>
@@ -386,9 +525,10 @@ export default {
                                     </div>
                                 </div>
                                 <div class="px-2 w-1/2 md:w-auto" @click="selectStockAdjustementAction( product )">
-                                    <div class="text-xs cursor-pointer border-b border-dashed border-info-secondary py-1">
+                                    <div class="text-xs cursor-pointer border-b border-dashed py-1" :class="!product.adjust_action ? 'border-warning-secondary text-warning-tertiary font-bold' : 'border-info-secondary'">
                                         <span class="text-xs">{{ __( 'Operation:' ) }}</span>&nbsp;
-                                        <span class="">
+                                        <span v-if="!product.adjust_action" class="">{{ __( 'Tap to choose' ) }}</span>
+                                        <span v-else class="">
                                             {{ getAdjustActionLabel( product.adjust_action ) }}
                                         </span>
                                     </div>
@@ -421,7 +561,18 @@ export default {
                         </td>
                         <td class="p-2 border hidden md:table-cell" @click="openQuantityPopup( product )">
                             <div class="flex items-center justify-center cursor-pointer">
-                                <span class="border-b border-dashed border-info-secondary py-2 px-4">{{ product.adjust_quantity }}</span>
+                                <span v-if="product.adjust_quantity === null || product.adjust_quantity === ''" class="border-b border-dashed border-warning-secondary text-warning-tertiary py-2 px-4 text-xs font-bold">{{ __( 'Tap to set' ) }}</span>
+                                <span v-else class="border-b border-dashed border-info-secondary py-2 px-4">{{ product.adjust_quantity }}</span>
+                            </div>
+                        </td>
+                        <td class="p-2 border hidden md:table-cell">
+                            <div class="flex items-center justify-center">
+                                <template v-if="getAfterQuantity(product) !== null">
+                                    <span class="py-2 px-2 text-sm" :class="product.adjust_action === 'set' && getAfterQuantity(product) < getBeforeQuantity(product) ? 'text-error-tertiary font-bold bg-error-primary rounded' : ''">{{ getBeforeQuantity(product) }} → {{ getAfterQuantity(product) }}</span>
+                                </template>
+                                <template v-else>
+                                    <span class="py-2 px-2 text-sm text-warning-tertiary font-semibold">{{ getBeforeQuantity(product) }} → —</span>
+                                </template>
                             </div>
                         </td>
                         <td class="p-2 border hidden md:table-cell">
@@ -432,7 +583,15 @@ export default {
                     </tr>
                 </tbody>
             </table>
-            <div class="ns-box-footer p-2 flex justify-end">
+            <div class="ns-box-footer p-2 flex justify-between items-center">
+                <div class="text-xs text-fontcolor-soft hidden md:block">
+                    <span v-if="hasIncomplete" class="text-warning-tertiary font-bold">
+                        <i class="las la-exclamation-circle"></i> {{ __( 'Please set quantity for all rows or remove them.' ) }}
+                    </span>
+                    <span v-else-if="hasProducts" class="text-success-tertiary">
+                        <i class="las la-check-circle"></i> {{ __( 'All rows are ready to proceed.' ) }}
+                    </span>
+                </div>
                 <div class="-mx-2 flex">
                     <div class="px-2">
                         <ns-button v-if="products.filter( p => p.selected ).length > 0" @click="deleteSelectedProducts()" type="error">
@@ -443,7 +602,7 @@ export default {
                         </ns-button>
                     </div>
                     <div class="px-2">
-                        <ns-button @click="proceedStockAdjustment()" type="info">{{ __( 'Proceed' ) }}</ns-button>
+                        <ns-button @click="proceedStockAdjustment()" :disabled="hasIncomplete ? 'disabled' : false" type="info">{{ __( 'Proceed' ) }}</ns-button>
                     </div>
                 </div>
             </div>

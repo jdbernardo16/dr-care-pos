@@ -29,7 +29,7 @@ export default {
     props: [ 'popup' ],
     data() {
         return {
-            finalValue: 1,
+            finalValue: 0,
             virtualStock: null,
             allSelected: true,
             isLoading: false,
@@ -46,8 +46,10 @@ export default {
          * if the quantity is defined, then probably
          * we're already trying to edit an existing product
          */
-        if ( this.popup.params.quantity ) {
+        if ( this.popup.params.quantity !== null && this.popup.params.quantity !== undefined && this.popup.params.quantity !== '' ) {
             this.finalValue     =   this.popup.params.quantity;
+        } else {
+            this.finalValue     =   0;
         }
 
         document.addEventListener( 'keyup', this.handleKeyPress );
