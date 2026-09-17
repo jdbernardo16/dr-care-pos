@@ -6,6 +6,7 @@ import { Payment } from "./payment";
 
 export interface Order {
     id?: number;
+    uuid?: string;
     discount_type: 'flat' | 'percentage';
     discount: number;
     discount_percentage: number;

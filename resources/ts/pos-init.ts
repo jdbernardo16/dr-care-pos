@@ -113,6 +113,8 @@ export class POS {
     private _responsive = new Responsive();
     private _visibleSection: BehaviorSubject<"cart" | "grid" | "both" | "summary">;
     private _isSubmitting = false;
+    private _isPaymentQueueRunning = false;
+    private _checkoutKey: string | null = null;
     private _processingAddQueue = false;
     private _selectedPaymentType: BehaviorSubject<PaymentType>;
     private _lastCompletedOrder: BehaviorSubject<any>;
@@ -243,10 +245,31 @@ export class POS {
         return this._cartHeaderButtons;
     }
 
+    /**
+     * The checkout key is a uuid generated once per cart. It is sent
+     * along with the order so the server can ignore duplicate submissions
+     * (slow connection, timeout, retry). The key is kept until the order
+     * has been successfully submitted, so a retry reuses the same key.
+     */
+    getCheckoutKey() {
+        if (this._checkoutKey === null) {
+            this._checkoutKey =
+                typeof crypto !== "undefined" &&
+                typeof crypto.randomUUID === "function"
+                    ? crypto.randomUUID()
+                    : `checkout-${Date.now()}-${Math.random()
+                          .toString(36)
+                          .slice(2)}`;
+        }
+
+        return this._checkoutKey;
+    }
+
     async reset() {
         return new Promise(async (resolve, reject) => {
             try {
                 this._isSubmitting = false;
+                this._checkoutKey = null;
 
                 /**
                  * to reset order details
@@ -1103,6 +1126,14 @@ export class POS {
          * probably the passed value should be send to the server.
          */
         const method = order.id !== undefined ? "put" : "post";
+
+        /**
+         * For a new order, we attach the checkout key so a slow
+         * connection retry can't create the same order twice.
+         */
+        if (method === "post") {
+            order.uuid = this.getCheckoutKey();
+        }
 
         /**
          * We should allow any module to mutate
@@ -2384,27 +2415,41 @@ export class POS {
     }
 
     async runPaymentQueue(onSuccess?) {
-        const queues = nsHooks.applyFilters("ns-pay-queue", [
-            ProductsQueue,
-            CustomerQueue,
-            TypeQueue,
-            PaymentQueue,
-        ]);
+        /**
+         * Prevent a double click from opening two payment
+         * popups and therefore submitting the order twice.
+         */
+        if (this._isPaymentQueueRunning) {
+            return false;
+        }
 
-        for (let index in queues) {
-            try {
-                const promise = new queues[index](this.order.getValue());
-                const response = await (queues[index] === PaymentQueue
-                    ? promise.run(onSuccess)
-                    : promise.run());
-            } catch (exception) {
-                /**
-                 * in case there is something broken
-                 * on the promise, we just stop the queue.
-                 */
-                console.log(exception);
-                return false;
+        this._isPaymentQueueRunning = true;
+
+        try {
+            const queues = nsHooks.applyFilters("ns-pay-queue", [
+                ProductsQueue,
+                CustomerQueue,
+                TypeQueue,
+                PaymentQueue,
+            ]);
+
+            for (let index in queues) {
+                try {
+                    const promise = new queues[index](this.order.getValue());
+                    const response = await (queues[index] === PaymentQueue
+                        ? promise.run(onSuccess)
+                        : promise.run());
+                } catch (exception) {
+                    /**
+                     * in case there is something broken
+                     * on the promise, we just stop the queue.
+                     */
+                    console.log(exception);
+                    return false;
+                }
             }
+        } finally {
+            this._isPaymentQueueRunning = false;
         }
     }
 

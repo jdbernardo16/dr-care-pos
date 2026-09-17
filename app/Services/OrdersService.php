@@ -49,6 +49,7 @@ use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,20 @@ class OrdersService
     public function create( $fields, ?Order $order = null )
     {
         $isNew = ! $order instanceof Order;
+
+        /**
+         * When the POS submits a checkout uuid, we want to make
+         * sure the order is only created once. This protects slow
+         * connections where the same checkout might be submitted
+         * more than once (timeout, retry, double click).
+         */
+        if ( $isNew && ! empty( $fields[ 'uuid' ] ) ) {
+            $existingOrder = $this->__getOrderFromCheckoutUuid( $fields[ 'uuid' ] );
+
+            if ( $existingOrder instanceof Order ) {
+                return $this->__getExistingOrderResponse( $existingOrder );
+            }
+        }
 
         /**
          * if the order is being edited, we need to
@@ -218,14 +233,32 @@ class OrdersService
          */
         $order->setData( $fields );
 
-        $order->saveWithRelationships( [
-            'products' => $orderProducts,
-            'payments' => $payments,
-            'coupons' => $coupons,
-            'instalments' => $instalments,
-            'taxes' => $taxes,
-            'order_addresses' => $addresses,
-        ] );
+        try {
+            $order->saveWithRelationships( [
+                'products' => $orderProducts,
+                'payments' => $payments,
+                'coupons' => $coupons,
+                'instalments' => $instalments,
+                'taxes' => $taxes,
+                'order_addresses' => $addresses,
+            ] );
+        } catch ( QueryException $exception ) {
+            /**
+             * In case two checkout requests with the same uuid
+             * are processed simultaneously, the unique index will
+             * reject the second one. We then return the order that
+             * has been created by the concurrent request.
+             */
+            if ( $isNew && ! empty( $fields[ 'uuid' ] ) && $this->__isDuplicateEntryException( $exception ) ) {
+                $existingOrder = $this->__getOrderFromCheckoutUuid( $fields[ 'uuid' ] );
+
+                if ( $existingOrder instanceof Order ) {
+                    return $this->__getExistingOrderResponse( $existingOrder );
+                }
+            }
+
+            throw $exception;
+        }
 
         $order->load( 'payments' );
         $order->load( 'products' );
@@ -1525,6 +1558,12 @@ class OrdersService
              * then we'll define the "created_at" column.
              */
             $order->created_at = $fields[ 'created_at' ] ?? ns()->date->getNow()->toDateTimeString();
+
+            /**
+             * the checkout uuid is used to ensure a checkout
+             * isn't saved twice when the connection is slow.
+             */
+            $order->uuid = $fields[ 'uuid' ] ?? null;
         }
 
         /**
@@ -2728,12 +2767,48 @@ class OrdersService
     {
         $order->payment_status = Order::PAYMENT_VOID;
         $order->voidance_reason = $reason;
+        $order->updated_at = ns()->date->getNow()->toDateTimeString();
         $order->save();
 
         return [
             'status' => 'success',
             'message' => __( 'The order has been correctly voided.' ),
         ];
+    }
+
+    /**
+     * Find an order that has been created using
+     * a specific checkout uuid.
+     */
+    private function __getOrderFromCheckoutUuid( string $uuid ): ?Order
+    {
+        return Order::with( [ 'payments', 'products', 'coupons' ] )
+            ->where( 'uuid', $uuid )
+            ->first();
+    }
+
+    /**
+     * Response returned when a checkout has already been
+     * processed and shouldn't be saved twice.
+     */
+    private function __getExistingOrderResponse( Order $order ): array
+    {
+        return [
+            'status' => 'success',
+            'message' => __( 'This checkout was already submitted. The existing order has been restored.' ),
+            'data' => compact( 'order' ),
+        ];
+    }
+
+    /**
+     * Checks if a query exception is caused
+     * by a duplicated entry (MySQL or SQLite).
+     */
+    private function __isDuplicateEntryException( QueryException $exception ): bool
+    {
+        $errorCode = $exception->errorInfo[ 1 ] ?? null;
+
+        return in_array( (int) $errorCode, [ 1062, 19 ], true );
     }
 
     public function returnVoidProducts( Order $order )

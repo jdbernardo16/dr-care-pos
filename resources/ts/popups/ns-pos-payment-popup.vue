@@ -34,6 +34,7 @@ export default {
             customAmount: 0,
             chargeAmount: 0,
             changeDue: 0,
+            submitting: false,
         };
     },
     computed: {
@@ -222,12 +223,30 @@ export default {
             );
         },
         submitPayment() {
+            if (this.submitting) {
+                return;
+            }
+
             if (this.chargeAmount > 0 && this.activePayment) {
-                POS.addPayment({
-                    identifier: this.activePayment.identifier,
-                    value: this.chargeAmount,
-                    label: this.activePayment.label,
-                });
+                /**
+                 * A previous attempt (slow connection) might have
+                 * already added the same payment to the cart. We
+                 * don't want to charge it twice.
+                 */
+                const alreadyAdded = (this.order.payments || []).some(
+                    (payment) =>
+                        payment.id === undefined &&
+                        payment.identifier === this.activePayment.identifier &&
+                        payment.value === this.chargeAmount,
+                );
+
+                if (!alreadyAdded) {
+                    POS.addPayment({
+                        identifier: this.activePayment.identifier,
+                        value: this.chargeAmount,
+                        label: this.activePayment.label,
+                    });
+                }
             }
             this.submitOrder();
         },
@@ -243,6 +262,12 @@ export default {
             return payment.identifier;
         },
         submitOrder(data = {}) {
+            if (this.submitting) {
+                return;
+            }
+
+            this.submitting = true;
+
             const popup = Popup.show(nsPosLoadingPopupVue);
 
             try {
@@ -250,6 +275,8 @@ export default {
 
                 POS.submitOrder(order).then(
                     (result) => {
+                        this.submitting = false;
+
                         // close spinner
                         popup.close();
 
@@ -263,6 +290,8 @@ export default {
                         this.popup.close();
                     },
                     (error) => {
+                        this.submitting = false;
+
                         // close loading popup
                         popup.close();
 
@@ -271,6 +300,8 @@ export default {
                     },
                 );
             } catch (exception) {
+                this.submitting = false;
+
                 popup.close();
 
                 // show error message
@@ -389,7 +420,7 @@ export default {
                     </button>
                     <button
                         @click="submitPayment()"
-                        :disabled="chargeAmount <= 0"
+                        :disabled="chargeAmount <= 0 || submitting"
                         class="flex-[2] py-3 bg-primary disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-base cursor-pointer hover:bg-secondary transition-colors"
                     >
                         {{ __("Charge") }}
