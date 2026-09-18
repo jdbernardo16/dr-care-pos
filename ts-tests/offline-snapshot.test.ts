@@ -37,19 +37,71 @@ describe( 'Offline snapshot service', () => {
         const options = await database.getMeta( 'options' );
 
         expect( options.ns_pos_enable_reordering ).toBe( 'yes' );
+        expect( ( await database.getCollection( 'customers' ) ).length ).toBe( 1 );
+        expect( ( await database.getMeta( 'payment_types' ) ).length ).toBe( 1 );
+        expect( ( await database.getMeta( 'register' ) ).open_register_id ).toBe( 3 );
+        expect( typeof meta.fetched_at ).toBe( 'number' );
+        expect( meta.offset ).toBe( meta.server_time - meta.fetched_at );
     } );
 
-    test( 'keeps the previous data when the refresh fails', async () => {
+    test( 'keeps the previous data when a later refresh fails', async () => {
         const database = new OfflineDatabase( `test-${Date.now()}-failure` );
         await database.open();
-        const fetcher = jest.fn( async () => {
-            throw new Error( 'offline' );
-        } );
+
+        const fetcher = jest.fn( async () => buildSnapshot() );
         const service = new OfflineSnapshotService( database, fetcher );
 
-        const refreshed = await service.refresh();
+        expect( await service.refresh() ).toBe( true );
+        expect( ( await database.getCollection( 'products' ) ).length ).toBe( 1 );
 
-        expect( refreshed ).toBe( false );
-        expect( ( await database.getCollection( 'products' ) ).length ).toBe( 0 );
+        fetcher.mockImplementation( async () => {
+            throw new Error( 'offline' );
+        } );
+
+        expect( await service.refresh() ).toBe( false );
+        expect( ( await database.getCollection( 'products' ) ).length ).toBe( 1 );
+
+        const meta = await database.getMeta( 'snapshot' );
+
+        expect( meta.generated_at ).toBe( '2026-09-18 10:00:00' );
+    } );
+
+    test( 'overlapping refreshes are coalesced into one fetch', async () => {
+        const database = new OfflineDatabase( `test-${Date.now()}-coalesce` );
+        await database.open();
+
+        let resolveFetch: ( value: any ) => void = () => {};
+        const fetcher = jest.fn(
+            () =>
+                new Promise<any>( ( resolve ) => {
+                    resolveFetch = resolve;
+                } ),
+        );
+        const service = new OfflineSnapshotService( database, fetcher );
+
+        const first = service.refresh();
+        const second = service.refresh();
+
+        resolveFetch( buildSnapshot() );
+
+        await Promise.all( [ first, second ] );
+
+        expect( fetcher ).toHaveBeenCalledTimes( 1 );
+        expect( ( await database.getCollection( 'products' ) ).length ).toBe( 1 );
+    } );
+
+    test( 'calling start twice does not trigger two fetches', async () => {
+        const database = new OfflineDatabase( `test-${Date.now()}-start` );
+        await database.open();
+
+        const fetcher = jest.fn( async () => buildSnapshot() );
+        const service = new OfflineSnapshotService( database, fetcher, 60000 );
+
+        await service.start();
+        await service.start();
+
+        expect( fetcher ).toHaveBeenCalledTimes( 1 );
+
+        service.stop();
     } );
 } );
