@@ -84,16 +84,21 @@ export class OfflineConnectivity {
 
     private async safePing(): Promise<boolean> {
         const timeoutMs = this.options.timeoutMs ?? 5000;
+        let timeout: ReturnType<typeof setTimeout> | null = null;
 
         try {
             return await Promise.race( [
                 this.ping( timeoutMs ),
                 new Promise<boolean>( ( resolve ) => {
-                    setTimeout( () => resolve( false ), timeoutMs );
+                    timeout = setTimeout( () => resolve( false ), timeoutMs );
                 } ),
             ] );
         } catch ( exception ) {
             return false;
+        } finally {
+            if ( timeout !== null ) {
+                clearTimeout( timeout );
+            }
         }
     }
 
