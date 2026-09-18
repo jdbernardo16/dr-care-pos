@@ -1787,12 +1787,20 @@ test.describe('Offline foundation', () => {
         // 2 — go offline and force two failed heartbeats
         await context.setOffline(true);
 
-        await page.evaluate(async () => {
-            const offline = (window as any).nsOffline;
+        await expect
+            .poll(
+                async () => {
+                    return await page.evaluate(async () => {
+                        const offline = (window as any).nsOffline;
 
-            await offline.connectivity.checkNow();
-            await offline.connectivity.checkNow();
-        });
+                        await offline.connectivity.checkNow();
+
+                        return offline.connectivity.status;
+                    });
+                },
+                { timeout: 15000 },
+            )
+            .toBe('offline');
 
         await expect(page.locator('#ns-pos-offline-banner')).toBeVisible();
 
