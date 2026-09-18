@@ -19,6 +19,7 @@ const STORES: StoreDefinition[] = [
 
 export class OfflineDatabase {
     private connection: IDBDatabase | null = null;
+    private openPromise: Promise<void> | null = null;
 
     constructor( private name: string = DEFAULT_DB_NAME ) {}
 
@@ -27,7 +28,11 @@ export class OfflineDatabase {
             return Promise.resolve();
         }
 
-        return new Promise( ( resolve, reject ) => {
+        if ( this.openPromise ) {
+            return this.openPromise;
+        }
+
+        this.openPromise = new Promise( ( resolve, reject ) => {
             const request = indexedDB.open( this.name, DB_VERSION );
 
             request.onupgradeneeded = () => {
@@ -42,28 +47,56 @@ export class OfflineDatabase {
 
             request.onsuccess = () => {
                 this.connection = request.result;
+
+                this.connection.onversionchange = () => {
+                    this.connection?.close();
+                    this.connection = null;
+                    this.openPromise = null;
+                };
+
                 resolve();
             };
 
-            request.onerror = () => reject( request.error );
+            request.onerror = () => {
+                this.openPromise = null;
+                reject( request.error );
+            };
+
+            request.onblocked = () => {
+                this.openPromise = null;
+                reject( new Error( 'The offline database is blocked by another tab.' ) );
+            };
         } );
+
+        return this.openPromise;
     }
 
     async replaceCollection( store: StoreName, items: any[] ): Promise<void> {
+        if ( ! Array.isArray( items ) ) {
+            throw new Error( 'The offline collection must be an array.' );
+        }
+
         const database = this.database();
 
         return new Promise( ( resolve, reject ) => {
             const transaction = database.transaction( store, 'readwrite' );
             const objectStore = transaction.objectStore( store );
 
-            objectStore.clear();
-
-            for ( const item of items ) {
-                objectStore.put( item );
-            }
-
             transaction.oncomplete = () => resolve();
             transaction.onerror = () => reject( transaction.error );
+            transaction.onabort = () =>
+                reject( transaction.error ?? new Error( 'The offline transaction was aborted.' ) );
+
+            try {
+                objectStore.clear();
+
+                for ( const item of items ) {
+                    objectStore.put( item );
+                }
+            } catch ( exception ) {
+                transaction.abort();
+                reject( exception );
+            }
         } );
     }
 
@@ -100,6 +133,8 @@ export class OfflineDatabase {
 
             transaction.oncomplete = () => resolve();
             transaction.onerror = () => reject( transaction.error );
+            transaction.onabort = () =>
+                reject( transaction.error ?? new Error( 'The offline transaction was aborted.' ) );
         } );
     }
 
