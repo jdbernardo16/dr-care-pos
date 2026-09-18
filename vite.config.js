@@ -102,6 +102,10 @@ export default ({ mode }) => {
                     ],
                 },
                 workbox: {
+                    // Laravel renders the app server-side: there is no
+                    // precached index.html, and an unresolvable fallback
+                    // aborts the whole service worker registration.
+                    navigateFallback: null,
                     globPatterns: [
                         "**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,eot}",
                     ],

@@ -33,6 +33,10 @@ class PosOfflineSnapshotTest extends TestCase
             'options',
         ] );
 
+        $register = $response->json( 'register' );
+        $this->assertIsArray( $register );
+        $this->assertTrue( $register[ 'open_register_id' ] === null || is_int( $register[ 'open_register_id' ] ) );
+
         $products = collect( $response->json( 'products' ) );
         $this->assertNotEmpty( $products );
         $this->assertTrue(

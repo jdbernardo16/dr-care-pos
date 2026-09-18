@@ -157,3 +157,19 @@ reconnect
 - Pending sales live in browser storage; clearing it loses them (device policy).
 - Receipts omit the logo offline in v1.
 - Only one tablet exists today; if a second terminal is added, offline codes are device-scoped but reconciliation volume grows.
+
+## Known follow-ups
+
+Documented from the Phase 1 implementation review; address before or during the indicated phase.
+
+**Before / during Phase 2**
+- Add receipt configuration (store header lines) to the snapshot payload.
+- Bound the customer payload (limit or filter) instead of returning every customer.
+- Extract the duplicated `applyHideProducts`/`applyHideCategories` catalog filters into a shared service used by both `CategoryController` and `PosController`.
+- Make the snapshot write transactional across stores (single multi-store IndexedDB transaction).
+- Add a multi-tab lock so only one tab owns offline mode and flushes the outbox.
+- Add an offline **reload** E2E assertion once the service worker can be activated in the test environment (local `php artisan serve` does not send `Service-Worker-Allowed`; production does via `.htaccess`).
+
+**Before / during Phase 3**
+- Purge the service-worker auth caches (`pos-page`, `api-cache`) on sign-out so a shared tablet cannot serve the previous user's cached page.
+- Add a 403 test for the snapshot endpoint's `nexopos.read.products` permission.

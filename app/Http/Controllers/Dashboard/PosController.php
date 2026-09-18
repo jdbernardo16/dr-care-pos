@@ -8,6 +8,7 @@ use App\Models\PaymentType;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Register;
+use Illuminate\Support\Facades\Auth;
 
 class PosController extends DashboardController
 {
@@ -107,6 +108,14 @@ class PosController extends DashboardController
                 'created_at' => $category->created_at,
             ] );
 
+        $register = Register::opened()
+            ->usedBy( Auth::id() )
+            ->first();
+
+        if ( ! $register instanceof Register && ns()->allowedTo( 'nexopos.use.registers' ) ) {
+            $register = Register::opened()->first();
+        }
+
         return [
             'generated_at' => ns()->date->getNow()->toDateTimeString(),
             'server_time' => ns()->date->getNow()->getTimestamp() * 1000,
@@ -115,7 +124,7 @@ class PosController extends DashboardController
             'payment_types' => PaymentType::active()->get( [ 'id', 'label', 'identifier' ] ),
             'customers' => Customer::get( [ 'id', 'first_name', 'last_name', 'phone', 'group_id' ] ),
             'register' => [
-                'open_register_id' => Register::opened()->first()?->id,
+                'open_register_id' => $register?->id,
             ],
             'options' => $this->offlineOptions(),
         ];
