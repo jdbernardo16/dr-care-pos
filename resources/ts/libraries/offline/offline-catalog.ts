@@ -2,6 +2,7 @@ export interface OfflineUnitQuantity {
     id: number;
     unit_id: number;
     unit_name?: string;
+    barcode?: string | null;
     unit?: { id: number; name: string } | null;
     sale_price: number;
     sale_price_net?: number;
@@ -22,6 +23,7 @@ export interface OfflineProduct {
     tax_group_id?: number;
     tax_type?: string;
     tax_group?: any;
+    selectedUnitQuantity?: OfflineUnitQuantity;
     unit_quantities: OfflineUnitQuantity[];
     galleries?: { id: number; url: string; featured?: boolean }[];
 }
@@ -106,7 +108,7 @@ export function searchProducts(
                 `${product.barcode ?? ''}`.toLowerCase().includes( needle )
             );
         } )
-        .slice( 0, limit );
+        .slice( 0, Math.max( 0, limit ) );
 }
 
 export function findByBarcode(
@@ -119,7 +121,23 @@ export function findByBarcode(
         return false;
     }
 
-    return (
-        products.find( ( product ) => `${product.barcode ?? ''}`.trim() === needle ) ?? false
-    );
+    /**
+     * Mirrors the online endpoint: unit-level barcodes take
+     * precedence over the product-level barcode.
+     */
+    for ( const product of products ) {
+        const matchingUnit = ( product.unit_quantities ?? [] ).find(
+            ( unitQuantity ) => `${unitQuantity.barcode ?? ''}`.trim() === needle,
+        );
+
+        if ( matchingUnit ) {
+            return { ...product, selectedUnitQuantity: matchingUnit };
+        }
+
+        if ( `${product.barcode ?? ''}`.trim() === needle ) {
+            return { ...product, selectedUnitQuantity: product.unit_quantities?.[ 0 ] };
+        }
+    }
+
+    return false;
 }

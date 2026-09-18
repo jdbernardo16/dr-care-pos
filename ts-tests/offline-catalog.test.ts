@@ -37,6 +37,13 @@ describe( 'Offline catalog', () => {
         expect( view.previousCategory ).toBe( false );
     } );
 
+    test( 'child category view exposes the previous category', () => {
+        const view = buildCategoryView( products as any, categories as any, 3, false );
+
+        expect( view.currentCategory?.id ).toBe( 3 );
+        expect( view.previousCategory && view.previousCategory.id ).toBe( 1 );
+    } );
+
     test( 'reordering option sorts by position', () => {
         const view = buildCategoryView( products as any, categories as any, 1, true );
 
@@ -53,5 +60,20 @@ describe( 'Offline catalog', () => {
     test( 'barcode lookup returns the product or false', () => {
         expect( findByBarcode( products as any, '222' )?.id ).toBe( 11 );
         expect( findByBarcode( products as any, '999' ) ).toBe( false );
+    } );
+
+    test( 'barcode lookup prefers unit-level barcodes', () => {
+        const withUnitBarcode = [
+            {
+                ...products[ 0 ],
+                barcode: '999',
+                unit_quantities: [
+                    { id: 100, unit_id: 1, barcode: '444', sale_price: 5, quantity: 10 },
+                ],
+            },
+        ] as any;
+
+        expect( findByBarcode( withUnitBarcode, '444' )?.selectedUnitQuantity?.id ).toBe( 100 );
+        expect( findByBarcode( withUnitBarcode, '999' )?.selectedUnitQuantity?.id ).toBe( 100 );
     } );
 } );

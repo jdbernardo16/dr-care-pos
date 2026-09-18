@@ -69,6 +69,7 @@ class PosController extends DashboardController
                             'id' => $unitQuantity->id,
                             'unit_id' => $unitQuantity->unit_id,
                             'unit_name' => $unitQuantity->unit?->name,
+                            'barcode' => $unitQuantity->barcode,
                             'unit' => $unitQuantity->unit ? [
                                 'id' => $unitQuantity->unit->id,
                                 'name' => $unitQuantity->unit->name,

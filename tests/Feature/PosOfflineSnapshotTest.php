@@ -42,6 +42,7 @@ class PosOfflineSnapshotTest extends TestCase
         $productWithUnits = $products->first( fn( $product ) => ! empty( $product[ 'unit_quantities' ] ) );
         $this->assertArrayHasKey( 'sale_price', $productWithUnits[ 'unit_quantities' ][ 0 ] );
         $this->assertArrayHasKey( 'unit', $productWithUnits[ 'unit_quantities' ][ 0 ] );
+        $this->assertArrayHasKey( 'barcode', $productWithUnits[ 'unit_quantities' ][ 0 ] );
         $this->assertArrayHasKey( 'barcode', $productWithUnits );
         $this->assertArrayHasKey( 'category_id', $productWithUnits );
         $this->assertArrayHasKey( 'pinned', $productWithUnits );
