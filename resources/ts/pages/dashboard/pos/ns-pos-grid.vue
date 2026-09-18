@@ -399,6 +399,7 @@ import switchTo from "~/libraries/pos-section-switch";
 import nsPosSearchProductVue from "~/popups/ns-pos-search-product.vue";
 import { __ } from "~/libraries/lang";
 import { nsCurrency, nsRawCurrency } from "~/filters/currency";
+import { getOfflineContext } from "~/libraries/offline/offline";
 
 export default {
     name: "ns-pos-grid",
@@ -671,10 +672,39 @@ export default {
             );
         },
 
-        submitSearch(value) {
+        async submitSearch(value) {
             if (value.length <= 0) return;
 
             if (this.scanMode) {
+                const offline = getOfflineContext();
+
+                if (offline && offline.connectivity.status === "offline") {
+                    const product = await offline.catalog.findByBarcode(value);
+
+                    this.barcode = "";
+
+                    if (product) {
+                        /**
+                         * addScannedProductToCart expects the barcode endpoint
+                         * shape: { product, unitQuantity, unit }.
+                         * findByBarcode sets selectedUnitQuantity to the unit
+                         * whose barcode matched (or the first unit otherwise).
+                         */
+                        const unitQuantity =
+                            product.selectedUnitQuantity ?? product.unit_quantities?.[0];
+
+                        this.addScannedProductToCart({
+                            product: { ...product, selectedUnitQuantity: unitQuantity },
+                            unitQuantity,
+                            unit: unitQuantity?.unit,
+                        });
+                    } else {
+                        nsSnackBar.error(__("Product not found in the offline catalog."));
+                    }
+
+                    return;
+                }
+
                 // Barcode mode — single product lookup
                 const url = nsHooks.applyFilters(
                     "ns-pos-submit-search-url",
@@ -692,6 +722,21 @@ export default {
                     },
                 });
             } else {
+                const offline = getOfflineContext();
+
+                if (offline && offline.connectivity.status === "offline") {
+                    const results = await offline.catalog.search(value, 20);
+
+                    if (results.length > 0) {
+                        this.products = results;
+                        this.categories = [];
+                    } else {
+                        nsSnackBar.info(__("No products match your search."));
+                    }
+
+                    return;
+                }
+
                 // Search mode — product list lookup
                 nsHttpClient.post("/api/products/search", {
                     search: value,
@@ -780,11 +825,31 @@ export default {
             }
         },
 
-        loadCategories(parent) {
+        async loadCategories(parent) {
             // Clear any leftover search text when navigating categories,
             // so the grid always reflects the category view.
             this.barcode = '';
             this.isLoading = true;
+
+            const offline = getOfflineContext();
+
+            if (offline && offline.connectivity.status === "offline") {
+                const options = (await offline.database.getMeta("options")) ?? {};
+                const view = await offline.catalog.getCategoryView(
+                    parent ? parent.id : null,
+                    options.ns_pos_enable_reordering === "yes",
+                );
+
+                this.categories = view.categories;
+                this.products = view.products;
+                this.pinnedProducts = view.pinnedProducts;
+                this.previousCategory = view.previousCategory;
+                this.currentCategory = view.currentCategory;
+                this.updateBreadCrumb(this.currentCategory);
+                this.isLoading = false;
+                return;
+            }
+
             nsHttpClient
                 .get(`/api/categories/pos/${parent ? parent.id : ""}`)
                 .subscribe({

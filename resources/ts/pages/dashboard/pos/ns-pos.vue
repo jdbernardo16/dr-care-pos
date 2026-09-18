@@ -1,5 +1,6 @@
 <template>
     <div class="h-full flex-auto flex flex-col" id="pos-container">
+        <ns-pos-offline-banner></ns-pos-offline-banner>
         <div class="flex overflow-hidden flex-shrink-0 px-2 pt-2">
             <div class="-mx-2 flex overflow-x-auto pb-1">
                 <div class="header-buttons flex px-2 flex-shrink-0" :key="index" v-for="(component,index) of buttons">
@@ -30,6 +31,8 @@
 import nsPosCart from './ns-pos-cart.vue';
 import nsPosGrid from './ns-pos-grid.vue';
 import nsPosTransactionSummary from './ns-pos-transaction-summary.vue';
+import nsPosOfflineBanner from './ns-pos-offline-banner.vue';
+import { initializeOfflineMode } from '~/libraries/offline/offline';
 
 export default {
     name: 'ns-pos',
@@ -39,6 +42,10 @@ export default {
         }
     },
     mounted() {
+        initializeOfflineMode().catch( ( exception ) => {
+            console.warn( 'Unable to initialize offline mode', exception );
+        } );
+
         this.visibleSectionSubscriber   =   POS.visibleSection.subscribe( section => {
             if (section === 'summary') {
                 const order = POS.lastCompletedOrder ? POS.lastCompletedOrder.getValue() : null;
@@ -75,6 +82,7 @@ export default {
         nsPosCart,
         nsPosGrid,
         nsPosTransactionSummary,
+        nsPosOfflineBanner,
     }
 }
 </script>
