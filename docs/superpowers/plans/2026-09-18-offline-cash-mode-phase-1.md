@@ -343,6 +343,7 @@ class PosOfflineSnapshotTest extends TestCase
         $productWithUnits = $products->first( fn( $product ) => ! empty( $product[ 'unit_quantities' ] ) );
         $this->assertArrayHasKey( 'sale_price', $productWithUnits[ 'unit_quantities' ][ 0 ] );
         $this->assertArrayHasKey( 'unit', $productWithUnits[ 'unit_quantities' ][ 0 ] );
+        $this->assertArrayHasKey( 'barcode', $productWithUnits[ 'unit_quantities' ][ 0 ] );
         $this->assertArrayHasKey( 'barcode', $productWithUnits );
         $this->assertArrayHasKey( 'category_id', $productWithUnits );
         $this->assertArrayHasKey( 'pinned', $productWithUnits );
@@ -433,6 +434,7 @@ class PosController extends DashboardController
                             'id' => $unitQuantity->id,
                             'unit_id' => $unitQuantity->unit_id,
                             'unit_name' => $unitQuantity->unit?->name,
+                            'barcode' => $unitQuantity->barcode,
                             'unit' => $unitQuantity->unit ? [
                                 'id' => $unitQuantity->unit->id,
                                 'name' => $unitQuantity->unit->name,
@@ -660,6 +662,21 @@ describe( 'Offline catalog', () => {
         expect( findByBarcode( products as any, '222' )?.id ).toBe( 11 );
         expect( findByBarcode( products as any, '999' ) ).toBe( false );
     } );
+
+    test( 'barcode lookup prefers unit-level barcodes', () => {
+        const withUnitBarcode = [
+            {
+                ...products[ 0 ],
+                barcode: '999',
+                unit_quantities: [
+                    { id: 100, unit_id: 1, barcode: '444', sale_price: 5, quantity: 10 },
+                ],
+            },
+        ] as any;
+
+        expect( findByBarcode( withUnitBarcode, '444' )?.selectedUnitQuantity?.id ).toBe( 100 );
+        expect( findByBarcode( withUnitBarcode, '999' )?.selectedUnitQuantity?.id ).toBe( 100 );
+    } );
 } );
 ```
 
@@ -679,6 +696,7 @@ export interface OfflineUnitQuantity {
     id: number;
     unit_id: number;
     unit_name?: string;
+    barcode?: string | null;
     unit?: { id: number; name: string } | null;
     sale_price: number;
     sale_price_net?: number;
@@ -699,6 +717,7 @@ export interface OfflineProduct {
     tax_group_id?: number;
     tax_type?: string;
     tax_group?: any;
+    selectedUnitQuantity?: OfflineUnitQuantity;
     unit_quantities: OfflineUnitQuantity[];
     galleries?: { id: number; url: string; featured?: boolean }[];
 }
@@ -796,9 +815,25 @@ export function findByBarcode(
         return false;
     }
 
-    return (
-        products.find( ( product ) => `${product.barcode ?? ''}`.trim() === needle ) ?? false
-    );
+    /**
+     * Mirrors the online endpoint: unit-level barcodes take
+     * precedence over the product-level barcode.
+     */
+    for ( const product of products ) {
+        const matchingUnit = ( product.unit_quantities ?? [] ).find(
+            ( unitQuantity ) => `${unitQuantity.barcode ?? ''}`.trim() === needle,
+        );
+
+        if ( matchingUnit ) {
+            return { ...product, selectedUnitQuantity: matchingUnit };
+        }
+
+        if ( `${product.barcode ?? ''}`.trim() === needle ) {
+            return { ...product, selectedUnitQuantity: product.unit_quantities?.[ 0 ] };
+        }
+    }
+
+    return false;
 }
 ```
 
@@ -1628,8 +1663,11 @@ if (this.scanMode) {
             /**
              * addScannedProductToCart expects the barcode endpoint
              * shape: { product, unitQuantity, unit }.
+             * findByBarcode sets selectedUnitQuantity to the unit
+             * whose barcode matched (or the first unit otherwise).
              */
-            const unitQuantity = product.unit_quantities?.[0];
+            const unitQuantity =
+                product.selectedUnitQuantity ?? product.unit_quantities?.[0];
 
             this.addScannedProductToCart({
                 product: { ...product, selectedUnitQuantity: unitQuantity },
