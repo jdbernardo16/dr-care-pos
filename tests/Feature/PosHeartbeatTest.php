@@ -24,5 +24,10 @@ class PosHeartbeatTest extends TestCase
         $response->assertOk();
         $response->assertJsonStructure( [ 'status', 'time', 'timestamp' ] );
         $this->assertIsInt( $response->json( 'timestamp' ) );
+
+        $this->assertSame( 'success', $response->json( 'status' ) );
+
+        $now = ns()->date->getNow()->getTimestamp() * 1000;
+        $this->assertEqualsWithDelta( $now, $response->json( 'timestamp' ), 5000 );
     }
 }

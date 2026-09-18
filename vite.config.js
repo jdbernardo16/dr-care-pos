@@ -107,6 +107,12 @@ export default ({ mode }) => {
                     ],
                     runtimeCaching: [
                         {
+                            // POS endpoints must bypass the API cache: the heartbeat is the offline
+                            // detector and the snapshot has its own IndexedDB store.
+                            urlPattern: /\/api\/pos\//,
+                            handler: "NetworkOnly",
+                        },
+                        {
                             // Allows the POS page to reopen while offline (network first, falls back to cache).
                             urlPattern: /\/dashboard\/pos$/,
                             handler: "NetworkFirst",
