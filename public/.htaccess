@@ -19,3 +19,11 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Allow the service worker to control the whole origin (PWA offline support).
+# Wrapped in IfModule so a missing mod_headers never breaks the site.
+<IfModule mod_headers.c>
+    <FilesMatch "^sw\.js$">
+        Header set Service-Worker-Allowed "/"
+    </FilesMatch>
+</IfModule>

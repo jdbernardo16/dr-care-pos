@@ -107,6 +107,31 @@ export default ({ mode }) => {
                     ],
                     runtimeCaching: [
                         {
+                            // Allows the POS page to reopen while offline (network first, falls back to cache).
+                            urlPattern: /\/dashboard\/pos$/,
+                            handler: "NetworkFirst",
+                            options: {
+                                cacheName: "pos-page",
+                                networkTimeoutSeconds: 3,
+                                expiration: {
+                                    maxEntries: 10,
+                                    maxAgeSeconds: 60 * 60 * 24,
+                                },
+                            },
+                        },
+                        {
+                            // Product images become available offline once viewed.
+                            urlPattern: /\/storage\/.+\.(?:png|jpg|jpeg|webp|gif|svg)$/i,
+                            handler: "CacheFirst",
+                            options: {
+                                cacheName: "product-images",
+                                expiration: {
+                                    maxEntries: 500,
+                                    maxAgeSeconds: 60 * 60 * 24 * 30,
+                                },
+                            },
+                        },
+                        {
                             urlPattern: /^https?:\/\/.*\/api\//,
                             handler: "NetworkFirst",
                             options: {
