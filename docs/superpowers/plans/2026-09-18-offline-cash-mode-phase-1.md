@@ -1784,7 +1784,7 @@ test.describe('Offline foundation', () => {
         ).jsonValue();
         expect(snapshotStored).toBeTruthy();
 
-        // 2 — go offline and force two failed heartbeats
+        // Go offline and wait for the monitor to report offline.
         await context.setOffline(true);
 
         await expect

@@ -45,7 +45,38 @@ test.describe('Offline foundation', () => {
             )
             .toBeTruthy();
 
-        // Go offline and force two failed heartbeats.
+        /**
+         * Let the POS finish booting before cutting the connection.
+         * Going offline while the register check is in flight leaves
+         * a blocking popup behind.
+         */
+        await page
+            .waitForResponse((response) => response.url().includes('/api/cash-registers'), { timeout: 10000 })
+            .catch(() => {});
+
+        const registerPopup = page.locator('.is-popup').first();
+
+        if (await registerPopup.isVisible().catch(() => false)) {
+            /**
+             * Dismiss it through the app's own popup manager.
+             * The popup has no real close control: the only element
+             * matching a "close" class is the "Exit To Orders" link,
+             * which navigates away from the POS.
+             */
+            await page.evaluate(() => {
+                const popups = (window as any).nsState?.state?.getValue()?.popups ?? [];
+
+                popups.forEach((popup: any) => {
+                    try {
+                        popup.close?.();
+                    } catch {
+                        /* popup may already be closing */
+                    }
+                });
+            });
+        }
+
+        // Go offline and wait for the monitor to report offline.
         await context.setOffline(true);
 
         await expect
@@ -69,19 +100,33 @@ test.describe('Offline foundation', () => {
         await expect(page.locator('[data-category-id]').first()).toBeVisible();
 
         // Drill into categories until cached products render.
-        for (let depth = 0; depth < 4; depth++) {
-            if ((await page.locator('[data-product-id]').count()) > 0) {
-                break;
-            }
+        let productsRendered = false;
 
-            const category = page.locator('[data-category-id]').first();
+        for (let attempt = 0; attempt < 4 && !productsRendered; attempt++) {
+            const category = page.locator('[data-category-id]').nth(attempt);
 
             if ((await category.count()) === 0) {
                 break;
             }
 
+            const previousCategories = await page.locator('[data-category-id]').count();
+
             await category.click();
-            await page.waitForTimeout(250);
+
+            await expect
+                .poll(
+                    async () => {
+                        const products = await page.locator('[data-product-id]').count();
+                        const categories = await page.locator('[data-category-id]').count();
+
+                        return products > 0 || categories !== previousCategories;
+                    },
+                    { timeout: 3000 },
+                )
+                .toBeTruthy()
+                .catch(() => {});
+
+            productsRendered = (await page.locator('[data-product-id]').count()) > 0;
         }
 
         await expect(page.locator('[data-product-id]').first()).toBeVisible();
