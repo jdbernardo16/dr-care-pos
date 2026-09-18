@@ -1,6 +1,6 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from "rxjs";
 
-export type ConnectivityStatus = 'online' | 'offline';
+export type ConnectivityStatus = "online" | "offline";
 
 export interface ConnectivityOptions {
     intervalMs?: number;
@@ -16,8 +16,9 @@ export interface ConnectivityOptions {
 export class OfflineConnectivity {
     private failures = 0;
     private timer: ReturnType<typeof setTimeout> | null = null;
-    private stopped = false;
-    private statusSubject = new BehaviorSubject<ConnectivityStatus>( 'online' );
+    private generation = 0;
+    private inFlight: Promise<ConnectivityStatus> | null = null;
+    private statusSubject = new BehaviorSubject<ConnectivityStatus>( "online" );
 
     constructor(
         private ping: ( timeoutMs: number ) => Promise<boolean>,
@@ -33,30 +34,48 @@ export class OfflineConnectivity {
     }
 
     start(): void {
-        this.stopped = false;
-        this.scheduleNext( 0 );
+        if ( this.timer !== null ) {
+            return;
+        }
+
+        this.generation++;
+        this.scheduleNext( 0, this.generation );
     }
 
     stop(): void {
-        this.stopped = true;
+        this.generation++;
 
-        if ( this.timer ) {
+        if ( this.timer !== null ) {
             clearTimeout( this.timer );
             this.timer = null;
         }
     }
 
     async checkNow(): Promise<ConnectivityStatus> {
+        if ( this.inFlight ) {
+            return this.inFlight;
+        }
+
+        this.inFlight = this.performCheck();
+
+        try {
+            return await this.inFlight;
+        } finally {
+            this.inFlight = null;
+        }
+    }
+
+    private async performCheck(): Promise<ConnectivityStatus> {
         const reachable = await this.safePing();
 
         if ( reachable ) {
             this.failures = 0;
-            this.emit( 'online' );
+            this.emit( "online" );
         } else {
             this.failures++;
 
             if ( this.failures >= ( this.options.failuresToOffline ?? 2 ) ) {
-                this.emit( 'offline' );
+                this.emit( "offline" );
             }
         }
 
@@ -64,8 +83,15 @@ export class OfflineConnectivity {
     }
 
     private async safePing(): Promise<boolean> {
+        const timeoutMs = this.options.timeoutMs ?? 5000;
+
         try {
-            return await this.ping( this.options.timeoutMs ?? 5000 );
+            return await Promise.race( [
+                this.ping( timeoutMs ),
+                new Promise<boolean>( ( resolve ) => {
+                    setTimeout( () => resolve( false ), timeoutMs );
+                } ),
+            ] );
         } catch ( exception ) {
             return false;
         }
@@ -77,14 +103,19 @@ export class OfflineConnectivity {
         }
     }
 
-    private scheduleNext( delay: number ): void {
-        if ( this.stopped ) {
+    private scheduleNext( delay: number, generation: number ): void {
+        if ( generation !== this.generation ) {
             return;
         }
 
         this.timer = setTimeout( async () => {
+            this.timer = null;
+
             await this.checkNow();
-            this.scheduleNext( this.options.intervalMs ?? 20000 );
+
+            if ( generation === this.generation ) {
+                this.scheduleNext( this.options.intervalMs ?? 20000, generation );
+            }
         }, delay );
     }
 }
