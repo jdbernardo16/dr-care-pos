@@ -257,6 +257,7 @@
                         @click="loadCategories(category)"
                         v-for="category of categories"
                         :key="category.id"
+                        :data-category-id="category.id"
                         class="cell-item w-full h-36 cursor-pointer border flex items-center justify-center overflow-hidden relative"
                     >
                         <div
@@ -319,6 +320,7 @@
                         @click="!isOutOfStock(product) && addToTheCart(product)"
                         v-for="product of products"
                         :key="product.id"
+                        :data-product-id="product.id"
                         :class="[
                             'cell-item w-full h-36 border flex flex-col items-center justify-center overflow-hidden relative',
                             isOutOfStock(product)
