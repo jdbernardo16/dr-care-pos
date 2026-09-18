@@ -399,7 +399,7 @@ import switchTo from "~/libraries/pos-section-switch";
 import nsPosSearchProductVue from "~/popups/ns-pos-search-product.vue";
 import { __ } from "~/libraries/lang";
 import { nsCurrency, nsRawCurrency } from "~/filters/currency";
-import { getOfflineContext } from "~/libraries/offline/offline";
+import { getOfflineContext, initializeOfflineMode } from "~/libraries/offline/offline";
 
 export default {
     name: "ns-pos-grid",
@@ -411,6 +411,7 @@ export default {
             products: [],
             pinnedProducts: [],
             cartProductsSubscribe: null,
+            connectivitySubscription: null,
             cartProducts: [],
             categories: [],
             breadcrumbs: [],
@@ -504,6 +505,19 @@ export default {
             (order) => (this.order = order),
         );
 
+        initializeOfflineMode()
+            .then((context) => {
+                this.connectivitySubscription =
+                    context.connectivity.status$.subscribe((status) => {
+                        if (status === "offline") {
+                            this.loadCategories(this.currentCategory);
+                        }
+                    });
+            })
+            .catch((exception) => {
+                console.warn("Unable to initialize offline mode", exception);
+            });
+
         this.interval = setInterval(() => this.checkFocus(), 500);
 
         /**
@@ -558,6 +572,7 @@ export default {
         this.settingsSubscriber.unsubscribe();
         this.optionsSubscriber.unsubscribe();
         this.cartProductsSubscribe.unsubscribe();
+        this.connectivitySubscription?.unsubscribe();
 
         clearInterval(this.interval);
 
@@ -679,27 +694,31 @@ export default {
                 const offline = getOfflineContext();
 
                 if (offline && offline.connectivity.status === "offline") {
-                    const product = await offline.catalog.findByBarcode(value);
+                    try {
+                        const product = await offline.catalog.findByBarcode(value);
 
-                    this.barcode = "";
+                        this.barcode = "";
 
-                    if (product) {
-                        /**
-                         * addScannedProductToCart expects the barcode endpoint
-                         * shape: { product, unitQuantity, unit }.
-                         * findByBarcode sets selectedUnitQuantity to the unit
-                         * whose barcode matched (or the first unit otherwise).
-                         */
-                        const unitQuantity =
-                            product.selectedUnitQuantity ?? product.unit_quantities?.[0];
+                        if (product) {
+                            const unitQuantity =
+                                product.selectedUnitQuantity ?? product.unit_quantities?.[0];
 
-                        this.addScannedProductToCart({
-                            product: { ...product, selectedUnitQuantity: unitQuantity },
-                            unitQuantity,
-                            unit: unitQuantity?.unit,
-                        });
-                    } else {
-                        nsSnackBar.error(__("Product not found in the offline catalog."));
+                            if (!unitQuantity || !unitQuantity.unit) {
+                                nsSnackBar.error(__("This product has no sellable unit in the offline catalog."));
+                                return;
+                            }
+
+                            this.addScannedProductToCart({
+                                product: { ...product, selectedUnitQuantity: unitQuantity },
+                                unitQuantity,
+                                unit: unitQuantity.unit,
+                            });
+                        } else {
+                            nsSnackBar.error(__("Product not found in the offline catalog."));
+                        }
+                    } catch (exception) {
+                        console.warn("Unable to search the offline catalog", exception);
+                        nsSnackBar.error(__("Unable to search the offline catalog."));
                     }
 
                     return;
@@ -725,13 +744,25 @@ export default {
                 const offline = getOfflineContext();
 
                 if (offline && offline.connectivity.status === "offline") {
-                    const results = await offline.catalog.search(value, 20);
+                    const searchValue = value;
 
-                    if (results.length > 0) {
-                        this.products = results;
-                        this.categories = [];
-                    } else {
-                        nsSnackBar.info(__("No products match your search."));
+                    try {
+                        const results = await offline.catalog.search(searchValue, 20);
+
+                        // ignore stale responses if the search value changed in the meantime
+                        if (this.barcode !== searchValue) {
+                            return;
+                        }
+
+                        if (results.length > 0) {
+                            this.products = results;
+                            this.categories = [];
+                        } else {
+                            nsSnackBar.info(__("No products match your search."));
+                        }
+                    } catch (exception) {
+                        console.warn("Unable to search the offline catalog", exception);
+                        nsSnackBar.error(__("Unable to search the offline catalog."));
                     }
 
                     return;
@@ -834,19 +865,26 @@ export default {
             const offline = getOfflineContext();
 
             if (offline && offline.connectivity.status === "offline") {
-                const options = (await offline.database.getMeta("options")) ?? {};
-                const view = await offline.catalog.getCategoryView(
-                    parent ? parent.id : null,
-                    options.ns_pos_enable_reordering === "yes",
-                );
+                try {
+                    const options = (await offline.database.getMeta("options")) ?? {};
+                    const view = await offline.catalog.getCategoryView(
+                        parent ? parent.id : null,
+                        options.ns_pos_enable_reordering === "yes",
+                    );
 
-                this.categories = view.categories;
-                this.products = view.products;
-                this.pinnedProducts = view.pinnedProducts;
-                this.previousCategory = view.previousCategory;
-                this.currentCategory = view.currentCategory;
-                this.updateBreadCrumb(this.currentCategory);
-                this.isLoading = false;
+                    this.categories = view.categories;
+                    this.products = view.products;
+                    this.pinnedProducts = view.pinnedProducts;
+                    this.previousCategory = view.previousCategory;
+                    this.currentCategory = view.currentCategory;
+                    this.updateBreadCrumb(this.currentCategory);
+                } catch (exception) {
+                    console.warn("Unable to load the offline catalog", exception);
+                    nsSnackBar.error(__("Unable to load the offline catalog."));
+                } finally {
+                    this.isLoading = false;
+                }
+
                 return;
             }
 
@@ -873,7 +911,7 @@ export default {
 
         updateBreadCrumb(parent) {
             if (parent) {
-                const index = this.breadcrumb.filter(
+                const index = this.breadcrumbs.filter(
                     (bread) => bread.id === parent.id,
                 );
 
@@ -884,7 +922,7 @@ export default {
                  */
                 if (index.length > 0) {
                     let allow = true;
-                    const prior = this.breadcrumb.filter((bread) => {
+                    const prior = this.breadcrumbs.filter((bread) => {
                         if (bread.id === index[0].id && allow) {
                             allow = false;
                             return true;
@@ -892,15 +930,15 @@ export default {
 
                         return allow;
                     });
-                    this.breadcrumb = prior;
+                    this.breadcrumbs = prior;
                 } else {
-                    this.breadcrumb.push(parent);
+                    this.breadcrumbs.push(parent);
                 }
             } else {
-                this.breadcrumb = [];
+                this.breadcrumbs = [];
             }
 
-            POS.breadcrumbs.next(this.breadcrumb);
+            POS.breadcrumbs.next(this.breadcrumbs);
         },
 
         async addToTheCart(product) {

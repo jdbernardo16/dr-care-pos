@@ -44,9 +44,13 @@ let initialization: Promise<OfflineContext> | null = null;
 
 function heartbeat( timeoutMs: number ): Promise<boolean> {
     return new Promise( ( resolve ) => {
-        const timer = setTimeout( () => resolve( false ), timeoutMs );
+        let subscription: any = null;
+        const timer = setTimeout( () => {
+            subscription?.unsubscribe();
+            resolve( false );
+        }, timeoutMs );
 
-        nsHttpClient.get( "/api/pos/heartbeat" ).subscribe( {
+        subscription = nsHttpClient.get( "/api/pos/heartbeat" ).subscribe( {
             next: () => {
                 clearTimeout( timer );
                 resolve( true );
@@ -76,8 +80,12 @@ async function createOfflineContext(): Promise<OfflineContext> {
     const connectivity = new OfflineConnectivity( heartbeat );
     const snapshot = new OfflineSnapshotService( database, fetchSnapshot );
     const catalog = new OfflineCatalog( database );
-
-    context = { database, snapshot, connectivity, catalog };
+    const offlineContext: OfflineContext = {
+        database,
+        snapshot,
+        connectivity,
+        catalog,
+    };
 
     connectivity.start();
     snapshot.start();
@@ -85,10 +93,12 @@ async function createOfflineContext(): Promise<OfflineContext> {
     window.addEventListener( "offline", () => connectivity.checkNow() );
     window.addEventListener( "online", () => connectivity.checkNow() );
 
+    context = offlineContext;
+
     // Exposed for debugging and the offline E2E test.
     ( window as any ).nsOffline = context;
 
-    return context;
+    return offlineContext;
 }
 
 /**

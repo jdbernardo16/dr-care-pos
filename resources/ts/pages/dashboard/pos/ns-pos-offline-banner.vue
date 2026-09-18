@@ -9,6 +9,7 @@ export default {
             status: "online",
             snapshotAge: null,
             subscription: null,
+            destroyed: false,
         };
     },
     async mounted() {
@@ -20,7 +21,7 @@ export default {
         const context =
             getOfflineContext() ?? ( await initializeOfflineMode().catch( () => null ) );
 
-        if ( ! context ) {
+        if ( this.destroyed || ! context ) {
             return;
         }
 
@@ -31,17 +32,31 @@ export default {
                 this.loadSnapshotAge( context );
             }
         } );
+
+        /**
+         * The component could have been unmounted while we were waiting
+         * for the initialization to resolve.
+         */
+        if ( this.destroyed ) {
+            this.subscription.unsubscribe();
+            this.subscription = null;
+        }
     },
     unmounted() {
+        this.destroyed = true;
         this.subscription?.unsubscribe();
     },
     methods: {
         __,
         async loadSnapshotAge( context ) {
-            const meta = await context.database.getMeta( "snapshot" );
+            try {
+                const meta = await context.database.getMeta( "snapshot" );
 
-            if ( meta?.fetched_at ) {
-                this.snapshotAge = Math.round( ( Date.now() - meta.fetched_at ) / 60000 );
+                if ( meta?.fetched_at ) {
+                    this.snapshotAge = Math.round( ( Date.now() - meta.fetched_at ) / 60000 );
+                }
+            } catch ( exception ) {
+                console.warn( "Unable to read the offline snapshot age", exception );
             }
         },
     },
@@ -55,7 +70,7 @@ export default {
     >
         <i class="las la-unlink"></i>
         <span>{{ __( "OFFLINE MODE" ) }} —</span>
-        <span>{{ __( "You can browse the cached catalog; sales are disabled until the connection is back." ) }}</span>
+        <span>{{ __( "You can browse the cached catalog; checkout is unavailable until the connection is back." ) }}</span>
         <span v-if="snapshotAge !== null">
             ({{ __( "catalog cached" ) }} {{ snapshotAge }} min ago)
         </span>
