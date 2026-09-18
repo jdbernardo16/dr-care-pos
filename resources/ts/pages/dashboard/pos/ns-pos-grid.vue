@@ -433,6 +433,7 @@ export default {
             gridItemsHeight: 0,
             isLoading: false,
             scanMode: false,
+            isDestroyed: false,
         };
     },
     computed: {
@@ -507,12 +508,15 @@ export default {
 
         initializeOfflineMode()
             .then((context) => {
-                this.connectivitySubscription =
-                    context.connectivity.status$.subscribe((status) => {
-                        if (status === "offline") {
-                            this.loadCategories(this.currentCategory);
-                        }
-                    });
+                if (this.isDestroyed) {
+                    return;
+                }
+
+                this.connectivitySubscription = context.connectivity.status$.subscribe((status) => {
+                    if (status === "offline") {
+                        this.loadCategories(this.currentCategory);
+                    }
+                });
             })
             .catch((exception) => {
                 console.warn("Unable to initialize offline mode", exception);
@@ -572,6 +576,7 @@ export default {
         this.settingsSubscriber.unsubscribe();
         this.optionsSubscriber.unsubscribe();
         this.cartProductsSubscribe.unsubscribe();
+        this.isDestroyed = true;
         this.connectivitySubscription?.unsubscribe();
 
         clearInterval(this.interval);

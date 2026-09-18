@@ -87,18 +87,26 @@ async function createOfflineContext(): Promise<OfflineContext> {
         catalog,
     };
 
-    connectivity.start();
-    snapshot.start();
+    try {
+        connectivity.start();
+        snapshot.start();
 
-    window.addEventListener( "offline", () => connectivity.checkNow() );
-    window.addEventListener( "online", () => connectivity.checkNow() );
+        window.addEventListener( "offline", () => connectivity.checkNow() );
+        window.addEventListener( "online", () => connectivity.checkNow() );
 
-    context = offlineContext;
+        context = offlineContext;
 
-    // Exposed for debugging and the offline E2E test.
-    ( window as any ).nsOffline = context;
+        // Exposed for debugging and the offline E2E test.
+        ( window as any ).nsOffline = context;
 
-    return offlineContext;
+        return offlineContext;
+    } catch ( exception ) {
+        connectivity?.stop?.();
+        snapshot?.stop?.();
+        context = null;
+
+        throw exception;
+    }
 }
 
 /**

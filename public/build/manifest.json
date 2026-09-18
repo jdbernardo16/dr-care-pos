@@ -79,8 +79,8 @@
       "_runtime-dom.esm-bundler-D2tXEx0D.js"
     ]
   },
-  "_ns-pos-grid-D4Lalgbo.js": {
-    "file": "assets/ns-pos-grid-D4Lalgbo.js",
+  "_ns-pos-grid-CMWJ7xqk.js": {
+    "file": "assets/ns-pos-grid-CMWJ7xqk.js",
     "name": "ns-pos-grid",
     "isDynamicEntry": true,
     "imports": [
@@ -885,13 +885,13 @@
     ]
   },
   "resources/ts/pages/dashboard/pos/ns-pos.vue": {
-    "file": "assets/ns-pos-DDe3a5bh.js",
+    "file": "assets/ns-pos-DYL85vlI.js",
     "name": "ns-pos",
     "src": "resources/ts/pages/dashboard/pos/ns-pos.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/ts/pages/dashboard/pos/ns-pos-cart.vue",
-      "_ns-pos-grid-D4Lalgbo.js",
+      "_ns-pos-grid-CMWJ7xqk.js",
       "_lang-BINodpp-.js",
       "_currency-D3_TCvZd.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
@@ -1340,7 +1340,7 @@
     ]
   },
   "resources/ts/pos.ts": {
-    "file": "assets/pos-D8WUpvaH.js",
+    "file": "assets/pos-dzLW5U1D.js",
     "name": "pos",
     "src": "resources/ts/pos.ts",
     "isEntry": true,
@@ -1363,7 +1363,7 @@
     "dynamicImports": [
       "resources/ts/pages/dashboard/pos/ns-pos.vue",
       "resources/ts/pages/dashboard/pos/ns-pos-cart.vue",
-      "_ns-pos-grid-D4Lalgbo.js"
+      "_ns-pos-grid-CMWJ7xqk.js"
     ]
   },
   "resources/ts/setup.ts": {
