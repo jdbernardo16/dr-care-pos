@@ -11,11 +11,16 @@ export class POSPage {
 
     // Cart area
     readonly cartSection: Locator;
+    readonly cartPanel: Locator;
     readonly emptyCartMessage: Locator;
     readonly payButton: Locator;
     readonly holdButton: Locator;
     readonly discountButton: Locator;
-    readonly voidButton: Locator;
+    readonly moreButton: Locator;
+    readonly chargeButton: Locator;
+
+    // Payment popup
+    readonly paymentPopup: Locator;
 
     // Sidebar buttons
     readonly ordersButton: Locator;
@@ -36,11 +41,15 @@ export class POSPage {
         this.barcodeInput     = page.locator('#grid-header input[type="text"]');
 
         this.cartSection      = page.locator('[id*="pos-cart"], [class*="pos-cart"]').first();
+        this.cartPanel        = page.locator('#pos-cart');
         this.emptyCartMessage = page.locator('h3:has-text("No products added")');
         this.payButton        = page.locator('text=Pay').first();
         this.holdButton       = page.locator('text=Hold').first();
         this.discountButton   = page.locator('text=Discount').first();
-        this.voidButton       = page.locator('text=Void').first();
+        this.moreButton       = page.locator('#more-button');
+        this.chargeButton     = page.locator('#charge-button');
+
+        this.paymentPopup     = page.locator('#ns-payment-popup');
 
         this.ordersButton     = page.locator('button:has-text("Orders")');
         this.orderTypeButton  = page.locator('button:has-text("Order Type")');
@@ -58,6 +67,10 @@ export class POSPage {
     }
 
     async enableAutofocus() {
+        // The autofocus toggle was removed in the POS UI rehaul.
+        if ((await this.autofocusToggle.count()) === 0) {
+            return;
+        }
         const isOn = await this.autofocusToggle.evaluate(
             (el: HTMLElement) => el.classList.contains('pos-button-clicked')
         );
@@ -125,6 +138,18 @@ export class POSPage {
         await this.page.waitForTimeout(500);
     }
 
+    async voidOrder() {
+        await this.moreButton.click();
+        await this.page.waitForTimeout(400);
+        await this.page.locator('text=Void').first().click();
+        await this.page.waitForTimeout(600);
+
+        // Confirm dialog
+        const yes = this.page.locator('.is-popup button').filter({ hasText: /^yes$/i }).first();
+        await yes.click({ timeout: 3000 });
+        await this.page.waitForTimeout(1500);
+    }
+
     async getCartTotal(): Promise<string> {
         const bodyText = await this.page.evaluate(() => document.body.innerText);
         const totalMatch = bodyText.match(/Total\s+USD([\d.]+)/g);
@@ -139,7 +164,7 @@ export class POSPage {
         const bodyText = await this.page.evaluate(() => document.body.innerText);
         if (bodyText.includes('No products added')) return 0;
 
-        const priceLines = bodyText.match(/Price\s*:\s*USD[\d.]+/g);
+        const priceLines = bodyText.match(/Price\s*:\s*(?:USD|PHP|₱)\s*[\d.,]+/g);
         return priceLines ? priceLines.length : 0;
     }
 
@@ -152,6 +177,87 @@ export class POSPage {
         await this.page.locator(`h3:has-text("${categoryName}")`).click();
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
+    }
+
+    /**
+     * Add a product to the cart by clicking its tile on the POS grid.
+     * Clicks the category tile first when the grid is showing categories.
+     */
+    async addProductTile(name: string = 'MAGIC FLAKES', category: string = 'Default Category') {
+        const categoryTile = this.page
+            .locator('#grid-items .cell-item')
+            .filter({ hasText: category })
+            .first();
+
+        const productTile = this.page
+            .locator('#grid-items .cell-item')
+            .filter({ hasText: name })
+            .first();
+
+        // The grid loads its categories asynchronously; wait until it
+        // shows either the requested category or the product itself.
+        await expect
+            .poll(
+                async () =>
+                    (await categoryTile.isVisible().catch(() => false)) ||
+                    (await productTile.isVisible().catch(() => false)),
+                { timeout: 15000 }
+            )
+            .toBe(true);
+
+        if (await categoryTile.isVisible().catch(() => false)) {
+            await categoryTile.click();
+            await this.page.waitForLoadState('networkidle');
+        }
+
+        await productTile.waitFor({ state: 'visible', timeout: 15000 });
+        await productTile.click();
+
+        // Depending on POS settings a quantity popup can appear.
+        await this.acceptQuantityPopup('1');
+
+        // Wait until the POS cart state actually contains the product.
+        await this.page.waitForFunction(
+            (needle) => {
+                const pos = (window as any).POS;
+                const products = pos?.products?.getValue?.() ?? [];
+                return products.some((product: any) =>
+                    String(product?.name || '').includes(needle)
+                );
+            },
+            name,
+            { timeout: 10000 }
+        );
+    }
+
+    /**
+     * Charge the current cart with the exact amount and wait for the
+     * transaction summary.
+     */
+    async completePayment() {
+        await this.chargeButton.click();
+
+        await expect(this.paymentPopup).toBeVisible({ timeout: 15000 });
+
+        await this.completeOpenPayment();
+    }
+
+    /**
+     * Pay on an already open payment popup using the exact amount and
+     * wait for the transaction summary.
+     */
+    async completeOpenPayment() {
+        // Use the exact amount so the charge matches the cart total.
+        await this.paymentPopup.getByText('₱Exact', { exact: true }).click();
+
+        await this.paymentPopup
+            .locator('button')
+            .filter({ hasText: 'Charge' })
+            .click();
+
+        await expect(this.page.getByText('Transaction Complete')).toBeVisible({
+            timeout: 20000,
+        });
     }
 
     async resetCart() {
