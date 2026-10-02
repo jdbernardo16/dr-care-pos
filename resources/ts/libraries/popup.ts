@@ -129,17 +129,25 @@ export class Popup {
 
         const selector          =   `#${popup.hash} .popup-body`;
         const popupBody          =   document.querySelector( selector );
-        popupBody.classList.remove( 'zoom-out-entrance' );
-        popupBody.classList.add( 'zoom-in-exit' );
+        popupBody?.classList.remove( 'zoom-out-entrance' );
+        popupBody?.classList.add( 'zoom-in-exit' );
 
         const container          =   document.querySelector( `#${popup.hash}` );
-        container.classList.remove( 'is-popup' );
+        container?.classList.remove( 'is-popup' );
 
         setTimeout( () => {
             const { popups }    =   nsState.state.getValue();
             const index         =   popups.indexOf( popup );
-            popups.splice( index, 1 );
-            nsState.setState({ popups });
+
+            /**
+             * The popup might already have been removed from the
+             * stack (double close). Splicing with -1 would delete
+             * the last unrelated popup.
+             */
+            if ( index !== -1 ) {
+                popups.splice( index, 1 );
+                nsState.setState({ popups });
+            }
 
             /**
              * this will destroy the listener to avoid
