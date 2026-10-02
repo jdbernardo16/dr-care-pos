@@ -49,6 +49,7 @@ use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,20 @@ class OrdersService
     public function create( $fields, ?Order $order = null )
     {
         $isNew = ! $order instanceof Order;
+
+        /**
+         * When the POS submits a checkout uuid, we want to make
+         * sure the order is only created once. This protects slow
+         * connections where the same checkout might be submitted
+         * more than once (timeout, retry, double click).
+         */
+        if ( $isNew && ! empty( $fields[ 'uuid' ] ) ) {
+            $existingOrder = $this->__getOrderFromCheckoutUuid( $fields[ 'uuid' ] );
+
+            if ( $existingOrder instanceof Order ) {
+                return $this->__getExistingOrderResponse( $existingOrder );
+            }
+        }
 
         /**
          * if the order is being edited, we need to
@@ -218,14 +233,32 @@ class OrdersService
          */
         $order->setData( $fields );
 
-        $order->saveWithRelationships( [
-            'products' => $orderProducts,
-            'payments' => $payments,
-            'coupons' => $coupons,
-            'instalments' => $instalments,
-            'taxes' => $taxes,
-            'order_addresses' => $addresses,
-        ] );
+        try {
+            $order->saveWithRelationships( [
+                'products' => $orderProducts,
+                'payments' => $payments,
+                'coupons' => $coupons,
+                'instalments' => $instalments,
+                'taxes' => $taxes,
+                'order_addresses' => $addresses,
+            ] );
+        } catch ( QueryException $exception ) {
+            /**
+             * In case two checkout requests with the same uuid
+             * are processed simultaneously, the unique index will
+             * reject the second one. We then return the order that
+             * has been created by the concurrent request.
+             */
+            if ( $isNew && ! empty( $fields[ 'uuid' ] ) && $this->__isDuplicateEntryException( $exception ) ) {
+                $existingOrder = $this->__getOrderFromCheckoutUuid( $fields[ 'uuid' ] );
+
+                if ( $existingOrder instanceof Order ) {
+                    return $this->__getExistingOrderResponse( $existingOrder );
+                }
+            }
+
+            throw $exception;
+        }
 
         $order->load( 'payments' );
         $order->load( 'products' );
@@ -778,12 +811,8 @@ class OrdersService
 
     private function __saveOrderPayments( $order, $payments, $customer )
     {
-        /**
-         * As we're about to record new payments,
-         * we first need to delete previous payments that
-         * might have been made. Probably we'll need to keep these
-         * order and only update them.
-         */
+        $order->payments()->delete();
+
         return collect( $payments )->map( function ( $payment ) use ( $order ) {
             return $this->__saveOrderSinglePayment( $payment, $order );
         } );
@@ -873,7 +902,7 @@ class OrdersService
 
         $orderPayment->identifier = $payment['identifier'];
         $orderPayment->value = $this->currencyService->define( $payment['value'] )->toFloat();
-        $orderPayment->author_id = $order->author_id;
+        $orderPayment->author_id = Auth::id(); // the payment is attributed to the user that performs the transaction
 
         return $orderPayment;
     }
@@ -1529,7 +1558,21 @@ class OrdersService
              * then we'll define the "created_at" column.
              */
             $order->created_at = $fields[ 'created_at' ] ?? ns()->date->getNow()->toDateTimeString();
+
+            /**
+             * the checkout uuid is used to ensure a checkout
+             * isn't saved twice when the connection is slow.
+             */
+            $order->uuid = $fields[ 'uuid' ] ?? null;
         }
+
+        /**
+         * We'll keep a reference to the previous payment status
+         * so we can determine whether the order was a hold and
+         * is now being charged. In that case, the transaction
+         * should be attributed to the user that performs it.
+         */
+        $previousPaymentStatus = $order->payment_status ?? null;
 
         /**
          * If any other attributes needs to be
@@ -1572,6 +1615,19 @@ class OrdersService
         $order->process_status = 'pending';
         $order->support_instalments = $fields[ 'support_instalments' ] ?? true; // by default instalments are supported
         $order->author_id = $fields[ 'author_id' ] ?? Auth::id(); // the author can now be changed
+
+        /**
+         * When a hold order is being charged, we'll make sure
+         * the transaction is attributed to the user that actually
+         * performs the charge and the date reflects the moment
+         * the transaction was completed. This prevent the sale
+         * from being attributed to the user that created the hold.
+         */
+        if ( $previousPaymentStatus === Order::PAYMENT_HOLD && $paymentStatus !== Order::PAYMENT_HOLD ) {
+            $order->author_id = Auth::id();
+            $order->created_at = ns()->date->getNow()->toDateTimeString();
+            $order->updated_at = ns()->date->getNow()->toDateTimeString();
+        }
         $order->title = $fields[ 'title' ] ?? null;
         $order->tax_value = $this->currencyService->define( $fields[ 'tax_value' ] ?? 0 )->toFloat();
         $order->products_tax_value = $this->currencyService->define( $fields[ 'products_tax_value' ] ?? 0 )->toFloat();
@@ -2711,12 +2767,48 @@ class OrdersService
     {
         $order->payment_status = Order::PAYMENT_VOID;
         $order->voidance_reason = $reason;
+        $order->updated_at = ns()->date->getNow()->toDateTimeString();
         $order->save();
 
         return [
             'status' => 'success',
             'message' => __( 'The order has been correctly voided.' ),
         ];
+    }
+
+    /**
+     * Find an order that has been created using
+     * a specific checkout uuid.
+     */
+    private function __getOrderFromCheckoutUuid( string $uuid ): ?Order
+    {
+        return Order::with( [ 'payments', 'products', 'coupons' ] )
+            ->where( 'uuid', $uuid )
+            ->first();
+    }
+
+    /**
+     * Response returned when a checkout has already been
+     * processed and shouldn't be saved twice.
+     */
+    private function __getExistingOrderResponse( Order $order ): array
+    {
+        return [
+            'status' => 'success',
+            'message' => __( 'This checkout was already submitted. The existing order has been restored.' ),
+            'data' => compact( 'order' ),
+        ];
+    }
+
+    /**
+     * Checks if a query exception is caused
+     * by a duplicated entry (MySQL or SQLite).
+     */
+    private function __isDuplicateEntryException( QueryException $exception ): bool
+    {
+        $errorCode = $exception->errorInfo[ 1 ] ?? null;
+
+        return in_array( (int) $errorCode, [ 1062, 19 ], true );
     }
 
     public function returnVoidProducts( Order $order )
@@ -3049,6 +3141,12 @@ class OrdersService
 
         $total = $payments->map( fn( $payment ) => $payment->value )->sum();
 
+        $cashIdentifiers = $paymentTypes->filter( fn( $pt ) => $pt->is_cash )->pluck( 'identifier' )->toArray();
+
+        $cashTotal = $payments->filter( fn( $payment ) => in_array( $payment->identifier, $cashIdentifiers ) )
+            ->map( fn( $payment ) => $payment->value )
+            ->sum();
+
         return [
             'summary' => $paymentTypes->map( function ( $paymentType ) use ( $payments ) {
                 $total = $payments
@@ -3062,6 +3160,8 @@ class OrdersService
                 ];
             } ),
             'total' => ns()->currency->define( $total )->toFloat(),
+            'cash_total' => ns()->currency->define( $cashTotal )->toFloat(),
+            'non_cash_total' => ns()->currency->define( $total - $cashTotal )->toFloat(),
             'entries' => $payments,
         ];
     }

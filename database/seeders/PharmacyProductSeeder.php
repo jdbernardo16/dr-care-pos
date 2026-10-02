@@ -78,7 +78,7 @@ class PharmacyProductSeeder extends Seeder
                 'tax_group_id' => null,
                 'tax_value' => 0,
                 'product_type' => 'product',
-                'type' => 'tangible',
+                'type' => 'materialized',
                 'accurate_tracking' => false,
                 'auto_cogs' => true,
                 'status' => 'available',

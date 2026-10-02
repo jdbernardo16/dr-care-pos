@@ -133,6 +133,7 @@ class ProductsController extends DashboardController
     {
         return $this->productService->searchProduct(
             search: $request->input( 'search' ),
+            limit: (int) $request->input( 'limit', 20 ),
             arguments: (array) $request->input( 'arguments' )
         );
     }

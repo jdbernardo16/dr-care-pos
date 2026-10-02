@@ -9,14 +9,14 @@ return [
         [
             'label' => __( 'Theme' ),
             'name' => 'theme',
-            'value' => Auth::user()->attribute->theme ?? '',
+            'value' => optional( Auth::user()->attribute )->theme ?? '',
             'type' => 'select',
             'options' => Helper::kvToJsOptions( config( 'nexopos.themes' ) ),
             'description' => __( 'Define what is the theme that applies to the dashboard.' ),
         ], [
             'label' => __( 'Avatar' ),
             'name' => 'avatar_link',
-            'value' => Auth::user()->attribute->avatar_link ?? '',
+            'value' => optional( Auth::user()->attribute )->avatar_link ?? '',
             'type' => 'media',
             'data' => [
                 'user_id' => Auth::id(),
@@ -26,7 +26,7 @@ return [
         ], [
             'label' => __( 'Language' ),
             'name' => 'language',
-            'value' => Auth::user()->attribute->language ?? '',
+            'value' => optional( Auth::user()->attribute )->language ?? '',
             'type' => 'select',
             'options' => Helper::kvToJsOptions( config( 'nexopos.languages' ) ),
             'description' => __( 'Choose the language for the current account.' ),

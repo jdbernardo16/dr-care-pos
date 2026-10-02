@@ -1,0 +1,164 @@
+<h2>POS Transaction UI: Loyverse vs Dr. Care</h2>
+<p class="subtitle">I've researched Loyverse's POS UI. Here's what I found compared to our current layout. Open this URL in your browser: <strong>http://localhost:57487</strong></p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Loyverse POS (simplified)</div>
+    <div class="mockup-body" style="padding: 12px; font-size: 13px; text-align: left;">
+      <div style="display:flex;gap:8px;min-height:300px;">
+        <div style="width:35%;background:#f8f9fa;border-radius:8px;padding:10px;">
+          <div style="font-weight:700;border-bottom:1px solid #ddd;padding-bottom:6px;">Ticket <span style="float:right;">⋮</span></div>
+          <div style="padding:8px 0;border-bottom:1px solid #eee;">
+            <div style="font-weight:600;">Coffee Latte</div>
+            <div style="display:flex;justify-content:space-between;color:#666;">
+              <span>× 2 <span style="color:#999;margin-left:4px;">$4.50</span></span>
+              <span><strong>$9.00</strong></span>
+            </div>
+          </div>
+          <div style="padding:8px 0;border-bottom:1px solid #eee;">
+            <div style="font-weight:600;">Bagel</div>
+            <div style="display:flex;justify-content:space-between;color:#666;">
+              <span>× 1 <span style="color:#999;margin-left:4px;">$3.50</span></span>
+              <span><strong>$3.50</strong></span>
+            </div>
+          </div>
+          <div style="padding:8px 0;border-bottom:1px solid #eee;">
+            <div style="font-weight:600;">Smoothie</div>
+            <div style="display:flex;justify-content:space-between;color:#666;">
+              <span>× 1 <span style="color:#999;margin-left:4px;">$5.00</span></span>
+              <span><strong>$5.00</strong></span>
+            </div>
+          </div>
+          <div style="margin-top:auto;padding:10px 0;border-top:2px solid #333;">
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;">
+              <span>Total</span><span>$17.50</span>
+            </div>
+          </div>
+          <button style="width:100%;margin-top:8px;background:#007aff;color:white;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;">Charge $17.50</button>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+            <span style="background:#007aff;color:white;padding:4px 12px;border-radius:16px;font-size:12px;">All Items</span>
+            <span style="background:#e9ecef;padding:4px 12px;border-radius:16px;font-size:12px;">Coffee</span>
+            <span style="background:#e9ecef;padding:4px 12px;border-radius:16px;font-size:12px;">Food</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div style="background:#f0f0f0;border-radius:8px;padding:12px;text-align:center;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div style="font-size:24px;margin-bottom:4px;">☕</div>
+              <div style="font-size:12px;font-weight:600;">Coffee</div>
+              <div style="font-size:11px;color:#666;">$4.50</div>
+            </div>
+            <div style="background:#f0f0f0;border-radius:8px;padding:12px;text-align:center;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div style="font-size:24px;margin-bottom:4px;">🥯</div>
+              <div style="font-size:12px;font-weight:600;">Bagel</div>
+              <div style="font-size:11px;color:#666;">$3.50</div>
+            </div>
+            <div style="background:#f0f0f0;border-radius:8px;padding:12px;text-align:center;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div style="font-size:24px;margin-bottom:4px;">🥤</div>
+              <div style="font-size:12px;font-weight:600;">Smoothie</div>
+              <div style="font-size:11px;color:#666;">$5.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Dr. Care POS (current - simplified)</div>
+    <div class="mockup-body" style="padding: 12px; font-size: 13px; text-align: left;">
+      <div style="display:flex;gap:8px;min-height:300px;">
+        <div style="width:50%;background:#f8f9fa;border-radius:8px;padding:10px;">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
+            <span style="border:1px solid #ddd;padding:3px 6px;border-radius:4px;">💬 Comments</span>
+            <span style="border:1px solid #ddd;padding:3px 6px;border-radius:4px;">⚖️ Taxes</span>
+            <span style="border:1px solid #ddd;padding:3px 6px;border-radius:4px;">🏷️ Coupons</span>
+            <span style="border:1px solid #ddd;padding:3px 6px;border-radius:4px;">🔧 Settings</span>
+            <span style="border:1px solid #ddd;padding:3px 6px;border-radius:4px;">➕ Product</span>
+          </div>
+          <div style="display:flex;font-weight:700;border-bottom:1px solid #ddd;padding-bottom:4px;font-size:11px;color:#666;">
+            <span style="flex:4;">PRODUCT</span>
+            <span style="flex:1;text-align:center;">QTY</span>
+            <span style="flex:1;text-align:right;">TOTAL</span>
+          </div>
+          <div style="padding:6px 0;border-bottom:1px solid #eee;display:flex;font-size:12px;">
+            <span style="flex:4;font-weight:600;">Coffee Latte</span>
+            <span style="flex:1;text-align:center;">2</span>
+            <span style="flex:1;text-align:right;">$9.00</span>
+          </div>
+          <div style="padding:6px 0;border-bottom:1px solid #eee;display:flex;font-size:12px;">
+            <span style="flex:4;font-weight:600;">Bagel</span>
+            <span style="flex:1;text-align:center;">1</span>
+            <span style="flex:1;text-align:right;">$3.50</span>
+          </div>
+          <div style="margin-top:8px;font-size:11px;">
+            <div style="display:flex;justify-content:space-between;"><span>Sub Total</span><span>$17.50</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Discount</span><span>$0.00</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Shipping</span><span>$0.00</span></div>
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;border-top:2px solid #333;padding-top:4px;margin-top:4px;">
+              <span>Total</span><span>$17.50</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-top:8px;">
+            <button style="background:#059669;color:white;border:none;border-radius:6px;padding:10px 4px;font-size:12px;font-weight:600;">Pay</button>
+            <button style="background:#0284c7;color:white;border:none;border-radius:6px;padding:10px 4px;font-size:12px;font-weight:600;">Hold</button>
+            <button style="background:#e5e7eb;color:#333;border:none;border-radius:6px;padding:10px 4px;font-size:12px;font-weight:600;">Disc%</button>
+            <button style="background:#e11d48;color:white;border:none;border-radius:6px;padding:10px 4px;font-size:12px;font-weight:600;">Void</button>
+          </div>
+        </div>
+        <div style="flex:1;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Key Differences I Noticed</h3>
+
+<div class="pros-cons" style="margin-top:12px;">
+  <div class="pros">
+    <h4>Loyverse strengths to consider:</h4>
+    <ul>
+      <li><strong>Cleaner cart layout</strong> — simpler item rows (no separate Qty/Total columns)</li>
+      <li><strong>Single "Charge" button</strong> — prominent, full-width, shows total amount</li>
+      <li><strong>Minimal header</strong> — no toolbar buttons cluttering the cart area</li>
+      <li><strong>Cart on the left</strong> — feels like a sidebar panel, products on right</li>
+      <li><strong>Category chips</strong> — pill-shaped filters at top of product area</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Things to preserve:</h4>
+    <ul>
+      <li>Comments, Taxes, Coupons — need to live somewhere accessible</li>
+      <li>Hold functionality — important for clinic workflow</li>
+      <li>Customer selection — tied to orders</li>
+      <li>Order type toggle (walk-in, delivery, etc.)</li>
+      <li>Discount and void capabilities</li>
+    </ul>
+  </div>
+</div>
+
+<h3>First question:</h3>
+<p class="subtitle">Which part of the transaction screen matters most to improve? Tap an option below.</p>
+
+<div class="options">
+  <div class="option" data-choice="cart-only" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>The Cart Panel</h3>
+      <p>Cleaner item rows, simplified totals, single prominent Charge button</p>
+    </div>
+  </div>
+  <div class="option" data-choice="full-layout" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Full Layout Redesign</h3>
+      <p>Both cart AND product grid — left cart panel, right products, minimal header</p>
+    </div>
+  </div>
+  <div class="option" data-choice="specific" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Specific Elements</h3>
+      <p>I want to pick and choose what to change (Charge button, item rows, header, etc.)</p>
+    </div>
+  </div>
+</div>

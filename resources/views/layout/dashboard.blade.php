@@ -14,7 +14,7 @@ $menus  =   app()->make( MenuService::class );
 $dateService  =   app()->make( DateService::class );
 
 if ( Auth::check() ) {
-    $theme  =   Auth::user()->attribute->theme ?: ns()->option->get( 'ns_default_theme', 'light' );
+    $theme  =   optional( Auth::user()->attribute )->theme ?: ns()->option->get( 'ns_default_theme', 'light' );
 } else {
     $theme  =   ns()->option->get( 'ns_default_theme', 'light' );
 }
@@ -24,6 +24,13 @@ if ( Auth::check() ) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dr Care">
+    <link rel="apple-touch-icon" href="/images/icons/apple-touch-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-touch-icon-180x180.png">
+    <link rel="manifest" href="{{ url( 'build/manifest.webmanifest' ) }}">
     <title>{{ App\Services\Helper::pageTitle( $title ?? __( 'Unnamed Page' ) ) }}</title>
     @include( 'layout._header-injection')
     @vite([
@@ -91,15 +98,6 @@ if ( Auth::check() ) {
                         @include( 'common.dashboard.with-title' )
                     @endif
                 </div>
-                <div class="p-2 text-xs flex justify-end text-gray-500">
-                    @if( $latestVersion = ns()->option->get( 'ns_latest_version' ) )
-                    <a href="https://my.nexopos.com/redirect/latest" target="_blank" class="hover:text-blue-400 ml-2 inline-block">
-                        {{ sprintf( __( 'Download NexoPOS %s' ), $latestVersion ) }}
-                    </a>
-                    @else
-                    {!! Hook::filter( 'ns-footer-signature', sprintf( __( 'You\'re using <a tager="_blank" href="%s" class="hover:text-blue-400 mx-1 inline-block">NexoPOS %s</a>' ), 'https://my.nexopos.com/en', config( 'nexopos.version' ) ) ) !!}
-                    @endif
-                </div>
             </div>
             @endif
         </div>
@@ -107,6 +105,7 @@ if ( Auth::check() ) {
     @section( 'layout.dashboard.footer' )
         @include( 'common.popups' )
         @include( 'common.dashboard-footer' )
+        <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/build/sw.js',{scope:'/'})})}</script>
     @show
 </body>
 </html>

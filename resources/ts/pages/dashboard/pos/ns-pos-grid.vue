@@ -1,28 +1,75 @@
 <template>
     <div id="pos-grid" class="flex-auto flex flex-col overflow-hidden">
         <div id="tools" class="flex pl-2" v-if="visibleSection === 'grid'">
-            <div @click="switchTo( 'cart' )" class="switch-cart flex cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 border-t border-r border-l">
-                <span>{{ __( 'Cart' ) }}</span>
-                <span v-if="order" class="products-count flex items-center justify-center text-sm rounded-full h-6 w-6 ml-1">{{ cartProducts.length }}</span>
+            <div
+                @click="switchTo('cart')"
+                class="switch-cart flex cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 border-t border-r border-l"
+            >
+                <span>{{ __("Cart") }}</span>
+                <span
+                    v-if="order"
+                    class="products-count flex items-center justify-center text-sm rounded-full h-6 w-6 ml-1"
+                    >{{ cartProducts.length }}</span
+                >
             </div>
-            <div @click="switchTo( 'grid' )" class="switch-grid cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 font-semibold">
-                {{ __( 'Products' ) }}
+            <div
+                @click="switchTo('grid')"
+                class="switch-grid cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 font-semibold"
+            >
+                {{ __("Products") }}
             </div>
         </div>
-        <div id="grid-container" class="rounded shadow  overflow-hidden flex-auto flex flex-col">
-            <div id="grid-header" class="p-2 border-b ">
-                <div class="border rounded flex  overflow-hidden">
-                    <button :title="__( 'Search for products.' )" @click="openSearchPopup()" class="w-10 h-10 border-r  outline-hidden">
-                        <i class="las la-search"></i>
-                    </button>
-                    <button :title="__( 'Toggle merging similar products.' )" @click="posToggleMerge()" :class="settings.ns_pos_items_merge ? 'pos-button-clicked' : ''" class="outline-hidden w-10 h-10 border-r ">
+        <div
+            id="grid-container"
+            class="rounded shadow overflow-hidden flex-auto flex flex-col"
+        >
+            <div id="grid-header" class="p-2 border-b flex items-center gap-2">
+                <div class="border rounded flex overflow-hidden flex-auto">
+                    <button
+                        :title="__('Toggle merging similar products.')"
+                        @click="posToggleMerge()"
+                        :class="
+                            settings.ns_pos_items_merge
+                                ? 'pos-button-clicked'
+                                : ''
+                        "
+                        class="outline-hidden w-14 h-14 border-r"
+                    >
                         <i class="las la-compress-arrows-alt"></i>
                     </button>
-                    <button :title="__( 'Toggle auto focus.' )" @click="options.ns_pos_force_autofocus = ! options.ns_pos_force_autofocus" :class="options.ns_pos_force_autofocus ? 'pos-button-clicked' : ''" class="outline-hidden w-10 h-10 border-r ">
-                        <i class="las la-barcode"></i>
+                    <button
+                        :title="scanMode ? __('Scanning barcode...') : __('Search by product name')"
+                        @click="scanMode = !scanMode"
+                        :class="scanMode ? 'bg-primary text-white' : ''"
+                        class="outline-hidden w-14 h-14 border-r cursor-pointer flex items-center justify-center"
+                    >
+                        <i class="las" :class="scanMode ? 'la-camera' : 'la-search'"></i>
                     </button>
-                    <input ref="search" v-model="barcode" type="text" class="flex-auto outline-hidden px-2 ">
+                    <input
+                        ref="search"
+                        v-model="barcode"
+                        type="text"
+                        :placeholder="scanMode ? __('Scan barcode...') : __('Search product...')"
+                        class="flex-auto outline-hidden px-2"
+                    />
+                    <button
+                        v-if="barcode.length > 0"
+                        :title="__('Clear search')"
+                        @click="clearSearch()"
+                        class="outline-hidden w-14 h-14 border-l cursor-pointer flex items-center justify-center"
+                    >
+                        <i class="las la-times text-xl"></i>
+                    </button>
                 </div>
+                <template v-if="false">
+                    <button
+                        :title="__('Search for products.')"
+                        @click="openSearchPopup()"
+                        class="cursor-pointer w-10 h-10 rounded-full bg-red-600 flex items-center justify-center outline-hidden flex-shrink-0"
+                    >
+                        <i class="las la-search text-white"></i>
+                    </button>
+                </template>
             </div>
             <div style="height: 0px">
                 <div v-if="isLoading" class="fade-in-entrance ns-loader">
@@ -31,37 +78,167 @@
             </div>
             <div id="grid-breadcrumb" class="p-2">
                 <ul class="flex">
-                    <li><a @click="loadCategories()" href="javascript:void(0)" class="px-3 ">{{ __( 'Home' ) }} </a> <i class="las la-angle-right"></i> </li>
-                    <li><a @click="loadCategories( bread )" v-for="bread of breadcrumbs" :key="bread.id" href="javascript:void(0)" class="px-3">{{ bread.name }} <i class="las la-angle-right"></i></a></li>
+                    <li>
+                        <a
+                            @click="loadCategories()"
+                            href="javascript:void(0)"
+                            class="px-3"
+                            >{{ __("Home") }}
+                        </a>
+                        <i class="las la-angle-right"></i>
+                    </li>
+                    <li>
+                        <a
+                            @click="loadCategories(bread)"
+                            v-for="bread of breadcrumbs"
+                            :key="bread.id"
+                            href="javascript:void(0)"
+                            class="px-3"
+                            >{{ bread.name }} <i class="las la-angle-right"></i
+                        ></a>
+                    </li>
                 </ul>
             </div>
-            
-            <div v-if="options.ns_pos_enable_pinned_products && pinnedProducts.length > 0" id="pinned-products">
+
+            <div
+                v-if="
+                    options.ns_pos_enable_pinned_products &&
+                    pinnedProducts.length > 0
+                "
+                id="pinned-products"
+            >
                 <div class="overflow-x-hidden pinned-wrapper">
-                    <div class="shadow-sm grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 divide-x-1 divide-y-1 divide-solid divide-pos-button-edge flex-nowrap flex items-center">
-                        <div @click="addToTheCart( product )" v-for="product of pinnedProducts" :key="product.id" 
-                            :class="options.ns_pos_show_preview_pinned_products ? 'h-36' : 'h-20 small-pinned-product'"
-                            class="cursor-pointer flex flex-col items-center relativ justify-center overflow-hidden relative flex-shrink-0">
-                            <div v-if="options.ns_pos_show_preview_pinned_products" class="h-full w-full flex items-center justify-center overflow-hidden">
-                                <img v-if="product.galleries && product.galleries.filter( i => i.featured ).length > 0" :src="product.galleries.filter( i => i.featured )[0].url" class="object-cover h-full" :alt="product.name"/>
-                                <img v-else-if="hasNoFeatured( product )" :src="product.galleries[0].url" class="object-cover h-full" :alt="product.name"/>
-                                <i v-else="! product.galleries || product.galleries.filter( i => i.featured ).length === 0" class="las la-image text-6xl"></i>
+                    <div
+                        class="shadow-sm grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 divide-x-1 divide-y-1 divide-solid divide-pos-button-edge flex-nowrap flex items-center"
+                    >
+                        <div
+                            @click="
+                                !isOutOfStock(product) && addToTheCart(product)
+                            "
+                            v-for="product of pinnedProducts"
+                            :key="product.id"
+                            :class="[
+                                options.ns_pos_show_preview_pinned_products
+                                    ? 'h-36'
+                                    : 'h-20 small-pinned-product',
+                                isOutOfStock(product)
+                                    ? 'ns-out-of-stock'
+                                    : 'cursor-pointer',
+                            ]"
+                            class="flex flex-col items-center relativ justify-center overflow-hidden relative flex-shrink-0"
+                        >
+                            <div
+                                v-if="isOutOfStock(product)"
+                                class="absolute top-0 left-0 w-full h-5 flex items-center justify-center out-of-stock-badge z-20"
+                            >
+                                <span
+                                    class="text-xs px-1.5 py-0.5 rounded-sm font-bold"
+                                    >{{ __("OOS") }}</span
+                                >
+                            </div>
+                            <div
+                                v-if="
+                                    options.ns_pos_show_preview_pinned_products
+                                "
+                                class="h-full w-full flex items-center justify-center overflow-hidden"
+                            >
+                                <img
+                                    v-if="
+                                        product.galleries &&
+                                        product.galleries.filter(
+                                            (i) => i.featured,
+                                        ).length > 0
+                                    "
+                                    :src="
+                                        product.galleries.filter(
+                                            (i) => i.featured,
+                                        )[0].url
+                                    "
+                                    class="object-cover h-full w-full"
+                                    :alt="product.name"
+                                />
+                                <img
+                                    v-else-if="hasNoFeatured(product)"
+                                    :src="product.galleries[0].url"
+                                    class="object-cover h-full w-full"
+                                    :alt="product.name"
+                                />
+                                <svg
+                                    v-else="
+                                        !product.galleries ||
+                                        product.galleries.filter(
+                                            (i) => i.featured,
+                                        ).length === 0
+                                    "
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 32 32"
+                                    class="w-16 h-16 opacity-10 fill-current"
+                                >
+                                    <path
+                                        d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"
+                                    />
+                                </svg>
                             </div>
                             <div class="w-full absolute z-10 -bottom-10">
-                                <div class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2">
-                                    <h3 class="text-sm text-center w-full">{{ product.name }}</h3>
-                                    <template v-if="product.unit_quantities && product.unit_quantities.length === 1">
-                                        <template v-if="options.ns_pos_vat === 'disabled'">
-                                            <span class="text-sm" v-if="product.unit_quantities && product.unit_quantities.length === 1">
-                                                {{ nsCurrency( product.unit_quantities[0].sale_price ) }}
+                                <div
+                                    class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2"
+                                >
+                                    <h3 class="text-lg text-center w-full">
+                                        {{ product.name }}
+                                    </h3>
+                                    <template
+                                        v-if="
+                                            product.unit_quantities &&
+                                            product.unit_quantities.length === 1
+                                        "
+                                    >
+                                        <template
+                                            v-if="
+                                                options.ns_pos_vat ===
+                                                'disabled'
+                                            "
+                                        >
+                                            <span
+                                                class="text-lg"
+                                                v-if="
+                                                    product.unit_quantities &&
+                                                    product.unit_quantities
+                                                        .length === 1
+                                                "
+                                            >
+                                                {{
+                                                    nsCurrency(
+                                                        product
+                                                            .unit_quantities[0]
+                                                            .sale_price,
+                                                    )
+                                                }}
                                             </span>
                                         </template>
                                         <template v-else>
-                                            <span v-if="options.ns_pos_prefered_price === 'gross_prices'" class="text-sm">
-                                                {{ nsCurrency( product.unit_quantities[0].sale_price_gross ) }}
+                                            <span
+                                                v-if="
+                                                    options.ns_pos_prefered_price ===
+                                                    'gross_prices'
+                                                "
+                                                class="text-lg"
+                                            >
+                                                {{
+                                                    nsCurrency(
+                                                        product
+                                                            .unit_quantities[0]
+                                                            .sale_price_gross,
+                                                    )
+                                                }}
                                             </span>
-                                            <span v-else class="text-sm">
-                                                {{ nsCurrency( product.unit_quantities[0].sale_price_net ) }}
+                                            <span v-else class="text-lg">
+                                                {{
+                                                    nsCurrency(
+                                                        product
+                                                            .unit_quantities[0]
+                                                            .sale_price_net,
+                                                    )
+                                                }}
                                             </span>
                                         </template>
                                     </template>
@@ -72,56 +249,142 @@
                 </div>
             </div>
             <div id="grid-items" class="overflow-y-auto h-full flex-col flex">
-                <div v-if="hasCategories" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    <div @click="loadCategories( category )" v-for="category of categories" :key="category.id" 
-                        class="cell-item w-full h-36 cursor-pointer border flex flex-col items-center justify-center overflow-hidden relative">
-                        <div class="h-full w-full flex items-center justify-center">
-                            <img v-if="category.preview_url" :src="category.preview_url" class="object-cover h-full" :alt="category.name">
-                            <i class="las la-image text-6xl" v-if="! category.preview_url"></i>
+                <div
+                    v-if="hasCategories"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                >
+                    <div
+                        @click="loadCategories(category)"
+                        v-for="category of categories"
+                        :key="category.id"
+                        class="cell-item w-full h-36 cursor-pointer border flex items-center justify-center overflow-hidden relative"
+                    >
+                        <div
+                            v-if="category.preview_url"
+                            class="w-full h-full rounded-lg border-2 border-box-edge shadow-xs flex items-center justify-center overflow-hidden bg-white"
+                        >
+                            <img
+                                :src="category.preview_url"
+                                class="object-contain h-full w-full"
+                                :alt="category.name"
+                            />
                         </div>
-                        <div class="w-full absolute z-10 -bottom-10">
-                            <div class="cell-item-label relative w-full flex items-center justify-center -top-10 h-20 py-2">
-                                <h3 class="text-sm font-bold py-2 text-center">{{ category.name }}</h3>
-                            </div>
+                        <svg
+                            v-if="!category.preview_url"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 32 32"
+                            class="w-16 h-16 opacity-10 fill-current"
+                        >
+                            <path
+                                d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"
+                            />
+                        </svg>
+                        <div
+                            class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                            style="background: rgb(255 255 255 / 0.85)"
+                        >
+                            <h3 class="text-sm font-bold text-center px-3">
+                                {{ category.name }}
+                            </h3>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="! hasCategories && ! hasProducts && ! isLoading" class="h-full w-full flex flex-col items-center justify-center">
+                <div
+                    v-if="!hasCategories && !hasProducts && !isLoading"
+                    class="h-full w-full flex flex-col items-center justify-center"
+                >
                     <i class="las la-frown-open text-8xl text-font"></i>
                     <p class="w-1/2 md:w-2/3 text-center text-font">
-                        {{ __( 'Looks like there is either no products and no categories. How about creating those first to get started ?' ) }}
+                        {{
+                            __(
+                                "Looks like there is either no products and no categories. How about creating those first to get started ?",
+                            )
+                        }}
                     </p>
-                    <br>
-                    <ns-link target="blank" type="info" :href="createCategoryUrl">{{ __( 'Create Categories' ) }}</ns-link>
+                    <br />
+                    <ns-link
+                        target="blank"
+                        type="info"
+                        :href="createCategoryUrl"
+                        >{{ __("Create Categories") }}</ns-link
+                    >
                 </div>
 
-                <div  v-if="! hasCategories" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    <div @click="addToTheCart( product )" v-for="product of products" :key="product.id" 
-                        class="cell-item w-full h-36 cursor-pointer border flex flex-col items-center justify-center overflow-hidden relative">
-                        <div class="h-full w-full flex items-center justify-center overflow-hidden">
-                            <img v-if="product.galleries && product.galleries.filter( i => i.featured ).length > 0" :src="product.galleries.filter( i => i.featured )[0].url" class="object-cover h-full" :alt="product.name"/>
-                            <img v-else-if="hasNoFeatured( product )" :src="product.galleries[0].url" class="object-cover h-full" :alt="product.name"/>
-                            <i v-else="! product.galleries || product.galleries.filter( i => i.featured ).length === 0" class="las la-image text-6xl"></i>
+                <div
+                    v-if="!hasCategories"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                >
+                    <div
+                        @click="!isOutOfStock(product) && addToTheCart(product)"
+                        v-for="product of products"
+                        :key="product.id"
+                        :class="[
+                            'cell-item w-full h-36 border flex flex-col items-center justify-center overflow-hidden relative',
+                            isOutOfStock(product)
+                                ? 'ns-out-of-stock'
+                                : 'cursor-pointer',
+                        ]"
+                    >
+                        <div
+                            v-if="isOutOfStock(product)"
+                            class="absolute top-0 left-0 w-full h-7 flex items-center justify-center out-of-stock-badge z-20"
+                        >
+                            <span
+                                class="text-sm px-2 py-0.5 rounded-sm font-bold"
+                                >{{ __("Out of Stock") }}</span
+                            >
+                        </div>
+                        <div
+                            class="h-full w-full flex items-center justify-center overflow-hidden"
+                        >
+                            <img
+                                v-if="
+                                    product.galleries &&
+                                    product.galleries.filter((i) => i.featured)
+                                        .length > 0
+                                "
+                                :src="
+                                    product.galleries.filter(
+                                        (i) => i.featured,
+                                    )[0].url
+                                "
+                                class="object-contain h-full w-full"
+                                :alt="product.name"
+                            />
+                            <img
+                                v-else-if="hasNoFeatured(product)"
+                                :src="product.galleries[0].url"
+                                class="object-contain h-full w-full"
+                                :alt="product.name"
+                            />
+                            <svg
+                                v-else="
+                                    !product.galleries ||
+                                    product.galleries.filter((i) => i.featured)
+                                        .length === 0
+                                "
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 32 32"
+                                class="w-16 h-16 opacity-10 fill-current"
+                            >
+                                <path
+                                    d="M 2 5 L 2 27 L 30 27 L 30 5 Z M 4 7 L 28 7 L 28 20.90625 L 22.71875 15.59375 L 22 14.875 L 17.46875 19.40625 L 11.71875 13.59375 L 11 12.875 L 4 19.875 Z M 24 9 C 22.894531 9 22 9.894531 22 11 C 22 12.105469 22.894531 13 24 13 C 25.105469 13 26 12.105469 26 11 C 26 9.894531 25.105469 9 24 9 Z M 11 15.71875 L 20.1875 25 L 4 25 L 4 22.71875 Z M 22 17.71875 L 28 23.71875 L 28 25 L 23.03125 25 L 18.875 20.8125 Z"
+                                />
+                            </svg>
                         </div>
                         <div class="w-full absolute z-10 -bottom-10">
-                            <div class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2">
-                                <h3 class="text-sm text-center w-full">{{ product.name }}</h3>
-                                <template v-if="product.unit_quantities && product.unit_quantities.length === 1">
-                                    <template v-if="options.ns_pos_vat === 'disabled'">
-                                        <span class="text-sm" v-if="product.unit_quantities && product.unit_quantities.length === 1">
-                                            {{ nsCurrency( product.unit_quantities[0].sale_price ) }}
-                                        </span>
+                            <div
+                                class="cell-item-label relative w-full flex flex-col items-center justify-center -top-10 h-20 p-2"
+                            >
+                                <h3 class="text-lg text-center w-full">
+                                    {{ product.name }}
+                                </h3>
+                                <span class="text-sm text-fontcolor-soft">
+                                    <template v-if="product.unit_quantities && product.unit_quantities.length > 0">
+                                        {{ product.unit_quantities[0].unit?.name || __('Unit') }}: {{ totalQuantity(product) }}
                                     </template>
-                                    <template v-else>
-                                        <span v-if="options.ns_pos_prefered_price === 'gross_prices'" class="text-sm">
-                                            {{ nsCurrency( product.unit_quantities[0].sale_price_gross ) }}
-                                        </span>
-                                        <span v-else class="text-sm">
-                                            {{ nsCurrency( product.unit_quantities[0].sale_price_net ) }}
-                                        </span>
-                                    </template>
-                                </template>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -130,25 +393,27 @@
         </div>
     </div>
 </template>
-<script >
-import { nsHttpClient, nsSnackBar } from '../../../bootstrap'
+<script>
+import { nsHttpClient, nsSnackBar } from "../../../bootstrap";
 import switchTo from "~/libraries/pos-section-switch";
-import nsPosSearchProductVue from '~/popups/ns-pos-search-product.vue';
-import { __ } from '~/libraries/lang';
-import { nsCurrency, nsRawCurrency } from '~/filters/currency';
+import nsPosSearchProductVue from "~/popups/ns-pos-search-product.vue";
+import { __ } from "~/libraries/lang";
+import { nsCurrency, nsRawCurrency } from "~/filters/currency";
 
 export default {
-    name: 'ns-pos-grid',
+    name: "ns-pos-grid",
     data() {
         return {
-            items: Array.from({length: 1000}, (_, index) => ({ data: '#' + index })),
+            items: Array.from({ length: 1000 }, (_, index) => ({
+                data: "#" + index,
+            })),
             products: [],
             pinnedProducts: [],
             cartProductsSubscribe: null,
             cartProducts: [],
             categories: [],
             breadcrumbs: [],
-            barcode: '',
+            barcode: "",
             previousCategory: null,
             order: null,
             visibleSection: null,
@@ -163,9 +428,10 @@ export default {
             interval: null,
             searchTimeout: null,
             gridItemsWidth: 0,
-            gridItemsHeight:0,
+            gridItemsHeight: 0,
             isLoading: false,
-        }
+            scanMode: false,
+        };
     },
     computed: {
         hasCategories() {
@@ -176,82 +442,91 @@ export default {
         },
         createCategoryUrl() {
             // link to create category defined on OrdersController.
-            return POS.settings.getValue().urls.categories_url; 
-        }
+            return POS.settings.getValue().urls.categories_url;
+        },
     },
     watch: {
         options: {
             handler() {
-                if ( this.options.ns_pos_force_autofocus ) {
-                    clearTimeout( this.searchTimeout );
+                if (this.options.ns_pos_force_autofocus) {
+                    clearTimeout(this.searchTimeout);
 
-                    this.searchTimeout  =   setTimeout( () => {
-                        this.submitSearch( this.barcode );
-                    }, 200 );
+                    this.searchTimeout = setTimeout(() => {
+                        this.submitSearch(this.barcode);
+                    }, 200);
                 }
             },
-            deep: true
+            deep: true,
         },
         barcode() {
-            if ( this.options.ns_pos_force_autofocus ) {
-                clearTimeout( this.searchTimeout );
+            clearTimeout(this.searchTimeout);
 
-                this.searchTimeout  =   setTimeout( () => {
-                    this.submitSearch( this.barcode );
-                }, 200 );
-            }
-        }
+            this.searchTimeout = setTimeout(() => {
+                this.submitSearch(this.barcode);
+            }, 200);
+        },
+        scanMode() {
+            this.barcode = '';
+            this.$refs.search.focus();
+        },
     },
     mounted() {
         this.loadCategories();
 
-        this.settingsSubscriber         =   POS.settings.subscribe( settings => {
-            this.settings               =   settings;
+        this.settingsSubscriber = POS.settings.subscribe((settings) => {
+            this.settings = settings;
             this.$forceUpdate();
         });
 
-        this.optionsSubscriber          =   POS.options.subscribe( options => {
-            this.options                =   options;
+        this.optionsSubscriber = POS.options.subscribe((options) => {
+            this.options = options;
             this.$forceUpdate();
         });
 
-        this.breadcrumbsSubsribe        =   POS.breadcrumbs.subscribe( ( breadcrumbs ) => {
-            this.breadcrumbs            =   breadcrumbs;
+        this.breadcrumbsSubsribe = POS.breadcrumbs.subscribe((breadcrumbs) => {
+            this.breadcrumbs = breadcrumbs;
             this.$forceUpdate();
         });
-        this.visibleSectionSubscriber   =   POS.visibleSection.subscribe( section => {
-            this.visibleSection      =   section;
+        this.visibleSectionSubscriber = POS.visibleSection.subscribe(
+            (section) => {
+                this.visibleSection = section;
+                this.$forceUpdate();
+            },
+        );
+
+        this.cartProductsSubscribe = POS.products.subscribe((products) => {
+            this.cartProducts = products;
             this.$forceUpdate();
         });
 
-        this.cartProductsSubscribe  =   POS.products.subscribe( products => {
-            this.cartProducts              =   products;
-            this.$forceUpdate();
-        });
+        this.orderSubscription = POS.order.subscribe(
+            (order) => (this.order = order),
+        );
 
-        this.orderSubscription      =   POS.order.subscribe( order => this.order = order );
-
-        this.interval   =   setInterval( () => this.checkFocus(), 500 );
+        this.interval = setInterval(() => this.checkFocus(), 500);
 
         /**
          * let's register hotkeys
          */
-        for( let shortcut in nsShortcuts ) {
+        for (let shortcut in nsShortcuts) {
             /**
              * let's declare only shortcuts that
              * works on the pos grid and that doesn't
              * expect any popup to be visible
              */
-            if ([
-                    'ns_pos_keyboard_quick_search',
-                ].includes( shortcut ) ) {
+            if (["ns_pos_keyboard_quick_search"].includes(shortcut)) {
                 nsHotPress
-                    .create( 'search-popup' )
-                    .whenNotVisible([ '.is-popup', '#product-search' ])
-                    .whenPressed( nsShortcuts[ shortcut ] !== null ? nsShortcuts[ shortcut ].join( '+' ) : null, ( event ) => {
-                        event.preventDefault();
-                        this.openSearchPopup();
-                });
+                    .create("search-popup")
+                    .whenNotVisible([".is-popup", "#product-search"])
+                    .whenPressed(
+                        nsShortcuts[shortcut] !== null
+                            ? nsShortcuts[shortcut].join("+")
+                            : null,
+                        (event) => {
+                            event.preventDefault();
+                            this.openSearchPopup();
+                        },
+                    );
             }
 
             /**
@@ -259,19 +534,21 @@ export default {
              * works on the pos grid and that doesn't
              * expect any popup to be visible
              */
-            if ([
-                    'ns_pos_keyboard_toggle_merge',
-                ].includes( shortcut ) ) {
+            if (["ns_pos_keyboard_toggle_merge"].includes(shortcut)) {
                 nsHotPress
-                    .create( 'toggle-merge' )
-                    .whenNotVisible([ '.is-popup' ])
-                    .whenPressed( nsShortcuts[ shortcut ] !== null ? nsShortcuts[ shortcut ].join( '+' ) : null, ( event ) => {
-                        event.preventDefault();
-                        this.posToggleMerge();
-                });
+                    .create("toggle-merge")
+                    .whenNotVisible([".is-popup"])
+                    .whenPressed(
+                        nsShortcuts[shortcut] !== null
+                            ? nsShortcuts[shortcut].join("+")
+                            : null,
+                        (event) => {
+                            event.preventDefault();
+                            this.posToggleMerge();
+                        },
+                    );
             }
         }
-
     },
     unmounted() {
         this.orderSubscription.unsubscribe();
@@ -281,33 +558,47 @@ export default {
         this.optionsSubscriber.unsubscribe();
         this.cartProductsSubscribe.unsubscribe();
 
-        clearInterval( this.interval );
+        clearInterval(this.interval);
 
-        nsHotPress.destroy( 'search-popup' );
-        nsHotPress.destroy( 'toggle-merge' );
+        nsHotPress.destroy("search-popup");
+        nsHotPress.destroy("toggle-merge");
     },
     methods: {
-        __, 
+        __,
         nsCurrency,
+
+        isOutOfStock(product) {
+            if (
+                !product.unit_quantities ||
+                product.unit_quantities.length === 0
+            ) {
+                return true;
+            }
+            return product.unit_quantities.every(
+                (q) => parseFloat(q.quantity) <= 0,
+            );
+        },
 
         switchTo,
 
         posToggleMerge() {
-            POS.set( 'ns_pos_items_merge', ! this.settings.ns_pos_items_merge );
+            POS.set("ns_pos_items_merge", !this.settings.ns_pos_items_merge);
         },
 
         /**
          * @deprecated
          */
         computeGridWidth() {
-            if ( document.getElementById( 'grid-items' ) !== null ) {
-                this.gridItemsWidth     =   document.getElementById( 'grid-items' ).offsetWidth;
-                this.gridItemsHeight    =   document.getElementById( 'grid-items' ).offsetHeight;
+            if (document.getElementById("grid-items") !== null) {
+                this.gridItemsWidth =
+                    document.getElementById("grid-items").offsetWidth;
+                this.gridItemsHeight =
+                    document.getElementById("grid-items").offsetHeight;
             }
         },
 
         cellSizeAndPositionGetter(item, index) {
-            const responsive    =   {
+            const responsive = {
                 xs: {
                     width: this.gridItemsWidth / 2,
                     items: 2,
@@ -332,166 +623,243 @@ export default {
                     width: this.gridItemsWidth / 6,
                     items: 6,
                     height: 150,
-                }
-            }
+                },
+            };
 
-            const wrapperWidth  =   responsive[ POS.responsive.screenIs ].width;
-            const wrapperHeight =   responsive[ POS.responsive.screenIs ].height;
-            const scrollWidth   =   0; // ( 50 / responsive[ POS.responsive.screenIs ].items );
+            const wrapperWidth = responsive[POS.responsive.screenIs].width;
+            const wrapperHeight = responsive[POS.responsive.screenIs].height;
+            const scrollWidth = 0; // ( 50 / responsive[ POS.responsive.screenIs ].items );
 
             return {
                 width: wrapperWidth - scrollWidth,
                 height: wrapperHeight,
-                x: ( ( index % responsive[ POS.responsive.screenIs ].items ) * ( wrapperWidth ) ) - scrollWidth,
-                y: parseInt( index / responsive[ POS.responsive.screenIs ].items ) * wrapperHeight
-            }
+                x:
+                    (index % responsive[POS.responsive.screenIs].items) *
+                        wrapperWidth -
+                    scrollWidth,
+                y:
+                    parseInt(
+                        index / responsive[POS.responsive.screenIs].items,
+                    ) * wrapperHeight,
+            };
         },
 
         openSearchPopup() {
-            Popup.show( nsPosSearchProductVue );
+            Popup.show(
+                nsPosSearchProductVue,
+                {},
+                { popupClass: "w-full h-full max-w-full max-h-full" },
+            );
         },
 
-        hasNoFeatured( product ) {
-            return product.galleries && product.galleries.length > 0 && product.galleries.filter( i => i.featured ).length === 0;
+        totalQuantity(product) {
+            if (
+                !product.unit_quantities ||
+                product.unit_quantities.length === 0
+            ) {
+                return 0;
+            }
+            const first = product.unit_quantities[0];
+            return parseFloat(first.quantity) || 0;
         },
 
-        submitSearch( value ) {
-            if ( value.length > 0 ) {
-                const url   =   nsHooks.applyFilters( 'ns-pos-submit-search-url', `/api/products/search/using-barcode/${ value }`, value );
+        hasNoFeatured(product) {
+            return (
+                product.galleries &&
+                product.galleries.length > 0 &&
+                product.galleries.filter((i) => i.featured).length === 0
+            );
+        },
 
-                nsHttpClient.get( url )
-                    .subscribe({
-                        next: result => {
-                            this.barcode     =   '';
-                            const product    =   {};
+        submitSearch(value) {
+            if (value.length <= 0) return;
 
-                            product.name                    =   result.product.name;
-                            product.id                      =   result.product.id;
-                            product.product_type            =   result.product.product_type;
-                            product.rate                    =   result.product.rate;
-                            product.tax_group_id            =   result.product.tax_group_id;
-                            product.tax_type                =   result.product.tax_type;
-                            product.unit_id                 =   result.unit.id;
-                            product.unit_price              =   result.unitQuantity.sale_price;
-                            product.price_gross             =   result.unitQuantity.sale_price_gross;
-                            product.price_net               =   result.unitQuantity.sale_price_net;
-                            product.unit_name               =   result.unit.name;
-                            
-                            // Check if this is a scale barcode with embedded data
-                            if ( result.scale ) {
-                                const scaleData = result.scale;
-                                
-                                // The backend already sets the selectedUnitQuantity based on PLU
-                                // We just need to set the quantity or price based on scale type
-                                
-                                // Set quantity or price based on scale barcode type
-                                if ( scaleData.type === 'weight' ) {
-                                    // For weight-based scales, set the quantity
-                                    product.quantity = scaleData.value;
-                                    
-                                    // Show notification with unit name
-                                    const unitName = scaleData.unit?.name || 'kg';
-                                    nsSnackBar.info( 
-                                        __( 'Scale barcode detected: {weight} {unit}' )
-                                            .replace( '{weight}', scaleData.value.toFixed(3) )
-                                            .replace( '{unit}', unitName )
-                                    );
-                                } else if ( scaleData.type === 'price' ) {
-                                    // For price-based scales, we need to calculate quantity
-                                    // based on the price and unit price
-                                    const unitPrice = result.product.selectedUnitQuantity?.sale_price || 
-                                                     result.product.unit_quantities[0]?.sale_price || 0;
-                                    if ( unitPrice > 0 ) {
-                                        product.quantity = scaleData.value / unitPrice;
-                                    }
-                                    
-                                    // Show notification
-                                    nsSnackBar.info( 
-                                        __( 'Scale barcode detected: {price}' )
-                                            .replace( '{price}', this.nsCurrency( scaleData.value ) )
-                                    );
-                                }
-                            }
-                            
-                            console.log( JSON.parse( JSON.stringify( product ) ) );
-                            POS.addToCart( product );
-                        },
-                        error: ( error ) => {
-                            this.barcode     =   '';
-                            nsSnackBar.error( error.message );
+            if (this.scanMode) {
+                // Barcode mode — single product lookup
+                const url = nsHooks.applyFilters(
+                    "ns-pos-submit-search-url",
+                    `/api/products/search/using-barcode/${value}`,
+                    value,
+                );
+                nsHttpClient.get(url).subscribe({
+                    next: (result) => {
+                        this.barcode = "";
+                        this.addScannedProductToCart(result);
+                    },
+                    error: (error) => {
+                        this.barcode = "";
+                        nsSnackBar.error(error.message);
+                    },
+                });
+            } else {
+                // Search mode — product list lookup
+                nsHttpClient.post("/api/products/search", {
+                    search: value,
+                    limit: 20,
+                }).subscribe({
+                    next: (result) => {
+                        // ignore stale responses if the search value changed
+                        // or the search was cleared in the meantime
+                        if (this.barcode !== value) return;
+
+                        if (Array.isArray(result) && result.length > 0) {
+                            // Populate grid with search results
+                            this.products = result;
+                            this.categories = [];
+                        } else {
+                            nsSnackBar.info(__("No products match your search."));
                         }
-                    })
+                    },
+                    error: (error) => {
+                        nsSnackBar.error(error.message);
+                    },
+                });
             }
         },
 
+        addScannedProductToCart(result) {
+            const product = {};
+
+            const unitQuantity =
+                result.unitQuantity ||
+                result.product.selectedUnitQuantity ||
+                result.product.unit_quantities?.[0];
+            const unit = result.unit || unitQuantity?.unit;
+
+            product.name = result.product.name;
+            product.id = result.product.id;
+            product.product_type = result.product.product_type;
+            product.rate = result.product.rate;
+            product.tax_group_id = result.product.tax_group_id;
+            product.tax_type = result.product.tax_type;
+            product.unit_id = unit.id;
+            product.unit_price = unitQuantity.sale_price;
+            product.price_gross = unitQuantity.sale_price_gross;
+            product.price_net = unitQuantity.sale_price_net;
+            product.unit_name = unit.name;
+
+            // Handle scale barcodes (existing logic)
+            if (result.scale) {
+                const scaleData = result.scale;
+                if (scaleData.type === "weight") {
+                    product.quantity = scaleData.value;
+                    const unitName = scaleData.unit?.name || "kg";
+                    nsSnackBar.info(
+                        __("Scale barcode detected: {weight} {unit}")
+                            .replace("{weight}", scaleData.value.toFixed(3))
+                            .replace("{unit}", unitName),
+                    );
+                } else if (scaleData.type === "price") {
+                    const unitPrice =
+                        result.product.selectedUnitQuantity?.sale_price ||
+                        result.product.unit_quantities[0]?.sale_price || 0;
+                    if (unitPrice > 0) {
+                        product.quantity = scaleData.value / unitPrice;
+                    }
+                    nsSnackBar.info(
+                        __("Scale barcode detected: {price}")
+                            .replace("{price}", this.nsCurrency(scaleData.value)),
+                    );
+                }
+            }
+
+            POS.addToCart(product);
+        },
+
         checkFocus() {
-            if ( this.options.ns_pos_force_autofocus ) {
-                const popup     =   document.querySelectorAll( '.is-popup' );
+            if (this.options.ns_pos_force_autofocus) {
+                const popup = document.querySelectorAll(".is-popup");
 
                 /**
                  * We don't force focus if
                  * any popup is visible.
                  */
-                if ( popup.length === 0 ) {
+                if (popup.length === 0) {
                     this.$refs.search.focus();
                 }
             }
         },
 
-        loadCategories( parent ) {
-            this.isLoading  =   true;
-            nsHttpClient.get( `/api/categories/pos/${ parent ? parent.id : ''}` )
+        loadCategories(parent) {
+            // Clear any leftover search text when navigating categories,
+            // so the grid always reflects the category view.
+            this.barcode = '';
+            this.isLoading = true;
+            nsHttpClient
+                .get(`/api/categories/pos/${parent ? parent.id : ""}`)
                 .subscribe({
-                    next: (result ) => {
-                        this.categories         =   result.categories;
-                        this.products           =   result.products;
-                        this.pinnedProducts     =   result.pinnedProducts || [];
-                        this.previousCategory   =   result.previousCategory;
-                        this.currentCategory    =   result.currentCategory;
-                        this.updateBreadCrumb( this.currentCategory );
-                        this.isLoading  =   false;
+                    next: (result) => {
+                        this.categories = result.categories;
+                        this.products = result.products;
+                        this.pinnedProducts = result.pinnedProducts || [];
+                        this.previousCategory = result.previousCategory;
+                        this.currentCategory = result.currentCategory;
+                        this.updateBreadCrumb(this.currentCategory);
+                        this.isLoading = false;
                     },
-                    error: ( error ) => {
-                        this.isLoading  =   false;
-                        return nsSnackBar.error( __( 'An unexpected error occurred.' ) );
-                    }
+                    error: (error) => {
+                        this.isLoading = false;
+                        return nsSnackBar.error(
+                            __("An unexpected error occurred."),
+                        );
+                    },
                 });
         },
 
-        updateBreadCrumb( parent ) {
-            if ( parent ) {
-                const index     =   this.breadcrumb.filter( bread => bread.id === parent.id );
+        updateBreadCrumb(parent) {
+            if (parent) {
+                const index = this.breadcrumb.filter(
+                    (bread) => bread.id === parent.id,
+                );
 
                 /**
                  * this means, we're trying to navigate
                  * through something that has already been
                  * added to the breadcrumb
                  */
-                if ( index.length > 0 ) {
-                    let allow       =   true;
-                    const prior     =   this.breadcrumb.filter( bread => {
-                        if ( bread.id === index[0].id && allow ) {
-                            allow   =   false;
+                if (index.length > 0) {
+                    let allow = true;
+                    const prior = this.breadcrumb.filter((bread) => {
+                        if (bread.id === index[0].id && allow) {
+                            allow = false;
                             return true;
                         }
 
                         return allow;
                     });
-                    this.breadcrumb     =   prior;
+                    this.breadcrumb = prior;
                 } else {
-                    this.breadcrumb.push( parent );
+                    this.breadcrumb.push(parent);
                 }
-
             } else {
-                this.breadcrumb     =   [];
+                this.breadcrumb = [];
             }
 
-            POS.breadcrumbs.next( this.breadcrumb );
+            POS.breadcrumbs.next(this.breadcrumb);
         },
 
-        addToTheCart( product ) {
-            POS.addToCart( product );
-        }
-    }
-}
+        async addToTheCart(product) {
+            const options = POS.options.getValue();
+            const originalValue = options.ns_pos_show_quantity;
+            options.ns_pos_show_quantity = false;
+            POS.defineOptions(options);
+            await POS.addToCart(product);
+            options.ns_pos_show_quantity = originalValue;
+            POS.defineOptions(options);
+
+            // Keep the search results visible after adding a product,
+            // so the cashier can add multiple products from the same search.
+            // The search is cleared manually via the clear button.
+            if (this.barcode.length === 0) {
+                this.loadCategories(this.currentCategory);
+            }
+        },
+
+        clearSearch() {
+            this.barcode = '';
+            this.loadCategories(this.currentCategory);
+            this.$refs.search.focus();
+        },
+    },
+};
 </script>

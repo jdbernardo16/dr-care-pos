@@ -12,8 +12,8 @@ const authFile = path.join(import.meta.dirname, '.auth/user.json');
 setup('authenticate as admin', async ({ page, request }) => {
 
     const username = process.env.TEST_USERNAME || 'admin';
-    const password = process.env.TEST_PASSWORD || 'admin123';
-    const baseUrl  = process.env.APP_URL || 'https://nexocloud-v6.dev';
+    const password = process.env.TEST_PASSWORD || 'password';
+    const baseUrl  = process.env.APP_URL || 'http://localhost:8000';
 
     /**
      * 1 – Navigate to the sign-in page and fill the Vue-rendered form.

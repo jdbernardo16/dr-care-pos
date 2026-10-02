@@ -6,6 +6,7 @@ use App\Models\Migration;
 use Exception;
 use Illuminate\Database\Migrations\Migration as MigrationsMigration;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class UpdateService
@@ -24,7 +25,7 @@ class UpdateService
          */
         $migrations = collect( [] );
 
-        if ( $ignoreMigrations === false ) {
+        if ( $ignoreMigrations === false && Schema::hasTable( ( new Migration )->getTable() ) ) {
             $migrations = Migration::get()->map( fn( $migration ) => $migration->migration );
         }
 
@@ -98,6 +99,16 @@ class UpdateService
 
         if ( $class instanceof MigrationsMigration ) {
             $class->$method();
+
+            if ( ! Schema::hasTable( 'migrations' ) ) {
+                Schema::create( 'migrations', function ( $table ) {
+                    $table->increments( 'id' );
+                    $table->string( 'migration' );
+                    $table->string( 'type' )->nullable();
+                    $table->integer( 'batch' );
+                } );
+            }
+
             $migration = new Migration;
             $migration->migration = $pathinfo[ 'filename' ];
             $migration->type = $type;

@@ -305,6 +305,23 @@ class UserCrud extends CrudService
                         ],
                     ],
                 ],
+                'payroll' => [
+                    'label' => __( 'Payroll' ),
+                    'fields' => [
+                        [
+                            'type' => 'number',
+                            'name' => 'hourly_rate',
+                            'value' => $entry->hourly_rate ?? '',
+                            'label' => __( 'Hourly Rate' ),
+                            'description' => __( 'Set the employee\'s hourly wage rate. Leave empty for non-hourly employees.' ),
+                            'validation' => 'nullable|numeric|min:0|max:99999.99',
+                            'attributes' => [
+                                'step' => '0.01',
+                                'min' => '0',
+                            ],
+                        ],
+                    ],
+                ],
                 'billing' => [
                     'label' => __( 'Billing Address' ),
                     'fields' => [

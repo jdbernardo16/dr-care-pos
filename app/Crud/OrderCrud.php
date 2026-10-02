@@ -374,6 +374,13 @@ class OrderCrud extends CrudService
             url: ns()->url( '/dashboard/' . 'orders' . '/edit/' . $entry->id )
         );
 
+        $entry->action(
+            identifier: 'ns.order-print',
+            label: '<i class="mr-2 las la-print"></i> ' . __( 'Print' ),
+            type: 'POPUP',
+            url: 'javascript:void(0)'
+        );
+
         /**
          * We'll check if the order has refunds
          * to add a refund receipt for printing

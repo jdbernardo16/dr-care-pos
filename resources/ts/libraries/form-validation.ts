@@ -227,7 +227,7 @@ export default class FormValidation {
     extractForm( form ) {
         let formValue  =   {};
 
-        if ( form.main ) {
+        if ( form.main && form.main.name ) {
             formValue[ form.main.name ]     =   form.main.value;
         }
 

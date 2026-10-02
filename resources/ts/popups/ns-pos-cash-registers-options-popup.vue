@@ -25,7 +25,9 @@ export default {
         return {
             settings: null,
             settingsSubscriber: null,
-            register: {}
+            register: {},
+            sessionSummary: null,
+            loadingSummary: false,
         }
     },
     methods: {
@@ -43,10 +45,18 @@ export default {
                 return nsSnackBar.error( __( 'The register is not yet loaded.' ) );
             }
 
+            this.loadingSummary  =   true;
+
             nsHttpClient.get( `/api/cash-registers/${this.settings.register.id}` )
                 .subscribe( result => {
                     this.register   =   result;
-                })
+                });
+
+            nsHttpClient.get( `/api/cash-registers/${this.settings.register.id}/session-summary` )
+                .subscribe( result => {
+                    this.sessionSummary  =   result;
+                    this.loadingSummary  =   false;
+                });
         },
 
         closePopup() {
@@ -156,17 +166,71 @@ export default {
                 <ns-close-button @click="closePopup()"></ns-close-button>
             </div>
         </div>
-        <div v-if="register.total_sale_amount !== undefined && register.balance !== undefined">
-            <div class="h-16 text-3xl bg-info-primary info flex items-center justify-between px-3">
-                <span class="">{{ __( 'Sales' ) }}</span>
-                <span class="font-bold">{{ nsCurrency( register.total_sale_amount ) }}</span>
-            </div>
-            <div class="h-16 text-3xl bg-success-primary success flex items-center justify-between px-3">
-                <span class="">{{ __( 'Balance' ) }}</span>
-                <span class="font-bold">{{ nsCurrency( register.balance ) }}</span>
+        <div v-if="sessionSummary && !loadingSummary">
+            <div class="flex">
+                <!-- Cash Summary -->
+                <div class="w-1/2 border-r border-box-edge">
+                    <div class="p-2 bg-success-primary success border-b border-box-edge">
+                        <h3 class="font-bold text-sm uppercase tracking-wide">{{ __( 'Cash Summary' ) }}</h3>
+                    </div>
+                    <div class="text-sm">
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Starting Cash' ) }}</span>
+                            <span class="font-semibold">{{ nsCurrency( sessionSummary.cash_summary.starting_cash ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Cash Payments' ) }}</span>
+                            <span class="font-semibold">{{ nsCurrency( sessionSummary.cash_summary.cash_payments ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Paid In' ) }}</span>
+                            <span class="font-semibold text-success-tertiary">{{ nsCurrency( sessionSummary.cash_summary.paid_in ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Paid Out' ) }}</span>
+                            <span class="font-semibold text-error-primary">{{ nsCurrency( sessionSummary.cash_summary.paid_out ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Change' ) }}</span>
+                            <span class="font-semibold text-error-primary">{{ nsCurrency( sessionSummary.cash_summary.change ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-2 bg-success-secondary success font-bold">
+                            <span>{{ __( 'Expected Cash' ) }}</span>
+                            <span>{{ nsCurrency( sessionSummary.cash_summary.expected_cash ) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sales Summary -->
+                <div class="w-1/2">
+                    <div class="p-2 bg-info-primary info border-b border-box-edge">
+                        <h3 class="font-bold text-sm uppercase tracking-wide">{{ __( 'Sales Summary' ) }}</h3>
+                    </div>
+                    <div class="text-sm">
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Gross Sales' ) }}</span>
+                            <span class="font-semibold">{{ nsCurrency( sessionSummary.sales_summary.gross_sales ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Discounts' ) }}</span>
+                            <span class="font-semibold text-error-primary">{{ nsCurrency( sessionSummary.sales_summary.discounts ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-1.5 border-b border-box-edge">
+                            <span>{{ __( 'Refunds' ) }}</span>
+                            <span class="font-semibold text-error-primary">{{ nsCurrency( sessionSummary.sales_summary.refunds ) }}</span>
+                        </div>
+                        <div class="flex justify-between px-3 py-2 bg-info-primary info font-bold border-b border-box-edge">
+                            <span>{{ __( 'Net Sales' ) }}</span>
+                            <span>{{ nsCurrency( sessionSummary.sales_summary.net_sales ) }}</span>
+                        </div>
+                        <div v-for="payment in sessionSummary.sales_summary.payment_breakdown" :key="payment.label" class="flex justify-between px-3 py-1.5 border-b border-box-edge pl-6">
+                            <span>{{ payment.label }}</span>
+                            <span class="font-semibold">{{ nsCurrency( payment.value ) }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="h-32 ns-box-body border-b py-1 flex items-center justify-center" v-if="register.total_sale_amount === undefined && register.balance === undefined">
+        <div class="h-32 ns-box-body border-b py-1 flex items-center justify-center" v-if="loadingSummary">
             <div>
                 <ns-spinner border="4" size="16"></ns-spinner>
             </div>

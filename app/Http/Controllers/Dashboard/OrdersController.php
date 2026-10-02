@@ -27,6 +27,7 @@ use App\Models\PaymentType;
 use App\Services\DateService;
 use App\Services\Options;
 use App\Services\OrdersService;
+use App\Services\RawbtPrintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
@@ -165,7 +166,7 @@ class OrdersController extends DashboardController
         return View::make( 'pages.dashboard.orders.pos', [
             'title' => sprintf(
                 __( 'POS' ),
-                ns()->option->get( 'ns_store_name', 'NexoPOS' )
+                ns()->option->get( 'ns_store_name', 'Dr Care' )
             ),
             'orderTypes' => collect( $this->ordersService->getTypeOptions() )
                 ->filter( function ( $type, $label ) {
@@ -266,7 +267,7 @@ class OrdersController extends DashboardController
         $order->load( 'settings' );
         $order->load( 'tax_group' );
 
-        return View::make( 'pages.dashboard.orders.templates.receipt', [
+        $data = [
             'order' => $order,
             'title' => sprintf( __( 'Order Receipt — %s' ), $order->code ),
             'optionsService' => $this->optionsService,
@@ -274,7 +275,21 @@ class OrdersController extends DashboardController
             'paymentTypes' => collect( $this->paymentTypes )->mapWithKeys( function ( $payment ) {
                 return [ $payment[ 'identifier' ] => $payment[ 'label' ] ];
             } ),
-        ] );
+        ];
+
+        if ( request()->query( 'format' ) === 'rawbt' ) {
+            $content = app()->make( RawbtPrintService::class )->makeReceipt( $order, $data[ 'ordersService' ], $data[ 'paymentTypes' ] );
+
+            return response( $content )->header( 'Content-Type', 'application/octet-stream' );
+        }
+
+        if ( request()->query( 'format' ) === 'rawbt-text' ) {
+            $content = View::make( 'pages.dashboard.orders.templates.receipt-rawbt', $data )->render();
+
+            return response( $content )->header( 'Content-Type', 'text/plain; charset=utf-8' );
+        }
+
+        return View::make( 'pages.dashboard.orders.templates.receipt', $data );
     }
 
     public function voidOrder( Order $order, Request $request )

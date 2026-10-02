@@ -9,7 +9,7 @@
             </div>
             <div class="my-2 w-full mx-auto">                
                 <ns-link type="info" href="{{ ns()->url( '/dashboard/orders/receipt/' . $order->id . '?dash-visibility=disabled' ) }}">{{ __( 'Hide Dashboard' ) }}</ns-link>
-                @include( 'pages.dashboard.orders.templates._payment_receipt' )
+                @include( Hook::filter( 'ns-web-receipt-template', 'pages.dashboard.orders.templates._payment_receipt' ) )
             </div>
         </div>
     </div>

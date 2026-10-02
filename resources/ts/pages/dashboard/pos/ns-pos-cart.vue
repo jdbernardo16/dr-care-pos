@@ -3,7 +3,7 @@
         <div id="tools" class="flex pl-2 ns-tab" v-if="visibleSection === 'cart'">
             <div @click="switchTo( 'cart' )" class="flex cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 font-semibold active tab">
                 <span>{{ __( 'Cart' ) }}</span>
-                <span v-if="order" class="flex items-center justify-center text-sm rounded-full h-6 w-6 bg-green-500 text-white ml-1">{{ products.length }}</span>
+                <span v-if="order" class="flex items-center justify-center text-base rounded-full h-7 w-7 bg-green-500 text-white ml-1">{{ products.length }}</span>
             </div>
             <div @click="switchTo( 'grid' )" class="cursor-pointer rounded-tl-lg rounded-tr-lg px-3 py-2 border-t border-r border-l inactive tab">
                 {{ __( 'Products' ) }}
@@ -11,20 +11,10 @@
         </div>
         <div class="rounded shadow ns-tab-item flex-auto flex overflow-hidden">
             <div class="cart-table flex flex-auto flex-col overflow-hidden">
-                <div id="cart-toolbox" class="w-full p-2 border-b">
-                    <div class="border rounded overflow-hidden">
-                        <div class="flex flex-wrap">
-                            <template v-for="component of cartHeaderButtons" :key="component">
-                                <component :is="component" :order="order" :settings="settings" :options="options"></component>
-                            </template>
-                        </div>
-                    </div>
+                <div id="cart-header" class="flex items-center px-3 py-2 border-b border-box-edge">
+                    <span class="font-bold text-xl text-fontcolor">{{ __( 'Ticket' ) }}</span>
                 </div>
-                <div id="cart-table-header" class="w-full text-fontcolor font-semibold flex">
-                    <div class="w-full lg:w-4/6 p-2 border border-l-0 border-t-0">{{ __( 'Product' ) }}</div>
-                    <div class="hidden lg:flex lg:w-1/6 p-2 border-b border-t-0">{{ __( 'Quantity' ) }}</div>
-                    <div class="hidden lg:flex lg:w-1/6 p-2 border border-r-0 border-t-0">{{ __( 'Total' ) }}</div>
-                </div>
+                <div id="cart-table-header" class="hidden"></div>
                 <div id="cart-products-table" class="flex flex-auto flex-col overflow-auto">
                     
                     <!-- Loop Procuts On Cart -->
@@ -35,205 +25,59 @@
                         </div>
                     </div>
 
-                    <div :product-index="index" :key="product.barcode" class="product-item flex" v-for="(product, index) of products">
-                        <div class="w-full lg:w-4/6 p-2 border border-l-0 border-t-0">
-                            <div class="flex justify-between product-details mb-1">
-                                <h3 class="font-semibold">
-                                    {{ product.name }} &mdash; {{ product.unit_name }}
-                                </h3>
-                                <div class="-mx-1 flex product-options">
-                                    <div class="px-1"> 
-                                        <a @click="removeUsingIndex( index )" class="hover:text-error-secondary cursor-pointer outline-hidden border-dashed py-1 border-b border-error-secondary text-sm">
-                                            <i class="las la-trash text-xl"></i>
-                                        </a>
-                                    </div>
-                                    <div class="px-1" v-if="options.ns_pos_allow_wholesale_price && allowQuantityModification( product )"> 
-                                        <a :class="product.mode === 'wholesale' ? 'text-success-secondary border-success-secondary' : 'border-secondary'" @click="toggleMode( product, index )" class="cursor-pointer outline-hidden border-dashed py-1 border-b  text-sm">
-                                            <i class="las la-award text-xl"></i>
-                                        </a>
-                                    </div>
-                                </div>
+                    <div class="product-item px-3 py-3 border-b border-box-edge cursor-pointer hover:bg-box-elevation-background flex justify-between items-start" v-for="(product, index) of products" :key="product.barcode || index" @click="openEditModal(product, index)">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-lg lg:text-xl text-fontcolor break-words leading-tight">
+                                {{ product.name }}
+                                <span class="text-fontcolor-soft font-normal text-base whitespace-nowrap" v-if="product.unit_name">&mdash; {{ product.unit_name }}</span>
                             </div>
-                            <div class="flex justify-between product-controls">
-                                <div class="-mx-1 flex flex-wrap">
-                                    <div class="px-1 w-1/2 md:w-auto mb-1">
-                                        <a
-                                            @click="changeProductPrice( product )"
-                                            :class="product.mode === 'wholesale' ? 'text-success-secondary hover:text-success-secondary border-success-secondary' : 'border-secondary'"
-                                            class="cursor-pointer outline-hidden border-dashed py-1 border-b  text-sm"
-                                        >{{ __( 'Price' ) }} : {{ nsCurrency( product.unit_price ) }}</a>
-                                    </div>
-                                    <div class="px-1 w-1/2 md:w-auto mb-1"> 
-                                        <a v-if="allowQuantityModification( product )" @click="openDiscountPopup( product, 'product', index )" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span> : {{ nsCurrency( product.discount ) }}</a>
-                                    </div>
-                                    <div class="px-1 w-1/2 md:w-auto mb-1 lg:hidden"> 
-                                        <a v-if="allowQuantityModification( product )" @click="changeQuantity( product, index )" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Quantity' ) }}: {{ displayProductQuantity( product ) }}</a>
-                                    </div>
-                                    <div class="px-1 w-1/2 md:w-auto mb-1 lg:hidden"> 
-                                        <span class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Total :' ) }} {{ nsCurrency( product.total_price ) }}</span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center gap-3 mt-1 text-base lg:text-lg text-fontcolor">
+                                <span class="flex items-center gap-1">
+                                    <span class="text-fontcolor-soft">&times;</span>
+                                    <span class="font-semibold text-fontcolor bg-input-background px-2 py-0.5 rounded">{{ displayProductQuantity(product) }}</span>
+                                    <span class="text-fontcolor-soft">@</span>
+                                    <span>{{ nsCurrency(product.unit_price) }}</span>
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-1 text-base">
+                                <a @click.stop="changeProductPrice(product)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Price' ) }}: {{ nsCurrency(product.unit_price) }}</a>
+                                <a v-if="allowQuantityModification(product)" @click.stop="openDiscountPopup(product, 'product', index)" class="text-info-secondary hover:text-info-tertiary cursor-pointer border-b border-dashed border-info-secondary">{{ __( 'Discount' ) }} <span v-if="product.discount_type === 'percentage'">{{ product.discount_percentage }}%</span>: {{ nsCurrency(product.discount) }}</a>
                             </div>
                         </div>
-                        <div @click="changeQuantity( product, index )" :class="allowQuantityModification( product ) ? 'cursor-pointer ns-numpad-key' : ''" class="hidden lg:flex w-1/6 p-2 border-b items-center justify-center">
-                            <span v-if="allowQuantityModification( product )" class="border-b border-dashed border-secondary p-2">{{ displayProductQuantity( product ) }}</span>
+                        <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                            <div class="text-lg lg:text-xl font-bold text-fontcolor">
+                                {{ nsCurrency(product.total_price) }}
+                            </div>
+                            <button @click.stop="removeUsingIndex(index)" class="text-error-secondary hover:text-error-tertiary text-xl cursor-pointer p-1">
+                                <i class="las la-trash-alt"></i>
+                            </button>
                         </div>
-                        <div class="hidden lg:flex w-1/6 p-2 border border-r-0 border-t-0 items-center justify-center">{{ nsCurrency( product.total_price ) }}</div>
                     </div>
-                    
-                    <!-- End Loop -->
 
                 </div>
-                <div id="cart-products-summary" class="flex">
-                    <table class="table ns-table w-full text-sm " v-if="visibleSection === 'both'">
-                        <tbody>
-                            <template v-if="[ 'products_vat' ].includes( options.ns_pos_vat )">
-                                <tr>
-                                    <td width="200" class="border p-2" colspan="2">
-                                        <span v-if="options.ns_pos_prefered_price === 'gross_prices'" class="py-1">{{  __( 'Product Taxes (included)' ) }}</span>
-                                        <span v-else class="py-1">{{  __( 'Product Taxes' ) }}</span>
-                                    </td>
-                                    <td width="200" class="border p-2 text-right">{{ nsCurrency( order.products_tax_value ) }}</td>
-                                </tr>
-                            </template>
-                            <tr>
-                                <td width="200" class="border p-2">
-                                    <a @click="selectCustomer()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Customer' ) }}: {{ customerName }}</a>
-                                </td>
-                                <td width="200" class="border p-2">{{ __( 'Sub Total' ) }}</td>
-                                <td width="200" class="border p-2 text-right">{{ nsCurrency( order.subtotal ) }}</td>
-                            </tr>
-                            <tr v-if="order.coupons.length > 0">
-                                <td width="200" class="border p-2"></td>
-                                <td width="200" class="border p-2">
-                                    <a @click="selectCoupon()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Coupons' ) }}</a>
-                                </td>
-                                <td width="200" class="border p-2 text-right">{{ nsCurrency( summarizeCoupons() ) }}</td>
-                            </tr>
-                            <tr>
-                                <td width="200" class="border p-2">
-                                    <a @click="openOrderType()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Type' ) }}: {{ selectedType }}</a>
-                                </td>
-                                <td width="200" class="border p-2">
-                                    <span>{{ __( 'Discount' ) }}</span>
-                                    <span v-if="order.discount_type === 'percentage'">({{ order.discount_percentage }}%)</span>
-                                    <span v-if="order.discount_type === 'flat'">({{ __( 'Flat' ) }})</span>
-                                </td>
-                                <td width="200" class="border p-2 text-right">
-                                    <a @click="openDiscountPopup( order, 'cart' )" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ nsCurrency( order.discount ) }}</a>
-                                </td>
-                            </tr>
-                            <tr v-if="order.type && order.type.identifier === 'delivery'">
-                                <td width="200" class="border p-2">
-                                    <!--  -->
-                                </td>
-                                <td width="200" class="border p-2">
-                                    <a @click="openShippingPopup()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Shipping' ) }}</a>
-                                </td>
-                                <td width="200" class="border p-2 text-right">{{ nsCurrency( order.shipping ) }}</td>
-                            </tr>
-                            <tr class="success">
-                                <template v-if="[ 'flat_vat', 'variable_vat' ].includes( options.ns_pos_vat )">
-                                    <td width="200" class="border p-2">
-                                        <a @click="openTaxSummary()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ order.tax_group.name ? order.tax_group.name : __( 'Tax' ) }}: {{ nsCurrency( order.tax_value ) }}</a>
-                                    </td>
-                                </template>
-                                <template v-else>
-                                    <td width="200" class="border p-2"></td>
-                                </template>
-                                <td width="200" class="border p-2">{{ __( 'Total' ) }}</td>
-                                <td width="200" class="border p-2 text-right">{{ nsCurrency( order.total ) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table class="table ns-table w-full text-sm" v-if="visibleSection === 'cart'">
-                        <tbody>
-                            <template v-if="[ 'products_vat' ].includes( options.ns_pos_vat )">
-                                <tr>
-                                    <td width="200" class="border p-2">
-                                        <span v-if="options.ns_pos_prefered_price === 'gross_prices'" class="py-1">{{  __( 'Product Taxes (included)' ) }}</span>
-                                        <span v-else class="py-1">{{  __( 'Product Taxes' ) }}</span>
-                                    </td>
-                                    <td width="200" class="border p-2 text-right">{{ nsCurrency( order.products_tax_value ) }}</td>
-                                </tr>
-                            </template>
-                            <tr>
-                                <td width="200" class="border p-2">
-                                    <a @click="selectCustomer()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Customer' ) }}: {{ customerName }}</a>
-                                </td>
-                                <td width="200" class="border p-2">
-                                    <div class="flex justify-between">
-                                        <span>{{ __( 'Sub Total' ) }}</span>
-                                        <span>{{ nsCurrency( order.subtotal ) }}</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="order.coupons.length > 0">
-                                <td width="200" class="border p-2"></td>
-                                <td width="200" class="border p-2">
-                                    <a @click="selectCoupon()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Coupons' ) }}</a>
-                                </td>
-                                <td width="200" class="border p-2 text-right">{{ nsCurrency( summarizeCoupons() ) }}</td>
-                            </tr>
-                            <tr>
-                                <td width="200" class="border p-2">
-                                    <a @click="openOrderType()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Type' ) }}: {{ selectedType }}</a>
-                                </td>
-                                <td width="200" class="border p-2">
-                                    <div class="flex justify-between items-center">
-                                        <p>
-                                            <span>{{ __( 'Discount' ) }}</span>
-                                            <span v-if="order.discount_type === 'percentage'">({{ order.discount_percentage }}%)</span>
-                                            <span v-if="order.discount_type === 'flat'">({{ __( 'Flat' ) }})</span>
-                                        </p>
-                                        <a @click="openDiscountPopup( order, 'cart' )" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ nsCurrency( order.discount ) }}</a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="order.type && order.type.identifier === 'delivery'">
-                                <td width="200" class="border p-2">
-                                    <!--  -->
-                                </td>
-                                <td width="200" class="border p-2">
-                                    <a @click="openShippingPopup()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Shipping' ) }}</a>
-                                    <span></span>                          
-                                </td>
-                            </tr>
-                            <tr class="success">
-                                <td width="200" class="border p-2">
-                                    <template v-if="options.ns_pos_vat !== 'disabled'">
-                                        <template v-if="order && options.ns_pos_tax_type === 'exclusive'">
-                                            <a v-if="options.ns_pos_prefered_price === 'gross_prices'" @click="openTaxSummary()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Tax' ) }}: {{ nsCurrency( order.tax_value ) }}</a>
-                                            <a v-else-if="options.ns_pos_prefered_price === 'net_prices'" @click="openTaxSummary()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Tax Inclusive' ) }}: {{ nsCurrency( order.tax_value ) }}</a>
-                                        </template>
-                                        <template v-else-if="order && options.ns_pos_tax_type === 'inclusive'">
-                                            <a v-if="options.ns_pos_prefered_price === 'gross_prices'" @click="openTaxSummary()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Tax Included' ) }}: {{ nsCurrency( order.tax_value ) }}</a>
-                                            <a v-else-if="options.ns_pos_prefered_price === 'net_prices'" @click="openTaxSummary()" class="cursor-pointer outline-hidden border-dashed py-1 border-b border-secondary text-sm">{{ __( 'Tax Included' ) }}: {{ nsCurrency( order.tax_value ) }}</a>
-                                        </template>
-                                    </template>
-                                </td>
-                                <td width="200" class="border p-2">
-                                    <div class="flex justify-between w-full">
-                                        <span>{{ __( 'Total' ) }}</span>
-                                        <span>{{ nsCurrency( order.total ) }}</span>    
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="h-16 flex flex-shrink-0 border-t border-box-edge" id="cart-bottom-buttons">
-                    <template v-for="button of (new Array(4)).fill()" v-if="Object.keys( cartButtons ).length === 0"> 
-                        <div :class="takeRandomClass()" class="animate-pulse flex-shrink-0 w-1/4 flex items-center font-bold cursor-pointer justify-center  border-r  flex-auto">
-                            <i class="mx-4 rounded-full bg-slate-300 h-5 w-5"></i>
-                            <div class="text-lg mr-4 hidden md:flex md:flex-auto lg:text-2xl">
-                                <div class="h-2 flex-auto bg-slate-200 rounded"></div>
-                            </div>
+                <div id="cart-products-summary" class="px-3 py-2 border-t border-box-edge">
+                    <div class="space-y-1 text-base lg:text-lg">
+                        <div class="flex justify-between text-fontcolor-soft">
+                            <span>{{ __( 'Subtotal' ) }}</span>
+                            <span>{{ nsCurrency(order.subtotal) }}</span>
                         </div>
-                    </template>
-                    <template v-for="component of cartButtons">
-                        <component :is="component" :order="order" :settings="settings"></component>
-                    </template>
+                        <div class="flex justify-between text-fontcolor-soft" v-if="order.discount > 0">
+                            <span>{{ __( 'Discount' ) }}<span v-if="order.discount_type === 'percentage'"> ({{ order.discount_percentage }}%)</span></span>
+                            <span>-{{ nsCurrency(order.discount) }}</span>
+                        </div>
+                        <div class="flex justify-between text-fontcolor-soft" v-if="order.tax_value > 0">
+                            <span>{{ __( 'Tax' ) }}</span>
+                            <span>{{ nsCurrency(order.tax_value) }}</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-xl lg:text-2xl text-fontcolor border-t-2 border-fontcolor pt-2 mt-2">
+                            <span>{{ __( 'Total' ) }}</span>
+                            <span>{{ nsCurrency(order.total) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center px-2 pt-2 pb-3 border-t border-box-edge gap-1" id="cart-bottom-buttons">
+                    <ns-pos-more-button :order="order"></ns-pos-more-button>
+                    <ns-pos-charge-button :order="order"></ns-pos-charge-button>
                 </div>
             </div>
         </div>
@@ -248,16 +92,8 @@ import switchTo from "~/libraries/pos-section-switch";
 
 import { ProductQuantityPromise } from "./queues/products/product-quantity";
 
-import nsPosPayButton from '~/pages/dashboard/pos/cart-buttons/ns-pos-pay-button.vue';
-import nsPosHoldButton from '~/pages/dashboard/pos/cart-buttons/ns-pos-hold-button.vue';
-import nsPosDiscountButton from '~/pages/dashboard/pos/cart-buttons/ns-pos-discount-button.vue';
-import nsPosVoidButton from '~/pages/dashboard/pos/cart-buttons/ns-pos-void-button.vue';
-
-import nsPosCartCommentButton from '~/pages/dashboard/pos/cart-header-buttons/ns-pos-cart-comment-button.vue';
-import nsPosCartTaxesButton from '~/pages/dashboard/pos/cart-header-buttons/ns-pos-cart-taxes-button.vue';
-import nsPosCartCouponsButton from '~/pages/dashboard/pos/cart-header-buttons/ns-pos-cart-coupons-button.vue';
-import nsPosCartSettingsButton from '~/pages/dashboard/pos/cart-header-buttons/ns-pos-cart-settings-button.vue';
-import nsPosCartQuickProductButton from '~/pages/dashboard/pos/cart-header-buttons/ns-pos-cart-quick-product-button.vue';
+import nsPosChargeButton from '~/pages/dashboard/pos/cart-buttons/ns-pos-charge-button.vue';
+import nsPosMoreButton from '~/pages/dashboard/pos/cart-buttons/ns-pos-more-button.vue';
 
 import nsPosDiscountPopupVue from '~/popups/ns-pos-discount-popup.vue';
 import PosConfirmPopup from '~/popups/ns-pos-confirm-popup.vue';
@@ -270,39 +106,27 @@ import nsPosCouponsLoadPopupVue from '~/popups/ns-pos-coupons-load-popup.vue';
 import nsPosOrderSettingsVue from '~/popups/ns-pos-order-settings.vue';
 import nsPosProductPricePopupVue from '~/popups/ns-pos-product-price-popup.vue';
 import nsPosQuickProductPopupVue from '~/popups/ns-pos-quick-product-popup.vue';
+import nsPosProductEditModalVue from './ns-pos-product-edit-modal.vue';
 
-declare const POS, nsShortcuts, nsHotPress, nsHooks;
+declare const POS, nsShortcuts, nsHotPress;
 
-import { ref, markRaw } from '@vue/reactivity';
+import { ref } from '@vue/reactivity';
 import { Order } from '~/interfaces/order';
 import { defineAsyncComponent, Ref } from 'vue';
 import ActionPermissions from '~/libraries/action-permissions';
 
 export default {
     name: 'ns-pos-cart',
+    components: {
+        nsPosChargeButton,
+        nsPosMoreButton,
+    },
     data: () => {
         return {
             popup : null,
-            cartButtons: {},
             products: [],
-            defaultCartButtons: {
-                nsPosPayButton: markRaw( nsPosPayButton ),
-                nsPosHoldButton: markRaw( nsPosHoldButton ),
-                nsPosDiscountButton: markRaw( nsPosDiscountButton ),
-                nsPosVoidButton: markRaw( nsPosVoidButton ),
-            },
-            cartHeaderButtons: {},
-            defaultCartHeaderButtons: {
-                nsPosCartCommentButton: markRaw( nsPosCartCommentButton ),
-                nsPosCartTaxesButton: markRaw( nsPosCartTaxesButton ),
-                nsPosCartCouponsButton: markRaw( nsPosCartCouponsButton ),
-                nsPosCartSettingsButton: markRaw( nsPosCartSettingsButton ),
-                nsPosCartQuickProductButton: markRaw( nsPosCartQuickProductButton ),
-            },
             visibleSection: null,
             visibleSectionSubscriber: null,
-            cartButtonsSubscriber: null,
-            cartHeaderButtonSubscriber: null,
             optionsSubscriber: null,
             options: {},
             typeSubscribe: null,
@@ -329,14 +153,6 @@ export default {
         }
     },
     mounted() {
-        this.cartButtonsSubscriber  =   POS.cartButtons.subscribe( cartButtons => {
-            this.cartButtons    =   cartButtons;
-        });
-
-        this.cartHeaderButtonSubscriber = POS.cartHeaderButtons.subscribe( buttons => {
-            this.cartHeaderButtons    =   buttons;
-        })
-
         this.optionsSubscriber  =   POS.options.subscribe( options => {
             this.options    =   options;
         });
@@ -344,7 +160,13 @@ export default {
         this.typeSubscribe  =   POS.types.subscribe( types => this.types = types );
 
         this.orderSubscribe  =   POS.order.subscribe( order => {
-            this.order   =   ref(order);
+            /**
+             * The order object is often mutated in place before being
+             * emitted. A shallow copy guarantees child components
+             * (e.g. ns-pos-charge-button) receive a fresh reference
+             * and re-render immediately.
+             */
+            this.order   =   ref({ ...order });
         });
 
         this.productSubscribe  =   POS.products.subscribe( products => {
@@ -357,15 +179,6 @@ export default {
 
         this.visibleSectionSubscriber   =   POS.visibleSection.subscribe( section => {
             this.visibleSection     =   ref(section);
-        });
-
-        /**
-         * everytime the cart reset
-         * we restore original buttons.
-         */
-        nsHooks.addAction( 'ns-before-cart-reset', 'ns-pos-cart-buttons', () => {
-            POS.cartButtons.next( this.defaultCartButtons );
-            POS.cartHeaderButtons.next( this.defaultCartHeaderButtons );
         });
 
         /**
@@ -404,9 +217,6 @@ export default {
         this.productSubscribe.unsubscribe();
         this.settingsSubscribe.unsubscribe();
         this.optionsSubscriber.unsubscribe();
-        this.cartButtonsSubscriber.unsubscribe();
-        this.cartHeaderButtonSubscriber.unsubscribe();
-
         nsHotPress.destroy( 'ns_pos_keyboard_shipping' );
         nsHotPress.destroy( 'ns_pos_keyboard_note' );
     },
@@ -772,6 +582,24 @@ export default {
             return product.product_type === 'product';
         },
 
+        async openEditModal(product, index) {
+            await ActionPermissions.canProceed('nexopos.cart.products');
+
+            try {
+                await new Promise( ( resolve, reject ) => {
+                    Popup.show(nsPosProductEditModalVue, {
+                        product: Object.assign({}, product),
+                        index,
+                        settings: this.settings,
+                        resolve,
+                        reject,
+                    });
+                });
+            } catch (exception) {
+                // popup closed
+            }
+        },
+
         /**
          * This will use the previously used 
          * popup to run the promise.
@@ -795,7 +623,7 @@ export default {
 
         openShippingPopup() {
             Popup.show( nsPosShippingPopupVue );
-        }
+        },
     }
 }
 </script>

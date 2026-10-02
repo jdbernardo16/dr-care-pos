@@ -29,6 +29,7 @@ export default defineConfig({
         video: 'retain-on-failure',
         trace: 'retain-on-failure',
         headless: true,
+        channel: 'chrome',
     },
     projects: [
         /**
@@ -37,7 +38,15 @@ export default defineConfig({
          */
         {
             name: 'setup',
-            testMatch: /.*\.setup\.ts/,
+            testMatch: /auth\.setup\.ts/,
+        },
+
+        /**
+         * Taxes setup — only used by product tax tests.
+         */
+        {
+            name: 'taxes-setup',
+            testMatch: /taxes\.setup\.ts/,
         },
 
         /**

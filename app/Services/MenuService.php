@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Classes\AsideMenu;
 use App\Classes\Menu;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use TorMorten\Eventy\Facades\Eventy as Hook;
 
@@ -159,7 +160,7 @@ class MenuService
                     ),
                 ),
             ),
-            AsideMenu::menu(
+            /* AsideMenu::menu(
                 label: __( 'Accounting' ),
                 icon: 'la-stream',
                 identifier: 'accounting',
@@ -207,7 +208,7 @@ class MenuService
                         href: ns()->url( '/dashboard/accounting/accounts/create' )
                     ),
                 ),
-            ),
+            ), */
             AsideMenu::menu(
                 label: __( 'Inventory' ),
                 icon: 'la-boxes',
@@ -298,7 +299,7 @@ class MenuService
                     ),
                 ),
             ),
-            AsideMenu::menu(
+            /* AsideMenu::menu(
                 label: __( 'Taxes' ),
                 icon: 'la-balance-scale-left',
                 identifier: 'taxes',
@@ -334,8 +335,8 @@ class MenuService
                         href: ns()->url( '/dashboard/taxes/create' )
                     ),
                 ),
-            ),
-            AsideMenu::menu(
+            ), */
+            /* AsideMenu::menu(
                 label: __( 'Modules' ),
                 icon: 'la-plug',
                 identifier: 'modules',
@@ -352,7 +353,7 @@ class MenuService
                         href: ns()->url( '/dashboard/modules/upload' )
                     ),
                 ),
-            ),
+            ), */
             AsideMenu::menu(
                 label: __( 'Users' ),
                 icon: 'la-users',
@@ -428,6 +429,78 @@ class MenuService
                         identifier: 'procurements-products',
                         permissions: [ 'nexopos.update.procurements' ],
                         href: ns()->url( '/dashboard/procurements/products' )
+                    ),
+                ),
+            ),
+            // Attendance
+            AsideMenu::menu(
+                label: __( 'Attendance' ),
+                icon: 'la-clock',
+                identifier: 'attendance',
+                permissions: [ 'attendance.clock', 'attendance.view' ],
+                childrens: AsideMenu::childrens(
+                    AsideMenu::subMenu(
+                        label: __( 'Clock In/Out' ),
+                        identifier: 'attendance-clock',
+                        permissions: [ 'attendance.clock' ],
+                        href: ns()->url( '/dashboard/attendance/clock' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Records' ),
+                        identifier: 'attendance-list',
+                        permissions: [ 'attendance.read' ],
+                        href: ns()->url( '/dashboard/attendance' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Create Record' ),
+                        identifier: 'attendance-create',
+                        permissions: [ 'attendance.create' ],
+                        href: ns()->url( '/dashboard/attendance/create' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Clock-in Devices' ),
+                        identifier: 'attendance-devices',
+                        href: ns()->url( '/dashboard/attendance/devices' ),
+                        show: Auth::user() instanceof \App\Models\User && Auth::user()->hasRoles( [ 'admin', 'nexopos.developer' ] )
+                    ),
+                ),
+            ),
+            // Payroll
+            AsideMenu::menu(
+                label: __( 'Payroll' ),
+                icon: 'la-money-bill',
+                identifier: 'payroll',
+                permissions: [ 'payroll.read' ],
+                childrens: AsideMenu::childrens(
+                    AsideMenu::subMenu(
+                        label: __( 'Pay Runs' ),
+                        identifier: 'payroll-runs',
+                        permissions: [ 'payroll.read' ],
+                        href: ns()->url( '/dashboard/payroll' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Create Pay Run' ),
+                        identifier: 'payroll-create',
+                        permissions: [ 'payroll.create' ],
+                        href: ns()->url( '/dashboard/payroll/create' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Overtime Requests' ),
+                        identifier: 'overtime-list',
+                        permissions: [ 'overtime.read' ],
+                        href: ns()->url( '/dashboard/overtime' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'File Overtime' ),
+                        identifier: 'overtime-file',
+                        permissions: [ 'overtime.create' ],
+                        href: ns()->url( '/dashboard/overtime/file' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Holidays' ),
+                        identifier: 'holiday-list',
+                        permissions: [ 'holiday.read' ],
+                        href: ns()->url( '/dashboard/holidays' )
                     ),
                 ),
             ),
@@ -576,7 +649,7 @@ class MenuService
             return ( ! isset( $menu[ 'permissions' ] ) || Gate::any( $menu[ 'permissions' ] ) ) && ( ! isset( $menu[ 'show' ] ) || $menu[ 'show' ] === true );
         } )->map( function ( $menu ) {
             $menu[ 'childrens' ] = collect( $menu[ 'childrens' ] ?? [] )->filter( function ( $submenu ) {
-                return ! isset( $submenu[ 'permissions' ] ) || Gate::any( $submenu[ 'permissions' ] );
+                return ( ! isset( $submenu[ 'permissions' ] ) || Gate::any( $submenu[ 'permissions' ] ) ) && ( ! isset( $submenu[ 'show' ] ) || $submenu[ 'show' ] === true );
             } )->toArray();
 
             return $menu;
