@@ -19,7 +19,7 @@ class ProductCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'ns:products {action} {--where=*} {--orWhere=*} {--store=0}';
+    protected $signature = 'ns:products {action} {--where=*} {--orWhere=*} {--store=0} {--quantity=1000} {--dry-run}';
 
     /**
      * The console command description.
@@ -57,7 +57,8 @@ class ProductCommand extends Command
         match ( $this->argument( 'action' ) ) {
             'update' => $this->updateProducts(),
             'compute-taxes' => $this->computeTaxes(),
-            'refresh-barcode' => $this->refreshBarcodes()
+            'refresh-barcode' => $this->refreshBarcodes(),
+            'zero-stock' => $this->zeroStock()
         };
     }
 
@@ -92,6 +93,32 @@ class ProductCommand extends Command
         $this->newLine();
 
         return $this->info( __( 'The product barcodes has been refreshed successfully.' ) );
+    }
+
+    /**
+     * Set the quantity of all the unit quantities matching
+     * the provided quantity (default 1000) to zero.
+     */
+    private function zeroStock()
+    {
+        $quantity = (float) $this->option( 'quantity' );
+        $query = ProductUnitQuantity::where( 'quantity', $quantity );
+
+        if ( $this->option( 'dry-run' ) ) {
+            return $this->info( sprintf(
+                __( 'Dry run: %s unit quantities matching a quantity of %s would be set to 0.' ),
+                $query->count(),
+                $quantity
+            ) );
+        }
+
+        $updated = $query->update( [ 'quantity' => 0 ] );
+
+        return $this->info( sprintf(
+            __( '%s unit quantities matching a quantity of %s have been set to 0.' ),
+            $updated,
+            $quantity
+        ) );
     }
 
     private function perform( Builder $queryBuilder, $callback )
