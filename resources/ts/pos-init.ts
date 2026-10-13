@@ -1875,6 +1875,18 @@ export class POS {
         this._processingAddQueue = false;
 
         /**
+         * The add queue completed successfully (a cancelled queue has
+         * already returned above). When the transaction summary is
+         * displayed, adding a product starts a new sale. This applies to
+         * every add path (grid, search popup, barcode, quick product)
+         * since this is the single choke point, and it also covers the
+         * `product_id === 0` path which skips the queue entirely.
+         */
+        if (this._visibleSection.getValue() === "summary") {
+            this.defineCurrentScreen(); // 'both' on desktop, 'grid' on small screens
+        }
+
+        /**
          * Let's combien the built product
          * with the data resolved by the promises
          */

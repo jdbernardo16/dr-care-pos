@@ -273,7 +273,7 @@ export default {
                 message: __("Would you like to void the entire order?"),
                 onAction: (action) => {
                     if (action) {
-                        POS.voidOrder();
+                        POS.voidOrder(this.order);
                     }
                 },
             });

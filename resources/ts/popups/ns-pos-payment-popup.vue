@@ -1,6 +1,7 @@
 <script lang="ts">
 import { nsSnackBar } from "~/bootstrap";
 import resolveIfQueued from "~/libraries/popup-resolver";
+import popupCloser from "~/libraries/popup-closer";
 import { Popup } from "~/libraries/popup";
 import { __ } from "~/libraries/lang";
 import CashPayment from "~/pages/dashboard/pos/payments/cash-payment.vue";
@@ -54,6 +55,8 @@ export default {
         },
     },
     mounted() {
+        this.popupCloser();
+
         this.orderSubscription = POS.order.subscribe((order) => {
             this.order = order;
         });
@@ -110,6 +113,7 @@ export default {
         nsCurrency,
 
         resolveIfQueued,
+        popupCloser,
 
         loadPaymentComponent(payment) {
             switch (payment.identifier) {
@@ -167,9 +171,13 @@ export default {
             }
         },
         closePopup() {
-            console.log(this.popup);
-            this.popup.close();
             POS.selectedPaymentType.next(null);
+
+            /**
+             * Reject the queued payment promise so the POS payment
+             * queue is released and the next charge can open a popup.
+             */
+            this.resolveIfQueued(false);
         },
         deletePayment(payment) {
             POS.removePayment(payment);
@@ -277,17 +285,26 @@ export default {
                     (result) => {
                         this.submitting = false;
 
+                        /**
+                         * Settle the queued payment promise FIRST. The
+                         * statements below are side effects that can
+                         * throw (already-closed popups, snackbar, summary
+                         * rendering) and settlement must never depend on
+                         * them, otherwise the POS payment queue would
+                         * stay locked. `resolveIfQueued()` resolves the
+                         * queue before closing the popup, so the queue is
+                         * released even if its own close throws.
+                         */
+                        this.resolveIfQueued(result);
+
                         // close spinner
                         popup.close();
 
                         nsSnackBar.success(result.message);
 
-                        if (typeof this.onSuccess === 'function') {
+                        if (typeof this.onSuccess === "function") {
                             this.onSuccess(result);
                         }
-
-                        // close payment popup
-                        this.popup.close();
                     },
                     (error) => {
                         this.submitting = false;

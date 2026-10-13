@@ -160,7 +160,13 @@ export default {
         this.typeSubscribe  =   POS.types.subscribe( types => this.types = types );
 
         this.orderSubscribe  =   POS.order.subscribe( order => {
-            this.order   =   ref(order);
+            /**
+             * The order object is often mutated in place before being
+             * emitted. A shallow copy guarantees child components
+             * (e.g. ns-pos-charge-button) receive a fresh reference
+             * and re-render immediately.
+             */
+            this.order   =   ref({ ...order });
         });
 
         this.productSubscribe  =   POS.products.subscribe( products => {
