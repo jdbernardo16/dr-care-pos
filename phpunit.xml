@@ -56,6 +56,7 @@
       <directory suffix="DeleteOrderTest.php">./tests/Feature</directory>
       <directory suffix="OrderRefundTest.php">./tests/Feature</directory>
       <directory suffix="OrderHoldTest.php">./tests/Feature</directory>
+      <directory suffix="HoldOrderRemovedProductTest.php">./tests/Feature</directory>
       <directory suffix="OrderWithInstalment.php">./tests/Feature</directory>
       <directory suffix="PartiallyPaidOrderWithAdjustmentTest.php">./tests/Feature</directory>
       <directory suffix="DeletingOrderTest.php">./tests/Feature</directory>

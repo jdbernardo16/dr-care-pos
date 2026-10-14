@@ -110,6 +110,19 @@ class OrdersService
             $previousOrder = clone $order;
         }
 
+        /**
+         * We'll keep the list of order products that have already been
+         * deducted from the stock before this request. Their stock changes
+         * are handled while the order is being saved; the reconciliation
+         * at the end of this method must not process them again.
+         */
+        $deductedOrderProductIds = $order instanceof Order
+            ? ProductHistory::whereIn( 'order_product_id', $order->products->pluck( 'id' )->toArray() )
+                ->where( 'operation_type', ProductHistory::ACTION_SOLD )
+                ->pluck( 'order_product_id' )
+                ->toArray()
+            : [];
+
         $customer = $this->__customerIsDefined( $fields );
 
         /**
@@ -260,6 +273,17 @@ class OrdersService
             throw $exception;
         }
 
+        /**
+         * The "sold" stock transactions are recorded by the
+         * OrderAfterPaymentStatusChangedEventListener which runs while the
+         * order is being saved. At that moment, products that have just been
+         * inserted (or updated) during this request aren't available yet in
+         * the database. We therefore reconcile the order products here, once
+         * everything has been persisted, to ensure every product of a
+         * stock-affecting order has an accurate "sold" transaction.
+         */
+        $this->__reconcileOrderProductHistory( $order, $deductedOrderProductIds );
+
         $order->load( 'payments' );
         $order->load( 'products' );
         $order->load( 'coupons' );
@@ -269,6 +293,106 @@ class OrdersService
             'message' => $isNew ? __( 'The order has been placed.' ) : __( 'The order has been updated' ),
             'data' => compact( 'order' ),
         ];
+    }
+
+    /**
+     * Ensure every product of an order that has affected the stock
+     * (paid or partially paid) has an accurate "sold" stock transaction.
+     *
+     * This covers products that were added or edited while the order was
+     * being charged: the payment status event fires before these rows are
+     * persisted, so they would otherwise never be deducted from the stock.
+     *
+     * @return void
+     */
+    private function __reconcileOrderProductHistory( Order $order, array $deductedOrderProductIds = [] )
+    {
+        if ( ! in_array( $order->payment_status, [ Order::PAYMENT_PAID, Order::PAYMENT_PARTIALLY ] ) ) {
+            return;
+        }
+
+        $order->load( 'products' );
+
+        $order->products->each( function ( OrderProduct $orderProduct ) use ( $order, $deductedOrderProductIds ) {
+            /**
+             * Quick products and services aren't attached to an existing
+             * product and therefore never affect the stock.
+             */
+            if ( (int) $orderProduct->product_id <= 0 ) {
+                return;
+            }
+
+            /**
+             * Products that had already been deducted before this request
+             * have their stock changes handled while the order is being
+             * saved, they must not be processed twice.
+             */
+            if ( in_array( $orderProduct->id, $deductedOrderProductIds ) ) {
+                return;
+            }
+
+            $soldHistories = ProductHistory::where( 'order_id', $order->id )
+                ->where( 'order_product_id', $orderProduct->id )
+                ->where( 'operation_type', ProductHistory::ACTION_SOLD )
+                ->get();
+
+            if ( $soldHistories->isEmpty() ) {
+                /**
+                 * The product has never been deducted (it was added while the
+                 * order was being charged). We now record the sale.
+                 */
+                $this->productService->stockAdjustment( ProductHistory::ACTION_SOLD, [
+                    'order_id' => $order->id,
+                    'unit_id' => $orderProduct->unit_id,
+                    'product_id' => $orderProduct->product_id,
+                    'quantity' => $orderProduct->quantity,
+                    'unit_price' => $orderProduct->unit_price,
+                    'total_price' => $orderProduct->total_price,
+                    'orderProduct' => $orderProduct,
+                ] );
+
+                return;
+            }
+
+            $soldHistory = $soldHistories->first();
+
+            /**
+             * Grouped products record one sold transaction per sub item.
+             * Their quantities are expressed in sub item units and can't be
+             * compared with the order product quantity.
+             */
+            if ( $soldHistories->count() > 1 || (int) $soldHistory->product_id !== (int) $orderProduct->product_id ) {
+                return;
+            }
+
+            $quantityDifference = (float) $orderProduct->quantity - (float) $soldHistory->quantity;
+
+            if ( $quantityDifference === 0.0 ) {
+                return;
+            }
+
+            /**
+             * The quantity has been changed while the order was being
+             * charged. The recorded transaction used the previous quantity,
+             * so we only adjust the difference here.
+             */
+            $this->productService->stockAdjustment(
+                $quantityDifference > 0 ? ProductHistory::ACTION_ADJUSTMENT_SALE : ProductHistory::ACTION_ADJUSTMENT_RETURN,
+                [
+                    'order_id' => $order->id,
+                    'unit_id' => $orderProduct->unit_id,
+                    'product_id' => $orderProduct->product_id,
+                    'quantity' => abs( $quantityDifference ),
+                    'unit_price' => $orderProduct->unit_price,
+                    'orderProduct' => $orderProduct,
+                ]
+            );
+
+            $soldHistory->quantity = $orderProduct->quantity;
+            $soldHistory->unit_price = $orderProduct->unit_price;
+            $soldHistory->total_price = $orderProduct->total_price;
+            $soldHistory->save();
+        } );
     }
 
     /**
@@ -655,10 +779,17 @@ class OrdersService
                     $orderProduct->delete();
 
                     /**
-                     * If the order has changed the stock. The operation
-                     * that update it should affect the stock as well.
+                     * We should only return the stock when it has actually
+                     * been deducted by this order. Products that belong to an
+                     * order that never affected the inventory (e.g. a hold
+                     * order being charged with a modified cart) must not be
+                     * credited back, otherwise phantom stock is created.
                      */
-                    if ( $order->payment_status !== Order::PAYMENT_HOLD ) {
+                    $stockWasDeducted = ProductHistory::where( 'operation_type', ProductHistory::ACTION_SOLD )
+                        ->where( 'order_product_id', $orderProduct->id )
+                        ->count() === 1;
+
+                    if ( $stockWasDeducted ) {
                         $this->productService->stockAdjustment(
                             ProductHistory::ACTION_ADJUSTMENT_RETURN, [
                                 'unit_id' => $orderProduct->unit_id,
