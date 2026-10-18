@@ -385,6 +385,15 @@
                                         {{ product.unit_quantities[0].unit?.name || __('Unit') }}: {{ totalQuantity(product) }}
                                     </template>
                                 </span>
+                                <span
+                                    v-if="
+                                        isOutOfStock(product) &&
+                                        unitSalePrice(product) !== null
+                                    "
+                                    class="out-of-stock-price"
+                                >
+                                    {{ nsCurrency(unitSalePrice(product)) }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -661,6 +670,28 @@ export default {
             }
             const first = product.unit_quantities[0];
             return parseFloat(first.quantity) || 0;
+        },
+
+        /**
+         * Resolve the sale price of the first unit, honouring the POS
+         * VAT and gross/net preferences. Returns null when unavailable.
+         */
+        unitSalePrice(product) {
+            const unit = (product.unit_quantities || [])[0];
+            const options = this.options || {};
+
+            if (!unit) {
+                return null;
+            }
+
+            const price =
+                options.ns_pos_vat === "disabled"
+                    ? unit.sale_price
+                    : options.ns_pos_prefered_price === "gross_prices"
+                      ? unit.sale_price_gross
+                      : unit.sale_price_net;
+
+            return price === undefined || price === null ? null : price;
         },
 
         hasNoFeatured(product) {
