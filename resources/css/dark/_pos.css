@@ -290,6 +290,10 @@
 
                     .cell-item-label {
                         background:rgb(0 0 0 / 73%);
+
+                        .out-of-stock-price {
+                            @apply text-xs font-bold text-fontcolor;
+                        }
                     }
 
                     &:hover {
@@ -309,8 +313,12 @@
 
         .ns-out-of-stock {
             &.cell-item, &.small-pinned-product {
-                @apply opacity-40;
                 pointer-events: none;
+
+                /* Fade the artwork only, so the label (name, stock, price) stays readable. */
+                img, svg {
+                    @apply opacity-40;
+                }
             }
 
             .out-of-stock-badge {

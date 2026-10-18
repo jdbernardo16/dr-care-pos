@@ -356,6 +356,10 @@
                         span {
                             @apply text-xs font-medium;
                         }
+
+                        .out-of-stock-price {
+                            @apply text-xs font-bold text-fontcolor;
+                        }
                     }
                 }
             }
@@ -363,8 +367,12 @@
 
         .ns-out-of-stock {
             &.cell-item, &.small-pinned-product {
-                @apply opacity-40;
                 pointer-events: none;
+
+                /* Fade the artwork only, so the label (name, stock, price) stays readable. */
+                img, svg {
+                    @apply opacity-40;
+                }
             }
 
             .out-of-stock-badge {
