@@ -19,6 +19,7 @@ import { insertAfterKey, insertBeforeKey } from "./libraries/object";
 import popupResolver from "./libraries/popup-resolver";
 import popupCloser from "./libraries/popup-closer";
 import { timespan } from "./libraries/timespan";
+import { getDeviceIdentity } from "./libraries/device-identity";
 import { defineAsyncComponent, defineComponent, markRaw, shallowRef } from "vue";
 import { nsCurrency, nsRawCurrency } from "./filters/currency";
 import { nsAbbreviate } from "./filters/abbreviate";
@@ -123,6 +124,17 @@ const nsState           =   new State({
 });
 
 nsHttpClient.defineClient( axios );
+
+axios.interceptors.request.use( ( config ) => {
+    const identity = getDeviceIdentity();
+
+    if ( identity ) {
+        config.headers[ "X-Device-Id" ] = identity.device_id;
+        config.headers[ "X-Device-Secret" ] = identity.device_secret;
+    }
+
+    return config;
+} );
 
 ( window as any ).nsEvent               =   nsEvent;
 ( window as any ).nsHttpClient          =   nsHttpClient;

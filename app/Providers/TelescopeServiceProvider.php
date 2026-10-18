@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Role;
 use App\Services\Helper;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
@@ -57,7 +58,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        if ( Helper::installed() ) {
+        if ( Helper::installed() && Schema::hasTable( 'nexopos_roles' ) ) {
             $adminRole = Role::namespace( Role::ADMIN );
             $users = collect( [] );
 

@@ -49,6 +49,12 @@ class GeneralSettings extends SettingsPage
                     description: __( 'The actual store address.' ),
                 ),
                 FormInput::text(
+                    name: 'ns_store_tin',
+                    value: ns()->option->get( 'ns_store_tin' ),
+                    label: __( 'Store TIN' ),
+                    description: __( 'The Tax Identification Number of the store, displayed on receipts.' ),
+                ),
+                FormInput::text(
                     name: 'ns_store_city',
                     value: ns()->option->get( 'ns_store_city' ),
                     label: __( 'Store City' ),

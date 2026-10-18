@@ -49,6 +49,7 @@ use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,20 @@ class OrdersService
         $isNew = ! $order instanceof Order;
 
         /**
+         * When the POS submits a checkout uuid, we want to make
+         * sure the order is only created once. This protects slow
+         * connections where the same checkout might be submitted
+         * more than once (timeout, retry, double click).
+         */
+        if ( $isNew && ! empty( $fields[ 'uuid' ] ) ) {
+            $existingOrder = $this->__getOrderFromCheckoutUuid( $fields[ 'uuid' ] );
+
+            if ( $existingOrder instanceof Order ) {
+                return $this->__getExistingOrderResponse( $existingOrder );
+            }
+        }
+
+        /**
          * if the order is being edited, we need to
          * keep a reference to the previous order to be able to compare
          * the changes that has been made.
@@ -94,6 +109,19 @@ class OrdersService
 
             $previousOrder = clone $order;
         }
+
+        /**
+         * We'll keep the list of order products that have already been
+         * deducted from the stock before this request. Their stock changes
+         * are handled while the order is being saved; the reconciliation
+         * at the end of this method must not process them again.
+         */
+        $deductedOrderProductIds = $order instanceof Order
+            ? ProductHistory::whereIn( 'order_product_id', $order->products->pluck( 'id' )->toArray() )
+                ->where( 'operation_type', ProductHistory::ACTION_SOLD )
+                ->pluck( 'order_product_id' )
+                ->toArray()
+            : [];
 
         $customer = $this->__customerIsDefined( $fields );
 
@@ -218,14 +246,43 @@ class OrdersService
          */
         $order->setData( $fields );
 
-        $order->saveWithRelationships( [
-            'products' => $orderProducts,
-            'payments' => $payments,
-            'coupons' => $coupons,
-            'instalments' => $instalments,
-            'taxes' => $taxes,
-            'order_addresses' => $addresses,
-        ] );
+        try {
+            $order->saveWithRelationships( [
+                'products' => $orderProducts,
+                'payments' => $payments,
+                'coupons' => $coupons,
+                'instalments' => $instalments,
+                'taxes' => $taxes,
+                'order_addresses' => $addresses,
+            ] );
+        } catch ( QueryException $exception ) {
+            /**
+             * In case two checkout requests with the same uuid
+             * are processed simultaneously, the unique index will
+             * reject the second one. We then return the order that
+             * has been created by the concurrent request.
+             */
+            if ( $isNew && ! empty( $fields[ 'uuid' ] ) && $this->__isDuplicateEntryException( $exception ) ) {
+                $existingOrder = $this->__getOrderFromCheckoutUuid( $fields[ 'uuid' ] );
+
+                if ( $existingOrder instanceof Order ) {
+                    return $this->__getExistingOrderResponse( $existingOrder );
+                }
+            }
+
+            throw $exception;
+        }
+
+        /**
+         * The "sold" stock transactions are recorded by the
+         * OrderAfterPaymentStatusChangedEventListener which runs while the
+         * order is being saved. At that moment, products that have just been
+         * inserted (or updated) during this request aren't available yet in
+         * the database. We therefore reconcile the order products here, once
+         * everything has been persisted, to ensure every product of a
+         * stock-affecting order has an accurate "sold" transaction.
+         */
+        $this->__reconcileOrderProductHistory( $order, $deductedOrderProductIds );
 
         $order->load( 'payments' );
         $order->load( 'products' );
@@ -236,6 +293,106 @@ class OrdersService
             'message' => $isNew ? __( 'The order has been placed.' ) : __( 'The order has been updated' ),
             'data' => compact( 'order' ),
         ];
+    }
+
+    /**
+     * Ensure every product of an order that has affected the stock
+     * (paid or partially paid) has an accurate "sold" stock transaction.
+     *
+     * This covers products that were added or edited while the order was
+     * being charged: the payment status event fires before these rows are
+     * persisted, so they would otherwise never be deducted from the stock.
+     *
+     * @return void
+     */
+    private function __reconcileOrderProductHistory( Order $order, array $deductedOrderProductIds = [] )
+    {
+        if ( ! in_array( $order->payment_status, [ Order::PAYMENT_PAID, Order::PAYMENT_PARTIALLY ] ) ) {
+            return;
+        }
+
+        $order->load( 'products' );
+
+        $order->products->each( function ( OrderProduct $orderProduct ) use ( $order, $deductedOrderProductIds ) {
+            /**
+             * Quick products and services aren't attached to an existing
+             * product and therefore never affect the stock.
+             */
+            if ( (int) $orderProduct->product_id <= 0 ) {
+                return;
+            }
+
+            /**
+             * Products that had already been deducted before this request
+             * have their stock changes handled while the order is being
+             * saved, they must not be processed twice.
+             */
+            if ( in_array( $orderProduct->id, $deductedOrderProductIds ) ) {
+                return;
+            }
+
+            $soldHistories = ProductHistory::where( 'order_id', $order->id )
+                ->where( 'order_product_id', $orderProduct->id )
+                ->where( 'operation_type', ProductHistory::ACTION_SOLD )
+                ->get();
+
+            if ( $soldHistories->isEmpty() ) {
+                /**
+                 * The product has never been deducted (it was added while the
+                 * order was being charged). We now record the sale.
+                 */
+                $this->productService->stockAdjustment( ProductHistory::ACTION_SOLD, [
+                    'order_id' => $order->id,
+                    'unit_id' => $orderProduct->unit_id,
+                    'product_id' => $orderProduct->product_id,
+                    'quantity' => $orderProduct->quantity,
+                    'unit_price' => $orderProduct->unit_price,
+                    'total_price' => $orderProduct->total_price,
+                    'orderProduct' => $orderProduct,
+                ] );
+
+                return;
+            }
+
+            $soldHistory = $soldHistories->first();
+
+            /**
+             * Grouped products record one sold transaction per sub item.
+             * Their quantities are expressed in sub item units and can't be
+             * compared with the order product quantity.
+             */
+            if ( $soldHistories->count() > 1 || (int) $soldHistory->product_id !== (int) $orderProduct->product_id ) {
+                return;
+            }
+
+            $quantityDifference = (float) $orderProduct->quantity - (float) $soldHistory->quantity;
+
+            if ( $quantityDifference === 0.0 ) {
+                return;
+            }
+
+            /**
+             * The quantity has been changed while the order was being
+             * charged. The recorded transaction used the previous quantity,
+             * so we only adjust the difference here.
+             */
+            $this->productService->stockAdjustment(
+                $quantityDifference > 0 ? ProductHistory::ACTION_ADJUSTMENT_SALE : ProductHistory::ACTION_ADJUSTMENT_RETURN,
+                [
+                    'order_id' => $order->id,
+                    'unit_id' => $orderProduct->unit_id,
+                    'product_id' => $orderProduct->product_id,
+                    'quantity' => abs( $quantityDifference ),
+                    'unit_price' => $orderProduct->unit_price,
+                    'orderProduct' => $orderProduct,
+                ]
+            );
+
+            $soldHistory->quantity = $orderProduct->quantity;
+            $soldHistory->unit_price = $orderProduct->unit_price;
+            $soldHistory->total_price = $orderProduct->total_price;
+            $soldHistory->save();
+        } );
     }
 
     /**
@@ -622,10 +779,17 @@ class OrdersService
                     $orderProduct->delete();
 
                     /**
-                     * If the order has changed the stock. The operation
-                     * that update it should affect the stock as well.
+                     * We should only return the stock when it has actually
+                     * been deducted by this order. Products that belong to an
+                     * order that never affected the inventory (e.g. a hold
+                     * order being charged with a modified cart) must not be
+                     * credited back, otherwise phantom stock is created.
                      */
-                    if ( $order->payment_status !== Order::PAYMENT_HOLD ) {
+                    $stockWasDeducted = ProductHistory::where( 'operation_type', ProductHistory::ACTION_SOLD )
+                        ->where( 'order_product_id', $orderProduct->id )
+                        ->count() === 1;
+
+                    if ( $stockWasDeducted ) {
                         $this->productService->stockAdjustment(
                             ProductHistory::ACTION_ADJUSTMENT_RETURN, [
                                 'unit_id' => $orderProduct->unit_id,
@@ -778,12 +942,8 @@ class OrdersService
 
     private function __saveOrderPayments( $order, $payments, $customer )
     {
-        /**
-         * As we're about to record new payments,
-         * we first need to delete previous payments that
-         * might have been made. Probably we'll need to keep these
-         * order and only update them.
-         */
+        $order->payments()->delete();
+
         return collect( $payments )->map( function ( $payment ) use ( $order ) {
             return $this->__saveOrderSinglePayment( $payment, $order );
         } );
@@ -873,7 +1033,7 @@ class OrdersService
 
         $orderPayment->identifier = $payment['identifier'];
         $orderPayment->value = $this->currencyService->define( $payment['value'] )->toFloat();
-        $orderPayment->author_id = $order->author_id;
+        $orderPayment->author_id = Auth::id(); // the payment is attributed to the user that performs the transaction
 
         return $orderPayment;
     }
@@ -1529,7 +1689,21 @@ class OrdersService
              * then we'll define the "created_at" column.
              */
             $order->created_at = $fields[ 'created_at' ] ?? ns()->date->getNow()->toDateTimeString();
+
+            /**
+             * the checkout uuid is used to ensure a checkout
+             * isn't saved twice when the connection is slow.
+             */
+            $order->uuid = $fields[ 'uuid' ] ?? null;
         }
+
+        /**
+         * We'll keep a reference to the previous payment status
+         * so we can determine whether the order was a hold and
+         * is now being charged. In that case, the transaction
+         * should be attributed to the user that performs it.
+         */
+        $previousPaymentStatus = $order->payment_status ?? null;
 
         /**
          * If any other attributes needs to be
@@ -1572,6 +1746,19 @@ class OrdersService
         $order->process_status = 'pending';
         $order->support_instalments = $fields[ 'support_instalments' ] ?? true; // by default instalments are supported
         $order->author_id = $fields[ 'author_id' ] ?? Auth::id(); // the author can now be changed
+
+        /**
+         * When a hold order is being charged, we'll make sure
+         * the transaction is attributed to the user that actually
+         * performs the charge and the date reflects the moment
+         * the transaction was completed. This prevent the sale
+         * from being attributed to the user that created the hold.
+         */
+        if ( $previousPaymentStatus === Order::PAYMENT_HOLD && $paymentStatus !== Order::PAYMENT_HOLD ) {
+            $order->author_id = Auth::id();
+            $order->created_at = ns()->date->getNow()->toDateTimeString();
+            $order->updated_at = ns()->date->getNow()->toDateTimeString();
+        }
         $order->title = $fields[ 'title' ] ?? null;
         $order->tax_value = $this->currencyService->define( $fields[ 'tax_value' ] ?? 0 )->toFloat();
         $order->products_tax_value = $this->currencyService->define( $fields[ 'products_tax_value' ] ?? 0 )->toFloat();
@@ -2711,12 +2898,48 @@ class OrdersService
     {
         $order->payment_status = Order::PAYMENT_VOID;
         $order->voidance_reason = $reason;
+        $order->updated_at = ns()->date->getNow()->toDateTimeString();
         $order->save();
 
         return [
             'status' => 'success',
             'message' => __( 'The order has been correctly voided.' ),
         ];
+    }
+
+    /**
+     * Find an order that has been created using
+     * a specific checkout uuid.
+     */
+    private function __getOrderFromCheckoutUuid( string $uuid ): ?Order
+    {
+        return Order::with( [ 'payments', 'products', 'coupons' ] )
+            ->where( 'uuid', $uuid )
+            ->first();
+    }
+
+    /**
+     * Response returned when a checkout has already been
+     * processed and shouldn't be saved twice.
+     */
+    private function __getExistingOrderResponse( Order $order ): array
+    {
+        return [
+            'status' => 'success',
+            'message' => __( 'This checkout was already submitted. The existing order has been restored.' ),
+            'data' => compact( 'order' ),
+        ];
+    }
+
+    /**
+     * Checks if a query exception is caused
+     * by a duplicated entry (MySQL or SQLite).
+     */
+    private function __isDuplicateEntryException( QueryException $exception ): bool
+    {
+        $errorCode = $exception->errorInfo[ 1 ] ?? null;
+
+        return in_array( (int) $errorCode, [ 1062, 19 ], true );
     }
 
     public function returnVoidProducts( Order $order )
@@ -3049,6 +3272,12 @@ class OrdersService
 
         $total = $payments->map( fn( $payment ) => $payment->value )->sum();
 
+        $cashIdentifiers = $paymentTypes->filter( fn( $pt ) => $pt->is_cash )->pluck( 'identifier' )->toArray();
+
+        $cashTotal = $payments->filter( fn( $payment ) => in_array( $payment->identifier, $cashIdentifiers ) )
+            ->map( fn( $payment ) => $payment->value )
+            ->sum();
+
         return [
             'summary' => $paymentTypes->map( function ( $paymentType ) use ( $payments ) {
                 $total = $payments
@@ -3062,6 +3291,8 @@ class OrdersService
                 ];
             } ),
             'total' => ns()->currency->define( $total )->toFloat(),
+            'cash_total' => ns()->currency->define( $cashTotal )->toFloat(),
+            'non_cash_total' => ns()->currency->define( $total - $cashTotal )->toFloat(),
             'entries' => $payments,
         ];
     }

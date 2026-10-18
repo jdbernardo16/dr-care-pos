@@ -31,6 +31,17 @@ class OrderAfterCreatedEventListener
      */
     public function handle( OrderAfterCreatedEvent $event )
     {
+        /**
+         * The "created" event is fired on both insert and update
+         * operations (see NsModel::saveWithRelationships). We'll
+         * only proceed for orders that have just been created to
+         * prevent the cashier stats from being credited twice
+         * when an order is updated (e.g. a hold order being charged).
+         */
+        if ( ! $event->order->wasRecentlyCreated ) {
+            return;
+        }
+
         // The order settings should be immediately
         // be created whent he order is created
         SaveOrderSettingJob::dispatchSync( $event->order );

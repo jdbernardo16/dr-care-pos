@@ -1,0 +1,25 @@
+uid=6_0 RootWebArea "Irbetris 150mg Irbesartan Philippines price - Search" url="https://www.bing.com/search?q=Irbetris+150mg+Irbesartan+Philippines+price"
+  uid=6_1 banner
+    uid=6_2 button "Skip to content"
+    uid=6_3 button "Accessibility Feedback"
+    uid=6_4 form
+      uid=6_5 link "Back to Bing search" url="https://www.bing.com/?FORM=Z9FD1"
+        uid=6_6 heading "Back to Bing search" level="1"
+      uid=6_7 search
+        uid=6_8 button "Search"
+        uid=6_9 searchbox "Enter your search here - Search suggestions will show as you type" autocomplete="both" value="Irbetris 150mg Irbesartan Philippines price"
+        uid=6_10 button "Search using voice"
+        uid=6_11 button "Search using an image" expandable
+        uid=6_12 status atomic live="polite" relevant="additions text"
+    uid=6_13 complementary "Account Rewards and Preferences"
+      uid=6_14 button "Microsoft Rewards" expandable haspopup="menu"
+      uid=6_15 link "Sign in" haspopup="menu" url="javascript:void(0)"
+        uid=6_16 generic "Sign in"
+    uid=6_17 StaticText "One last step"
+    uid=6_18 StaticText "Please solve the challenge below to continue"
+    uid=6_19 Iframe "Widget containing a Cloudflare security challenge"
+      uid=6_20 RootWebArea "Checking your Browser…" url="https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/x4puf/0x4AAAAAABgNScUsbCFCjwIZ/light/fbE/new/normal?lang=en"
+        uid=6_21 generic atomic live="polite" relevant="additions text"
+          uid=6_22 alert atomic live="assertive" relevant="additions text"
+            uid=6_23 checkbox "Verify you are human"
+            uid=6_24 StaticText "Verify you are human"

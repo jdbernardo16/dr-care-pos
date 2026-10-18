@@ -11,6 +11,7 @@ use App\Models\CustomerAccountHistory;
 use App\Models\DashboardDay;
 use App\Models\DashboardMonth;
 use App\Models\Order;
+use App\Models\OrderPayment;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductHistory;
@@ -187,7 +188,7 @@ class ReportService
                 ];
             }
 
-            $message = __( 'A stock operation has recently been detected, however NexoPOS wasn\'t able to update the report accordingly. This occurs if the daily dashboard reference hasn\'t been created.' );
+            $message = __( 'A stock operation has recently been detected, however Dr Care wasn\'t able to update the report accordingly. This occurs if the daily dashboard reference hasn\'t been created.' );
 
             /**
              * @todo make sure outgoing link takes to relevant article
@@ -377,7 +378,7 @@ class ReportService
 
     public function notifyIncorrectDashboardReport()
     {
-        $message = __( 'A stock operation has recently been detected, however NexoPOS wasn\'t able to update the report accordingly. This occurs if the daily dashboard reference hasn\'t been created.' );
+        $message = __( 'A stock operation has recently been detected, however Dr Care wasn\'t able to update the report accordingly. This occurs if the daily dashboard reference hasn\'t been created.' );
 
         ns()->notification->create(
             title: __( 'Untracked Stock Operation' ),
@@ -679,16 +680,17 @@ class ReportService
         }
     }
 
-    private function getSalesSummary( $orders )
+    private function getSalesSummary( $orders, $refundTotal = 0 )
     {
         $allSales = $orders->map( function ( $order ) {
             $productTaxes = $order->products()->sum( 'tax_value' );
             $totalPurchasePrice = $order->products()->sum( 'total_purchase_price' );
+            $productDiscounts = $order->products()->get()->sum( fn( $product ) => $product->discount * $product->quantity );
 
             return [
-                'subtotal' => $order->subtotal,
+                'subtotal' => $order->subtotal + $productDiscounts,
                 'product_taxes' => $productTaxes,
-                'sales_discounts' => $order->discount,
+                'sales_discounts' => $order->discount + $productDiscounts,
                 'sales_taxes' => $order->tax_value,
                 'shipping' => $order->shipping,
                 'total' => $order->total,
@@ -710,7 +712,30 @@ class ReportService
             'profit' => Currency::define( $allSales->sum( 'profit' ) )->toFloat(),
             'total_purchase_price' => Currency::define( $allSales->sum( 'total_purchase_price' ) )->toFloat(),
             'total' => Currency::define( $allSales->sum( 'total' ) )->toFloat(),
+            'refunds' => $refundTotal,
         ];
+    }
+
+    private function getRefundTotal( $start, $end, $user_id = null, $categories_id = [] ): float
+    {
+        $request = Order::whereIn( 'payment_status', [
+                Order::PAYMENT_REFUNDED,
+                Order::PAYMENT_PARTIALLY_REFUNDED,
+            ] )
+            ->from( $start )
+            ->to( $end );
+
+        if ( ! empty( $user_id ) ) {
+            $request = $request->where( 'author_id', $user_id );
+        }
+
+        if ( ! empty( $categories_id ) ) {
+            $request = $request->whereHas( 'products', function ( $query ) use ( $categories_id ) {
+                $query->whereIn( 'product_category_id', $categories_id );
+            } );
+        }
+
+        return (float) $request->sum( 'total' );
     }
 
     /**
@@ -720,7 +745,8 @@ class ReportService
     {
         $request = Order::paymentStatus( Order::PAYMENT_PAID )
             ->from( $start )
-            ->to( $end );
+            ->to( $end )
+            ->with( 'payments' );
 
         if ( ! empty( $user_id ) ) {
             $request = $request->where( 'author_id', $user_id );
@@ -746,7 +772,8 @@ class ReportService
         }
 
         $orders = $request->get();
-        $summary = $this->getSalesSummary( $orders );
+        $refundTotal = $this->getRefundTotal( $start, $end, $user_id, $categories_id );
+        $summary = $this->getSalesSummary( $orders, $refundTotal );
         $products = $orders->map( fn( $order ) => $order->products )->flatten();
         $productsIds = $products->map( fn( $product ) => $product->product_id )->unique();
 
@@ -755,14 +782,16 @@ class ReportService
                 $product = $products->where( 'product_id', $id )->first();
                 $filtredProdcuts = $products->where( 'product_id', $id )->all();
 
-                $summable = [ 'quantity', 'discount', 'wholesale_tax_value', 'sale_tax_value', 'tax_value', 'total_price_net', 'total_price', 'total_price_gross', 'total_purchase_price' ];
+                $summable = [ 'quantity', 'wholesale_tax_value', 'sale_tax_value', 'tax_value', 'total_price_net', 'total_price', 'total_price_gross', 'total_purchase_price' ];
                 foreach ( $summable as $key ) {
                     $product->$key = collect( $filtredProdcuts )->sum( $key );
                 }
+                $product->discount = collect( $filtredProdcuts )->sum( fn( $p ) => $p->discount * $p->quantity );
 
                 return $product;
             } )->values(),
             'summary' => $summary,
+            'payments' => $this->getOrdersPaymentSummary( $orders ),
         ];
     }
 
@@ -770,9 +799,8 @@ class ReportService
     {
         $request = Order::paymentStatus( Order::PAYMENT_PAID )
             ->from( $start )
-            ->to( $end );
-
-        $request->with( 'products' );
+            ->to( $end )
+            ->with( [ 'products', 'payments' ] );
 
         if ( ! empty( $user_id ) ) {
             $request = $request->where( 'author_id', $user_id );
@@ -803,7 +831,8 @@ class ReportService
          * We'll pull the sales
          * summary
          */
-        $summary = $this->getSalesSummary( $orders );
+        $refundTotal = $this->getRefundTotal( $start, $end, $user_id, $categories_id );
+        $summary = $this->getSalesSummary( $orders, $refundTotal );
 
         $products = $orders->map( fn( $order ) => $order->products )->flatten();
         $category_ids = $orders->map( fn( $order ) => $order->products->map( fn( $product ) => $product->product_category_id ) );
@@ -832,17 +861,19 @@ class ReportService
              * to summarize them.
              */
             $rawProducts->each( function ( $product ) use ( &$mergedProducts ) {
+                $totalDiscount = $product->discount * $product->quantity;
+
                 if ( isset( $mergedProducts[ $product->product_id ] ) ) {
                     $mergedProducts[ $product->product_id ][ 'quantity' ] += $product->quantity;
                     $mergedProducts[ $product->product_id ][ 'tax_value' ] += $product->tax_value;
-                    $mergedProducts[ $product->product_id ][ 'discount' ] += $product->discount;
+                    $mergedProducts[ $product->product_id ][ 'discount' ] += $totalDiscount;
                     $mergedProducts[ $product->product_id ][ 'total_price' ] += $product->total_price;
                     $mergedProducts[ $product->product_id ][ 'total_purchase_price' ] += $product->total_purchase_price;
                 } else {
                     $mergedProducts[ $product->product_id ] = array_merge( $product->toArray(), [
                         'quantity' => $product->quantity,
                         'tax_value' => $product->tax_value,
-                        'discount' => $product->discount,
+                        'discount' => $totalDiscount,
                         'total_price' => $product->total_price,
                         'total_purchase_price' => $product->total_purchase_price,
                         'name' => $product->name,
@@ -862,7 +893,48 @@ class ReportService
             return $categoryWithProducts;
         } );
 
-        return compact( 'result', 'summary' );
+        return [
+            'result' => $result,
+            'summary' => $summary,
+            'payments' => $this->getOrdersPaymentSummary( $orders ),
+        ];
+    }
+
+    private function getOrdersPaymentSummary( $orders ): array
+    {
+        $orderIds = $orders->pluck( 'id' );
+
+        $payments = OrderPayment::whereIn( 'order_id', $orderIds )
+            ->select( 'identifier', DB::raw( 'SUM(value) as total' ) )
+            ->groupBy( 'identifier' )
+            ->get()
+            ->keyBy( 'identifier' );
+
+        /**
+         * payment.value stores the amount tendered, not the amount applied.
+         * change is always returned in cash, so we subtract total change
+         * from the cash payment total to get the net cash received.
+         */
+        $totalChange = (float) $orders->sum( 'change' );
+
+        if ( ! isset( $payments['cash-payment'] ) ) {
+            $payments['cash-payment'] = new \stdClass;
+            $payments['cash-payment']->total = 0;
+        }
+
+        $payments['cash-payment']->total = max( 0, (float) $payments['cash-payment']->total - $totalChange );
+
+        $paymentTypes = \App\Models\PaymentType::active()->get();
+
+        return $paymentTypes->map( function ( $type ) use ( $payments ) {
+            $payment = $payments->get( $type->identifier );
+
+            return [
+                'identifier' => $type->identifier,
+                'label' => $type->label,
+                'total' => $payment ? (float) $payment->total : 0,
+            ];
+        } )->values()->toArray();
     }
 
     /**

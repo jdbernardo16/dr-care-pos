@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RawBT Receipt Test</title>
+<style>
+    body { font-family: system-ui, sans-serif; margin: 16px; background: #f5f5f5; }
+    h1 { font-size: 18px; }
+    button { display: block; width: 100%; margin: 8px 0; padding: 14px; font-size: 16px; font-weight: bold; border: 0; border-radius: 8px; cursor: pointer; }
+    #load { background: #3b82f6; color: #fff; }
+    #send { background: #16a34a; color: #fff; }
+    pre { background: #fff; border: 1px solid #ddd; padding: 10px; font-size: 12px; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow: auto; }
+    #status { font-size: 13px; color: #555; margin: 8px 0; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+    <h1>RawBT Receipt Test</h1>
+    <button id="load">1. Load latest order receipt</button>
+    <button id="send">2. Print via RawBT (ESC/POS)</button>
+    <div id="status"></div>
+    <pre id="preview">No receipt loaded yet.</pre>
+    <script>
+        let orderId = null;
+
+        function status( msg ) {
+            document.getElementById( 'status' ).textContent += msg + '\n';
+        }
+
+        document.getElementById( 'load' ).onclick = async () => {
+            status( '> Loading latest order...' );
+
+            try {
+                const orders = await ( await fetch( '/api/orders?limit=1' ) ).json();
+                const order = Array.isArray( orders ) ? orders[0] : ( orders.data ? orders.data[0] : null );
+                orderId = order ? order.id : null;
+                status( '> Order #' + orderId + ' found. Fetching text preview...' );
+
+                const res = await fetch( '/dashboard/orders/receipt/' + orderId + '?format=rawbt-text', { credentials: 'same-origin' } );
+                const type = res.headers.get( 'content-type' ) || '';
+                status( '> HTTP ' + res.status + ' | content-type: ' + type );
+
+                const text = await res.text();
+                document.getElementById( 'preview' ).textContent = text;
+
+                if ( type.includes( 'text/plain' ) ) {
+                    status( '> OK: text preview received (' + text.length + ' chars).' );
+                } else {
+                    status( '> WARNING: not plain text! You are likely not signed in, or the server did not apply the rawbt format.' );
+                }
+            } catch ( e ) {
+                status( '> ERROR: ' + e.message );
+            }
+        };
+
+        document.getElementById( 'send' ).onclick = async () => {
+            if ( ! orderId ) return status( '> Load a receipt first (button 1).' );
+
+            status( '> Fetching ESC/POS stream...' );
+
+            try {
+                const res = await fetch( '/dashboard/orders/receipt/' + orderId + '?format=rawbt', { credentials: 'same-origin' } );
+                const type = res.headers.get( 'content-type' ) || '';
+
+                if ( ! res.ok || ! type.includes( 'application/octet-stream' ) ) {
+                    return status( '> WARNING: expected octet-stream, got ' + type + ' (HTTP ' + res.status + ')' );
+                }
+
+                const buffer = await res.arrayBuffer();
+                const bytes = new Uint8Array( buffer );
+                let binary = '';
+                bytes.forEach( b => binary += String.fromCharCode( b ) );
+                const b64 = btoa( binary );
+
+                status( '> Firing rawbt:base64 with ' + bytes.length + ' ESC/POS bytes (' + b64.length + ' b64 chars)...' );
+                window.location.href = 'rawbt:base64,' + b64;
+            } catch ( e ) {
+                status( '> ERROR: ' + e.message );
+            }
+        };
+    </script>
+</body>
+</html>

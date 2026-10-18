@@ -6,6 +6,7 @@ use App\Events\CashRegisterHistoryAfterAllDeletedEvent;
 use App\Exceptions\NotAllowedException;
 use App\Models\Order;
 use App\Models\OrderPayment;
+use App\Models\PaymentType;
 use App\Models\Register;
 use App\Models\RegisterHistory;
 use App\Models\User;
@@ -139,6 +140,19 @@ class CashRegistersService
             ];
         }
 
+        /**
+         * Only cash payment types affect the physical cash register balance.
+         * Non-cash payments (GCash, bank, customer account) are recorded
+         * on the order but don't change the cash on hand.
+         */
+        $paymentType = PaymentType::find( $orderPayment->type->id ?? null );
+        if ( ! $paymentType instanceof PaymentType || ! $paymentType->is_cash ) {
+            return [
+                'status' => 'info',
+                'message' => __( 'Non-cash payment types are not tracked on the cash register.' ),
+            ];
+        }
+
         $cashRegisterHistory = RegisterHistory::where( 'payment_id', $orderPayment->id )->first();
 
         /**
@@ -152,7 +166,7 @@ class CashRegistersService
             $cashRegisterHistory->payment_type_id = $orderPayment->type->id;
             $cashRegisterHistory->order_id = $orderPayment->order_id;
             $cashRegisterHistory->action = RegisterHistory::ACTION_ORDER_PAYMENT;
-            $cashRegisterHistory->author_id = $orderPayment->order->author_id;
+            $cashRegisterHistory->author_id = $orderPayment->author_id;
             $cashRegisterHistory->balance_before = $register->balance;
             $cashRegisterHistory->value = ns()->currency->define( $orderPayment->value )->toFloat();
             $cashRegisterHistory->balance_after = ns()->currency->define( $register->balance )->additionateBy( $orderPayment->value )->toFloat();
@@ -433,6 +447,121 @@ class CashRegistersService
         return $register;
     }
 
+    public function getRegisterSessionSummary(Register $register): array
+    {
+        if ($register->status !== Register::STATUS_OPENED) {
+            throw new NotAllowedException(__('Unable to get session summary for a closed register.'));
+        }
+
+        $opening = $register->history()
+            ->where('action', RegisterHistory::ACTION_OPENING)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$opening instanceof RegisterHistory) {
+            throw new NotAllowedException(__('The register doesn\'t have an opening history.'));
+        }
+
+        $openingDate = $opening->created_at;
+        $startingCash = (float) $opening->value;
+
+        // Paid orders since opening (load products for item-level discounts)
+        $orders = Order::paid()
+            ->with('products')
+            ->where('register_id', $register->id)
+            ->where('created_at', '>=', $openingDate)
+            ->get();
+
+        $orderIds = $orders->pluck('id');
+
+        // Gross/Net sales from paid orders (compute discounts from unit_price vs total_price to match sales report)
+        $orderDiscounts = (float) $orders->sum('discount');
+        $productDiscounts = 0;
+        foreach ($orders->flatMap->products as $product) {
+            $lineTotal = (float) $product->unit_price * (float) $product->quantity;
+            $actualTotal = (float) $product->total_price;
+            if ($lineTotal > $actualTotal) {
+                $productDiscounts += $lineTotal - $actualTotal;
+            }
+        }
+        $discounts = $orderDiscounts + $productDiscounts;
+        $subtotal = (float) $orders->sum('subtotal');
+        $grossSales = $subtotal + $productDiscounts;
+        $netSales = (float) $orders->sum('total');
+
+        // Cash payment identifiers
+        $cashPaymentIdentifiers = PaymentType::where('is_cash', true)
+            ->get()
+            ->pluck('identifier')
+            ->toArray();
+
+        // Cash payments from paid orders
+        $cashPayments = (float) OrderPayment::whereIn('order_id', $orderIds)
+            ->whereIn('identifier', $cashPaymentIdentifiers)
+            ->sum('value');
+
+        // Register history since opening
+        $histories = RegisterHistory::where('register_id', $register->id)
+            ->where('created_at', '>=', $openingDate)
+            ->get();
+
+        $paidIn = (float) $histories->where('action', RegisterHistory::ACTION_CASHING)->sum('value');
+        $paidOut = (float) $histories->where('action', RegisterHistory::ACTION_CASHOUT)->sum('value');
+        $change = (float) $histories->where('action', RegisterHistory::ACTION_ORDER_CHANGE)->sum('value');
+
+        // Change from paid orders only (excludes voided orders)
+        $paidChange = (float) $histories->where('action', RegisterHistory::ACTION_ORDER_CHANGE)
+            ->whereIn('order_id', $orderIds)
+            ->sum('value');
+
+        // Payment breakdown from paid orders (all types) — deduct change from cash payments
+        $paymentBreakdownRaw = OrderPayment::whereIn('order_id', $orderIds)
+            ->select('identifier', DB::raw('SUM(value) as total_amount'))
+            ->groupBy('identifier')
+            ->get();
+
+        $paymentBreakdown = $paymentBreakdownRaw->map(function ($payment) use ($cashPaymentIdentifiers, $paidChange) {
+            $paymentType = PaymentType::where('identifier', $payment->identifier)->first();
+            $value = (float) $payment->total_amount;
+            if (in_array($payment->identifier, $cashPaymentIdentifiers)) {
+                $value = max(0, $value - $paidChange);
+            }
+            return [
+                'label' => $paymentType ? $paymentType->label : $payment->identifier,
+                'value' => $value,
+            ];
+        })->values()->toArray();
+
+        // Sales refunds total (all refunded orders since opening)
+        $refundedOrdersTotal = (float) Order::whereIn('payment_status', [
+                Order::PAYMENT_REFUNDED,
+                Order::PAYMENT_PARTIALLY_REFUNDED,
+            ])
+            ->where('register_id', $register->id)
+            ->where('created_at', '>=', $openingDate)
+            ->sum('total');
+
+        $expectedCash = $startingCash + $cashPayments + $paidIn - $paidOut - $change;
+
+        return [
+            'cash_summary' => [
+                'starting_cash' => $startingCash,
+                'cash_payments' => $cashPayments,
+                'paid_in' => $paidIn,
+                'paid_out' => $paidOut,
+                'change' => $change,
+                'expected_cash' => max(0, $expectedCash),
+            ],
+            'sales_summary' => [
+                'gross_sales' => $grossSales,
+                'discounts' => $discounts,
+                'net_sales' => $netSales,
+                'refunds' => $refundedOrdersTotal,
+                'payment_breakdown' => $paymentBreakdown,
+            ],
+        ];
+    }
+
     private function diffInTime( $start, $end )
     {
         $startTime = Carbon::parse( $start );
@@ -481,8 +610,13 @@ class CashRegistersService
             ->join( 'nexopos_payments_types', 'nexopos_payments_types.identifier', '=', 'nexopos_orders_payments.identifier' )
             ->get();
 
+        $cashPaymentIdentifiers = PaymentType::where( 'is_cash', true )
+            ->get()
+            ->pluck( 'identifier' )
+            ->toArray();
+
         $totalCashPayment = OrderPayment::whereIn( 'order_id', $orders->pluck( 'id' ) )
-            ->where( 'identifier', OrderPayment::PAYMENT_CASH )
+            ->whereIn( 'identifier', $cashPaymentIdentifiers )
             ->sum( 'value' );
 
         $totalChange = $orders->sum( 'change' );

@@ -47,5 +47,15 @@ class EventServiceProvider extends ServiceProvider
     {
         Hook::addFilter( 'ns-dashboard-menus', [ MenusFilter::class, 'injectRegisterMenus' ] );
         Hook::addFilter( 'ns-common-routes', [ app()->make( OrdersService::class ), 'handlePOSRoute' ], 10, 3 );
+
+        Hook::addFilter( 'ns-web-receipt-template', function ( $template ) {
+            $option = ns()->option->get( 'ns_invoice_receipt_template' );
+
+            if ( in_array( $option, [ 'thermal_58', 'thermal_80' ] ) ) {
+                return $template . '_thermal';
+            }
+
+            return $template;
+        }, 10, 1 );
     }
 }

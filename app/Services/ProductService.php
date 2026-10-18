@@ -2196,6 +2196,7 @@ class ProductService
                 'unit_quantities.unit',
                 'category',
                 'tax_group.taxes',
+                'galleries',
             ] )
             ->limit( $limit );
 

@@ -31,7 +31,8 @@ export default {
                 ([7,8,9].map( key => ({ identifier: key, value: key }))),
                 ([4,5,6].map( key => ({ identifier: key, value: key }))),
                 ([1,2,3].map( key => ({ identifier: key, value: key }))),
-                [{ identifier: '.', value: '.' },{ identifier: 0, value: 0 },{ identifier: 'backspace', icon : 'la-backspace' }],
+                [{ identifier: '.', value: '.' },{ identifier: 0, value: 0 },{ identifier: '00', value: '00' }],
+                [{ identifier: 'backspace', icon : 'la-backspace' }],
                 [{ identifier: 'next', value: __( 'Enter' ) }]
             ]
         }
@@ -108,6 +109,16 @@ export default {
                     if ( value.toString().match( /^[0-9][1-9]*\.[0-9]*$/) === null ) {
                         value    +=  '.';
                     }
+                }
+            } else if ( key.identifier === '00' ) {
+                if ( this.limit > 0 && this.value.length >= this.limit ) {
+                    return;
+                }
+                if ( this.allSelected ) {
+                    value    =   '00';
+                    this.allSelected    =   false;
+                } else {
+                    value    +=  '00';
                 }
             } else if ( key.value.toString().match( /^\d+$/ ) ) {
                 if ( this.limit > 0 && this.value.length >= this.limit ) {

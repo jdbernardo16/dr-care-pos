@@ -36,6 +36,16 @@
 .is-popup {
     background: rgb(0 0 0 / 40%);
 
+    /**
+     * Using auto margins instead of relying only on flex items-center:
+     * when the popup is taller than the viewport, the top no longer gets
+     * clipped — the popup starts at the top and the overlay scrolls.
+     */
+    .popup-body {
+        margin: auto;
+        max-height: 100%;
+    }
+
     .elevation-surface {
         @apply bg-box-elevation-background border-box-elevation-edge text-fontcolor;
         &.hoverable:hover {

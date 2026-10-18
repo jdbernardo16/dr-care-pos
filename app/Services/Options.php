@@ -32,7 +32,7 @@ class Options
 
         $defaultOptions = [
             'ns_registration_enabled' => 'no',
-            'ns_store_name' => 'NexoPOS',
+            'ns_store_name' => 'Dr Care',
             'ns_pos_allow_decimal_quantities' => 'yes',
             'ns_pos_quick_product' => 'yes',
             'ns_pos_show_quantity' => 'yes',
@@ -209,6 +209,26 @@ class Options
                 }
             }
         }
+    }
+
+    /**
+     * Returns the VAT status label to display on receipts
+     * based on the configured POS VAT type.
+     */
+    public function getVatStatusLabel(): string
+    {
+        return $this->isVatEnabled() ? __( 'VAT' ) : __( 'Non-VAT' );
+    }
+
+    /**
+     * Determine whether the store is VAT-registered based on
+     * the configured POS VAT type.
+     */
+    public function isVatEnabled(): bool
+    {
+        $vatType = $this->get( 'ns_pos_vat', 'disabled' );
+
+        return in_array( $vatType, [ 'flat_vat', 'variable_vat', 'products_vat', 'products_variable_vat' ] );
     }
 
     /**

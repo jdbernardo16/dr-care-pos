@@ -35,6 +35,7 @@ return [
             'type' => 'select',
             'options' => Helper::kvToJsOptions( [
                 'default' => __( 'Default Printing (web)' ),
+                'rawbt' => __( 'RawBT (Android Thermal)' ),
             ] ),
             'description' => __( 'Determine what is the gateway used for printing.' ),
         ],

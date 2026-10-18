@@ -39,6 +39,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
         ) {
             Popup.show( nsOrdersRefund, { order : event.value.row, component : event.value.component });
         }
+
+        if ( 
+            event.identifier === 'ns-table-row-action' && 
+            event.value.action.identifier === 'ns.order-print' 
+        ) {
+            const print   =   new PrintService({ urls: systemUrls, options: systemOptions });
+            print.process( event.value.row.id, 'sale' );
+        }
     });
 });
 </script>

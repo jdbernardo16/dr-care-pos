@@ -42,6 +42,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'active' => 'boolean',
+        'hourly_rate' => 'decimal:2',
     ];
 
     protected $dispatchesEvents = [
@@ -81,6 +82,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'email', 'password', 'role_id', 'active', 'username', 'author_id',
+        'hourly_rate',
     ];
 
     /**
@@ -199,5 +201,10 @@ class User extends Authenticatable
     public function hasRoles( array $roles )
     {
         return $this->roles()->whereIn( 'namespace', $roles )->count() > 0;
+    }
+
+    public function payrollRuns()
+    {
+        return $this->hasMany( PayrollRun::class, 'user_id' );
     }
 }

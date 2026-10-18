@@ -8,6 +8,7 @@ Route::middleware( NsRestrictMiddleware::arguments( 'nexopos.read.registers' ) )
     Route::get( 'cash-registers/{id?}', [ CashRegistersController::class, 'getRegisters' ] )->where( [ 'id' => '[0-9]+' ] );
     Route::get( 'cash-registers/used', [ CashRegistersController::class, 'getUsedRegister' ] );
     Route::get( 'cash-registers/session-history/{register}', [ CashRegistersController::class, 'getSessionHistory' ] );
+    Route::get( 'cash-registers/{register}/session-summary', [ CashRegistersController::class, 'getSessionSummary' ] );
 } );
 
 Route::post( 'cash-registers/{action}/{register}', [ CashRegistersController::class, 'performAction' ] )->middleware( NsRestrictMiddleware::arguments( 'nexopos.use.registers' ) );

@@ -6,9 +6,9 @@ import { default as nsPaymentPopup } from '~/popups/ns-pos-payment-popup.vue';
 export class PaymentQueue implements Queue {
     constructor( private order ) {}
 
-    run() { 
+    run(onSuccess?: (result: any) => void) { 
         return new Promise( ( resolve, reject ) => {
-            Popup.show( nsPaymentPopup, { resolve, reject, order : this.order })
+            Popup.show( nsPaymentPopup, { resolve, reject, order : this.order, onSuccess })
         })
     }
 }

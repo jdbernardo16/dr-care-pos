@@ -150,3 +150,9 @@ Schedule::job( new ClearModuleTempJob )->weekly();
  * on GitHub and store the result as an option.
  */
 Schedule::job( new CheckForUpdatesJob )->dailyAt( '08:00' );
+
+/**
+ * Full backup (database snapshot + images) every night at 2:00 AM.
+ * Backups older than 30 days are automatically deleted.
+ */
+Schedule::command( 'backup:full', [ '--delete-older-than' => 60 ] )->weeklyOn( 0, '02:00' );

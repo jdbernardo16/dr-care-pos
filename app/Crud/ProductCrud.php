@@ -18,6 +18,7 @@ use App\Services\CrudService;
 use App\Services\Helper;
 use App\Services\TaxService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\BulkEditor\Classes\BulkEditor;
 use TorMorten\Eventy\Facades\Events as Hook;
 
@@ -715,16 +716,13 @@ class ProductCrud extends CrudService
                 '$sort' => false,
                 'width' => '300px',
             ],
-            'type' => [
-                'label' => __( 'Type' ),
-                '$direction' => '',
-                'width' => '150px',
-                '$sort' => false,
-            ],
             'sku' => [
                 'label' => __( 'Sku' ),
                 '$direction' => '',
                 '$sort' => false,
+            ],
+            'total_quantity' => [
+                'label' => __( 'Stock' ),
             ],
             'category_name' => [
                 'label' => __( 'Category' ),
@@ -734,17 +732,6 @@ class ProductCrud extends CrudService
             ],
             'status' => [
                 'label' => __( 'Status' ),
-                '$direction' => '',
-                '$sort' => false,
-            ],
-            'user_username' => [
-                'label' => __( 'Author' ),
-                '$direction' => '',
-                '$sort' => false,
-            ],
-            'created_at' => [
-                'label' => __( 'Date' ),
-                'width' => '150px',
                 '$direction' => '',
                 '$sort' => false,
             ],
@@ -767,6 +754,7 @@ class ProductCrud extends CrudService
         $entry->stock_management = $entry->stock_management === 'enabled' ? __( 'Enabled' ) : __( 'Disabled' );
         $entry->status = $entry->status === 'available' ? __( 'Available' ) : __( 'Hidden' );
         $entry->category_name = $entry->category_name ?: __( 'Unassigned' );
+        $entry->total_quantity = (int) ($entry->total_quantity ?? 0);
         // you can make changes here
         $entry->action(
             identifier: 'edit',
@@ -812,6 +800,12 @@ class ProductCrud extends CrudService
     public function hook( $query ): void
     {
         $query->orderBy( 'updated_at', 'desc' );
+
+        $query->selectSub(function ($sub) {
+            $sub->from('nexopos_products_unit_quantities')
+                ->selectRaw('COALESCE(SUM(quantity), 0)')
+                ->whereColumn('product_id', 'nexopos_products.id');
+        }, 'total_quantity');
     }
 
     /**

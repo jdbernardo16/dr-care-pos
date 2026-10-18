@@ -49,6 +49,10 @@
                     </div>
                     <div class="flex-auto text-right p-2">{{ nsCurrency( history.value ) }}</div>
                 </div>
+                <div :key="history.id" v-if="[ 'register-noncash-payment' ].includes( history.action )"  class="flex border-b elevation-surface info">
+                    <div class="p-2 flex-auto">{{ history.label }}</div>
+                    <div class="flex-auto text-right p-2">{{ nsCurrency( history.value ) }}</div>
+                </div>
             </template>
         </div>
         <div class="summary border-t border-box-edge">
